@@ -2,6 +2,7 @@ package mayo.edu.cts2.editor.client;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
@@ -56,11 +57,13 @@ public class Cts2Editor implements EntryPoint {
 		oids.add("2.16.840.1.113883.3.464.0003.1021");
 		oids.add("2.16.840.1.113883.3.464.0003.1017");
 
-		service.getValueSets(oids, new AsyncCallback<List<String>>() {
+		service.getValueSets(oids, new AsyncCallback<Map<String, String>>() {
 
 			@Override
-			public void onSuccess(List<String> ValueSetsXml) {
-
+			public void onSuccess(Map<String, String> valueSetsMap) {
+				for (String oid : valueSetsMap.keySet()) {
+					System.out.println("oid: " + oid + "\nXML:\n" + valueSetsMap.get(oid));
+				}
 			}
 
 			@Override
