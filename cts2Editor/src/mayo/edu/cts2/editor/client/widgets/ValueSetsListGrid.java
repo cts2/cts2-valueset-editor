@@ -12,7 +12,6 @@ import com.smartgwt.client.types.SelectionAppearance;
 import com.smartgwt.client.types.SelectionStyle;
 import com.smartgwt.client.types.SortDirection;
 import com.smartgwt.client.widgets.Canvas;
-import com.smartgwt.client.widgets.grid.CellFormatter;
 import com.smartgwt.client.widgets.grid.ListGrid;
 import com.smartgwt.client.widgets.grid.ListGridField;
 import com.smartgwt.client.widgets.grid.ListGridRecord;
@@ -27,10 +26,10 @@ public class ValueSetsListGrid extends ListGrid {
 	private final ValueSetsXmlDS i_valueSetsXmlDS;
 	private String i_searchString;
 
-	public ValueSetsListGrid() {
+	public ValueSetsListGrid(String oid, String data) {
 		super();
 
-		i_valueSetsXmlDS = ValueSetsXmlDS.getInstance();
+		i_valueSetsXmlDS = new ValueSetsXmlDS(oid);
 
 		setWidth100();
 		setHeight100();
@@ -39,72 +38,17 @@ public class ValueSetsListGrid extends ListGrid {
 		setDataSource(i_valueSetsXmlDS);
 		setEmptyMessage(EMPTY_MESSAGE);
 
-		ListGridField resourceTypeField = new ListGridField("resourceRoot",
-				"Resource Type");
-		resourceTypeField.setWidth("50%");
-		resourceTypeField.setWrap(false);
-		resourceTypeField.setShowHover(true);
-		resourceTypeField.setCanEdit(false);
-
-		ListGridField resourceNamefField = new ListGridField("valueSetName",
-				"Value Set Identifier");
+		ListGridField resourceNamefField = new ListGridField("valueSetName", "Value Set Identifier");
 		resourceNamefField.setWidth("*");
 		resourceNamefField.setWrap(false);
 		resourceNamefField.setShowHover(true);
 		resourceNamefField.setCanEdit(false);
 
-		resourceNamefField.setCellFormatter(new CellFormatter() {
-
-			@Override
-			public String format(Object value, ListGridRecord record,
-					int rowNum, int colNum) {
-				if (value != null) {
-					return addCellHighlights(value.toString());
-				} else {
-					return null;
-				}
-			}
-		});
-
-		ListGridField formalNameField = new ListGridField("formalName",
-				"Formal Name");
+		ListGridField formalNameField = new ListGridField("formalName", "Formal Name");
 		formalNameField.setWidth("55%");
 		formalNameField.setWrap(false);
 		formalNameField.setShowHover(true);
 		formalNameField.setCanEdit(false);
-
-		formalNameField.setCellFormatter(new CellFormatter() {
-
-			@Override
-			public String format(Object value, ListGridRecord record,
-					int rowNum, int colNum) {
-				if (value != null) {
-					return addCellHighlights(value.toString());
-				} else {
-					return null;
-				}
-			}
-		});
-
-		ListGridField descriptionField = new ListGridField("value",
-				"Description");
-		descriptionField.setWidth("*");
-		descriptionField.setShowHover(true);
-		descriptionField.setWrap(true);
-		descriptionField.setCanEdit(false);
-
-		descriptionField.setCellFormatter(new CellFormatter() {
-
-			@Override
-			public String format(Object value, ListGridRecord record,
-					int rowNum, int colNum) {
-				if (value != null) {
-					return addCellHighlights(value.toString());
-				} else {
-					return null;
-				}
-			}
-		});
 
 		setFields(formalNameField, resourceNamefField);
 
@@ -123,8 +67,7 @@ public class ValueSetsListGrid extends ListGrid {
 	}
 
 	@Override
-	protected Canvas getCellHoverComponent(Record record, Integer rowNum,
-			Integer colNum) {
+	protected Canvas getCellHoverComponent(Record record, Integer rowNum, Integer colNum) {
 		// only show a custom DetailViewer for the description column only
 		if (colNum == 1) {
 
@@ -134,10 +77,8 @@ public class ValueSetsListGrid extends ListGrid {
 			// Define the fields that we want to display in the details popup.
 			// These fields are populated from the record of the selected
 			// ValueSets.
-			DetailViewerField descripitonField = new DetailViewerField("value",
-					"Description");
-			DetailViewerField formalNameField = new DetailViewerField(
-					"formalName", "Formal Name");
+			DetailViewerField descripitonField = new DetailViewerField("value", "Description");
+			DetailViewerField formalNameField = new DetailViewerField("formalName", "Formal Name");
 			detailViewer.setFields(formalNameField, descripitonField);
 
 			detailViewer.setData(new Record[]{record});
@@ -162,13 +103,10 @@ public class ValueSetsListGrid extends ListGrid {
 		i_valueSetsXmlDS.fetchData(criteria, new DSCallback() {
 
 			@Override
-			public void execute(DSResponse response, Object rawData,
-					DSRequest request) {
+			public void execute(DSResponse response, Object rawData, DSRequest request) {
 
-				if ((response != null)
-						&& (response.getAttribute("reason") != null)) {
-					setEmptyMessage("<b><font color=\"red\">" + ERROR_MESSAGE
-							+ "</font></b>");
+				if ((response != null) && (response.getAttribute("reason") != null)) {
+					setEmptyMessage("<b><font color=\"red\">" + ERROR_MESSAGE + "</font></b>");
 				} else {
 					setEmptyMessage(EMPTY_MESSAGE);
 				}
@@ -184,34 +122,4 @@ public class ValueSetsListGrid extends ListGrid {
 		});
 
 	}
-
-	/**
-	 * Highlight any of the text that matches the searchString.
-	 * 
-	 * @param value
-	 * @return
-	 */
-	private String addCellHighlights(String cellText) {
-
-		if (i_searchString == null || i_searchString.length() == 0) {
-			return cellText;
-		}
-
-		String lowerCaseCellText = cellText.toLowerCase();
-		int startIndex = lowerCaseCellText
-				.indexOf(i_searchString.toLowerCase());
-
-		if (startIndex >= 0) {
-			int first = startIndex;
-
-			cellText = cellText.substring(0, first)
-					+ "<b style=\"color:#e33b74\">"
-					+ cellText.substring(startIndex, startIndex
-							+ i_searchString.length()) + "</b>"
-					+ cellText.substring(startIndex + i_searchString.length());
-		}
-
-		return cellText;
-	}
-
 }

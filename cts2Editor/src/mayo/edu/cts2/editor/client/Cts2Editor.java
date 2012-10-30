@@ -3,6 +3,9 @@ package mayo.edu.cts2.editor.client;
 import java.util.ArrayList;
 import java.util.List;
 
+import mayo.edu.cts2.editor.client.widgets.ValueSetsLayout;
+import mayo.edu.cts2.editor.client.widgets.ValueSetsListGrid;
+
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -18,6 +21,8 @@ import com.smartgwt.client.widgets.layout.VLayout;
 public class Cts2Editor implements EntryPoint {
 
 	private VLayout i_mainLayout;
+	private ValueSetsLayout i_valueSetsLayout;
+	private ValueSetsListGrid i_valueSetsListGrid;
 
 	/**
 	 * This is the entry point method.
@@ -36,12 +41,15 @@ public class Cts2Editor implements EntryPoint {
 
 		});
 
+		i_valueSetsLayout = new ValueSetsLayout();
+
 		i_mainLayout = new VLayout();
 		i_mainLayout.setWidth100();
 		i_mainLayout.setHeight100();
 		i_mainLayout.setMargin(15);
 
 		i_mainLayout.addMember(testButton);
+		i_mainLayout.addMember(i_valueSetsListGrid);
 
 		// Draw the Layout - main layout
 		RootLayoutPanel.get().add(i_mainLayout);
@@ -52,7 +60,7 @@ public class Cts2Editor implements EntryPoint {
 		Cts2EditorServiceAsync service = GWT.create(Cts2EditorService.class);
 
 		// Sample list of oids for testing the call
-		ArrayList<String> oids = new ArrayList<String>();
+		final ArrayList<String> oids = new ArrayList<String>();
 		oids.add("2.16.840.1.113883.3.464.0003.1021");
 		oids.add("2.16.840.1.113883.3.464.0003.1017");
 
@@ -61,6 +69,15 @@ public class Cts2Editor implements EntryPoint {
 			@Override
 			public void onSuccess(List<String> ValueSetsXml) {
 
+				// clear out the value set layout.
+				i_valueSetsLayout.removeAll();
+
+				for (int i = 0; i < oids.size(); i++) {
+
+					// create and add the new valueset listgrid.
+					ValueSetsListGrid vsListGrid = new ValueSetsListGrid(oids.get(i), "xml string");
+					i_valueSetsLayout.addMember(vsListGrid);
+				}
 			}
 
 			@Override

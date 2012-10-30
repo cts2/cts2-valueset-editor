@@ -15,8 +15,7 @@ import com.smartgwt.client.types.DSDataFormat;
  */
 public class ValueSetsXmlDS extends DataSource {
 
-	private static final Logger logger = Logger.getLogger(ValueSetsXmlDS.class
-			.getName());
+	private static final Logger logger = Logger.getLogger(ValueSetsXmlDS.class.getName());
 
 	private static final String RECORD_X_PATH = "/cts2:ValueSetCatalogEntryDirectory/cts2:entry";
 
@@ -27,15 +26,15 @@ public class ValueSetsXmlDS extends DataSource {
 	private final XmlNamespaces i_xmlNamespaces;
 	private final LinkedHashMap<String, String> i_nsMap;
 
-	public static ValueSetsXmlDS getInstance() {
-		if (instance == null) {
-			instance = new ValueSetsXmlDS("ValueSetsXmlDS");
-		}
+	// public static ValueSetsXmlDS getInstance(String oid) {
+	// // if (instance == null) {
+	// instance = new ValueSetsXmlDS("ValueSetsXmlDS");
+	// // }
+	//
+	// return instance;
+	// }
 
-		return instance;
-	}
-
-	public ValueSetsXmlDS(String id) {
+	public ValueSetsXmlDS(String oid) {
 
 		setID(id);
 		setDataFormat(DSDataFormat.XML);
@@ -44,29 +43,21 @@ public class ValueSetsXmlDS extends DataSource {
 
 		// Set the namespaces
 		i_xmlNamespaces = new XmlNamespaces();
-		i_xmlNamespaces.addNamespace("cts2",
-				"http://schema.omg.org/spec/CTS2/1.0/ValueSet");
-		i_xmlNamespaces.addNamespace("core",
-				"http://schema.omg.org/spec/CTS2/1.0/Core");
-		i_xmlNamespaces.addNamespace("xsi",
-				"http://www.w3.org/2001/XMLSchema-instance");
+		i_xmlNamespaces.addNamespace("cts2", "http://schema.omg.org/spec/CTS2/1.0/ValueSet");
+		i_xmlNamespaces.addNamespace("core", "http://schema.omg.org/spec/CTS2/1.0/Core");
+		i_xmlNamespaces.addNamespace("xsi", "http://www.w3.org/2001/XMLSchema-instance");
 		setXmlNamespaces(i_xmlNamespaces);
 
 		// set the XPath
 		setRecordXPath(RECORD_X_PATH);
 
-		DataSourceTextField valueSetNamefField = new DataSourceTextField(
-				"valueSetName", "Value Set Name");
-		DataSourceTextField aboutField = new DataSourceTextField("about",
-				"About");
-		DataSourceTextField formalNameField = new DataSourceTextField(
-				"formalName", "Formal Name");
-		DataSourceTextField resourceSynopsisValueField = new DataSourceTextField(
-				"value", "Resource Synopsis");
+		DataSourceTextField valueSetNamefField = new DataSourceTextField("valueSetName", "Value Set Name");
+		DataSourceTextField aboutField = new DataSourceTextField("about", "About");
+		DataSourceTextField formalNameField = new DataSourceTextField("formalName", "Formal Name");
+		DataSourceTextField resourceSynopsisValueField = new DataSourceTextField("value", "Resource Synopsis");
 		resourceSynopsisValueField.setValueXPath(X_PATH_RESOURCE_SYNOPSIS);
 
-		setFields(valueSetNamefField, aboutField, formalNameField,
-				resourceSynopsisValueField);
+		setFields(valueSetNamefField, aboutField, formalNameField, resourceSynopsisValueField);
 
 		setClientOnly(true);
 	}
