@@ -3,7 +3,6 @@ package mayo.edu.cts2.editor.server;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
