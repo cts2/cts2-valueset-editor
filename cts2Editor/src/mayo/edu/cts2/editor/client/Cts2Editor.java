@@ -64,28 +64,33 @@ public class Cts2Editor implements EntryPoint {
 		oids.add("2.16.840.1.113883.3.464.0003.1017");
 		oids.add("2.16.840.1.113883.3.464.0001.231");
 
-		service.getValueSets(oids, new AsyncCallback<Map<String, String>>() {
+		service.getValueSets(oids, new AsyncCallback<String>() {
 
 			@Override
-			public void onSuccess(Map<String, String> valueSetsMap) {
+			public void onSuccess(String valueSets) {
+				/* NOTE: valueSets is an xml string of <ValueSetCatalogEntryMsg>s wrapped
+							in the <ValueSetCatalogEntryMsgList>.
+				   The XPath root is Cts2EditorServiceImpl.XPATH_VALUESETS_BASE */
 
-				// clear out the existing value sets ListGrid
-				i_valueSetsLayout.removeAll();
+				System.out.println(valueSets);
 
-				for (String oid : valueSetsMap.keySet()) {
-
-					// create the new value set ListGrid
-					ValueSetsListGrid vsListGrid = new ValueSetsListGrid(oid);
-					vsListGrid.populateData(valueSetsMap.get(oid));
-
-					// put the value set list grid and title into a vlayout.
-					ValueSetContainer valueSetContainer = new ValueSetContainer(oid, vsListGrid);
-
-					// put the value set list grid layout (container) into the
-					// main list grid container.
-					i_valueSetsLayout.addMember(valueSetContainer);
-					System.out.println("oid: " + oid + "\nXML:\n" + valueSetsMap.get(oid));
-				}
+//				// clear out the existing value sets ListGrid
+//				i_valueSetsLayout.removeAll();
+//
+//				for (String oid : valueSetsMap.keySet()) {
+//
+//					// create the new value set ListGrid
+//					ValueSetsListGrid vsListGrid = new ValueSetsListGrid(oid);
+//					vsListGrid.populateData(valueSetsMap.get(oid));
+//
+//					// put the value set list grid and title into a vlayout.
+//					ValueSetContainer valueSetContainer = new ValueSetContainer(oid, vsListGrid);
+//
+//					// put the value set list grid layout (container) into the
+//					// main list grid container.
+//					i_valueSetsLayout.addMember(valueSetContainer);
+//					System.out.println("oid: " + oid + "\nXML:\n" + valueSetsMap.get(oid));
+//				}
 			}
 
 			@Override

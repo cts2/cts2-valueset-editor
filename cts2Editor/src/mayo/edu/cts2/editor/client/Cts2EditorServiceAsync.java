@@ -11,9 +11,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 public interface Cts2EditorServiceAsync {
 	void getValueSet(String oid, AsyncCallback<String> async);
 
-	void getValueSets(List<String> oids, AsyncCallback<Map<String, String>> async);
+	void getValueSets(List<String> oids, AsyncCallback<String> async);
 
 	void getResolvedValueSet(String oid, AsyncCallback<String> async);
-
-	void getResolvedValueSets(List<String> oids, AsyncCallback<Map<String, String>> async);
 }

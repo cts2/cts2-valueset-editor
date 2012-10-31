@@ -14,10 +14,8 @@ public interface Cts2EditorService extends RemoteService {
 	String getValueSet(String oid)
 	  throws IllegalArgumentException;
 
-	Map<String, String> getValueSets(List<String> oids)
+	String getValueSets(List<String> oids)
 	  throws IllegalArgumentException;
 
 	String getResolvedValueSet(String oid) throws IllegalArgumentException;
-
-	Map<String, String> getResolvedValueSets(List<String> oids) throws IllegalArgumentException;
 }
