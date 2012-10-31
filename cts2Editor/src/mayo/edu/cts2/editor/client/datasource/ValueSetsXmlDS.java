@@ -3,9 +3,9 @@ package mayo.edu.cts2.editor.client.datasource;
 import java.util.LinkedHashMap;
 import java.util.logging.Logger;
 
-import com.smartgwt.client.data.Criteria;
-import com.smartgwt.client.data.DSCallback;
 import com.smartgwt.client.data.DataSource;
+import com.smartgwt.client.data.Record;
+import com.smartgwt.client.data.XMLTools;
 import com.smartgwt.client.data.XmlNamespaces;
 import com.smartgwt.client.data.fields.DataSourceTextField;
 import com.smartgwt.client.types.DSDataFormat;
@@ -17,7 +17,7 @@ public class ValueSetsXmlDS extends DataSource {
 
 	private static final Logger logger = Logger.getLogger(ValueSetsXmlDS.class.getName());
 
-	private static final String RECORD_X_PATH = "/cts2:ValueSetCatalogEntryDirectory/cts2:entry";
+	private static final String RECORD_X_PATH = "/cts2:ValueSetCatalogEntryMsg/cts2:valueSetCatalogEntry";
 
 	private static final String X_PATH_RESOURCE_ROOT = "/cts2:ValueSetCatalogEntryDirectory/core:heading/core:resourceRoot";
 	private static final String X_PATH_RESOURCE_SYNOPSIS = "core:resourceSynopsis/core:value";
@@ -25,14 +25,6 @@ public class ValueSetsXmlDS extends DataSource {
 	private static ValueSetsXmlDS instance = null;
 	private final XmlNamespaces i_xmlNamespaces;
 	private final LinkedHashMap<String, String> i_nsMap;
-
-	// public static ValueSetsXmlDS getInstance(String oid) {
-	// // if (instance == null) {
-	// instance = new ValueSetsXmlDS("ValueSetsXmlDS");
-	// // }
-	//
-	// return instance;
-	// }
 
 	public ValueSetsXmlDS(String oid) {
 
@@ -76,33 +68,9 @@ public class ValueSetsXmlDS extends DataSource {
 		return nsMap;
 	}
 
-	@Override
-	public void fetchData(Criteria criteria, final DSCallback callback) {
-
-		// Cts2EditorServiceAsync service = GWT.create(Cts2EditorService.class);
-		// service.getValueSets(null, new AsyncCallback<String>() {
-		//
-		// @Override
-		// public void onSuccess(List<String> valueSetsXml) {
-		// Object results = XMLTools.selectNodes(result, RECORD_X_PATH,
-		// i_nsMap);
-		// Record[] fetchRecords = recordsFromXML(results);
-		// setTestData(fetchRecords);
-		//
-		// // use the callback to let the widget know we got the data...
-		// // callback.execute(null, null, null);
-		// }
-		//
-		// @Override
-		// public void onFailure(Throwable caught) {
-		// setTestData((new Record[0]));
-		// // DSResponse myresp = new DSResponse();
-		// // myresp.setAttribute("reason", caught.getMessage());
-		// // use the callback to let the widget know we got the error
-		// // message.
-		// // callback.execute(myresp, null, null);
-		// }
-		// });
-
+	public void setData(String xmlData) {
+		Object results = XMLTools.selectNodes(xmlData, RECORD_X_PATH, i_nsMap);
+		Record[] fetchRecords = recordsFromXML(results);
+		setTestData(fetchRecords);
 	}
 }

@@ -1,8 +1,9 @@
 package mayo.edu.cts2.editor.client;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
 
+import mayo.edu.cts2.editor.client.widgets.ValueSetContainer;
 import mayo.edu.cts2.editor.client.widgets.ValueSetsLayout;
 import mayo.edu.cts2.editor.client.widgets.ValueSetsListGrid;
 
@@ -22,7 +23,6 @@ public class Cts2Editor implements EntryPoint {
 
 	private VLayout i_mainLayout;
 	private ValueSetsLayout i_valueSetsLayout;
-	private ValueSetsListGrid i_valueSetsListGrid;
 
 	/**
 	 * This is the entry point method.
@@ -38,7 +38,6 @@ public class Cts2Editor implements EntryPoint {
 			public void onClick(ClickEvent event) {
 				getValueSets();
 			}
-
 		});
 
 		i_valueSetsLayout = new ValueSetsLayout();
@@ -49,7 +48,7 @@ public class Cts2Editor implements EntryPoint {
 		i_mainLayout.setMargin(15);
 
 		i_mainLayout.addMember(testButton);
-		i_mainLayout.addMember(i_valueSetsListGrid);
+		i_mainLayout.addMember(i_valueSetsLayout);
 
 		// Draw the Layout - main layout
 		RootLayoutPanel.get().add(i_mainLayout);
@@ -63,26 +62,34 @@ public class Cts2Editor implements EntryPoint {
 		final ArrayList<String> oids = new ArrayList<String>();
 		oids.add("2.16.840.1.113883.3.464.0003.1021");
 		oids.add("2.16.840.1.113883.3.464.0003.1017");
+		oids.add("2.16.840.1.113883.3.464.0001.231");
 
-		service.getValueSets(oids, new AsyncCallback<List<String>>() {
+		service.getValueSets(oids, new AsyncCallback<Map<String, String>>() {
 
 			@Override
-			public void onSuccess(List<String> ValueSetsXml) {
+			public void onSuccess(Map<String, String> valueSetsMap) {
 
-				// clear out the value set layout.
+				// clear out the existing value sets ListGrid
 				i_valueSetsLayout.removeAll();
 
-				for (int i = 0; i < oids.size(); i++) {
+				for (String oid : valueSetsMap.keySet()) {
 
-					// create and add the new valueset listgrid.
-					ValueSetsListGrid vsListGrid = new ValueSetsListGrid(oids.get(i), "xml string");
-					i_valueSetsLayout.addMember(vsListGrid);
+					// create the new value set ListGrid
+					ValueSetsListGrid vsListGrid = new ValueSetsListGrid(oid);
+					vsListGrid.populateData(valueSetsMap.get(oid));
+
+					// put the value set list grid and title into a vlayout.
+					ValueSetContainer valueSetContainer = new ValueSetContainer(oid, vsListGrid);
+
+					// put the value set list grid layout (container) into the
+					// main list grid container.
+					i_valueSetsLayout.addMember(valueSetContainer);
+					System.out.println("oid: " + oid + "\nXML:\n" + valueSetsMap.get(oid));
 				}
 			}
 
 			@Override
 			public void onFailure(Throwable caught) {
-				// TODO Auto-generated method stub
 
 			}
 		});

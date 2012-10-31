@@ -1,6 +1,7 @@
 package mayo.edu.cts2.editor.client;
 
 import java.util.List;
+import java.util.Map;
 
 import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
@@ -10,6 +11,10 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
  */
 @RemoteServiceRelativePath("cts2Editor")
 public interface Cts2EditorService extends RemoteService {
-	List<String> getValueSets(List<String> oids)
-			throws IllegalArgumentException;
+	String getValueSet(String oid)
+	  throws IllegalArgumentException;
+
+	Map<String, String> getValueSets(List<String> oids)
+	  throws IllegalArgumentException;
+
 }
