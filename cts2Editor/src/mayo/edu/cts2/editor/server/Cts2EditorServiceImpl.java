@@ -1,21 +1,13 @@
 package mayo.edu.cts2.editor.server;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Logger;
 
-import com.sun.org.apache.xml.internal.serialize.OutputFormat;
-import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
 import mayo.edu.cts2.editor.client.Cts2EditorService;
 
 import mayo.edu.cts2.editor.server.rest.Cts2Client;
 import org.jboss.resteasy.client.ProxyFactory;
 import org.jboss.resteasy.util.Base64;
-
-import javax.xml.transform.Result;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
 
 /**
  * The server side implementation of the RPC service.
@@ -35,13 +27,16 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet
 
 	private final int MAX_RECORDS = 1000;
 
+	private Cts2Client client;
+
+	public Cts2EditorServiceImpl() {
+		super();
+		client = ProxyFactory.create(Cts2Client.class, getCts2ValueSetRestUrl());
+	}
+
 	@Override
 	public String getValueSet(String oid) throws IllegalArgumentException {
-		String authHeader  = "Basic " + Base64.encodeBytes((getCts2ValueSetRestUsername() + ":" + getCts2ValueSetRestPassword()).getBytes());
-		Cts2Client client = ProxyFactory.create(Cts2Client.class, getCts2ValueSetRestUrl());
-		String xmlResponse = client.getValueSet(authHeader, oid);
-
-		return xmlResponse;
+		return client.getValueSet(getAuthorizationHeader(), oid);
 	}
 
 	@Override
@@ -51,11 +46,8 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet
 	public String getValueSets(List<String> oids) throws IllegalArgumentException {
 		StringBuilder sb = new StringBuilder(XML_HEADER + XML_ROOT_START);
 
-		String authHeader  = "Basic " + Base64.encodeBytes(
-		  (getCts2ValueSetRestUsername() + ":" + getCts2ValueSetRestPassword()).getBytes());
-		Cts2Client client = ProxyFactory.create(Cts2Client.class, getCts2ValueSetRestUrl());
 		for (String oid: oids) {
-			String xmlResponse = client.getValueSet(authHeader, oid);
+			String xmlResponse = client.getValueSet(getAuthorizationHeader(), oid);
 			int end = xmlResponse.indexOf(XML_HEADER) + XML_HEADER.length();
 			xmlResponse = xmlResponse.substring(end);
 			sb.append(xmlResponse);
@@ -66,13 +58,23 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet
 	}
 
 	@Override
-	public String getResolvedValueSet(String oid) throws IllegalArgumentException {
-		String authHeader  = "Basic " + Base64.encodeBytes(
-		  (getCts2ValueSetRestUsername() + ":" + getCts2ValueSetRestPassword()).getBytes());
-		Cts2Client client = ProxyFactory.create(Cts2Client.class, getCts2ValueSetRestUrl());
-		String xmlResponse = client.getResolvedValueSet(authHeader, oid, "1", MAX_RECORDS);
+	public String getValueSetDefinition(String oid) throws IllegalArgumentException {
+		return client.getValueSetDefinition(getAuthorizationHeader(), oid, "1");
+	}
 
-		return xmlResponse;
+	@Override
+	public String getResolvedValueSet(String oid) throws IllegalArgumentException {
+		return client.getResolvedValueSet(getAuthorizationHeader(), oid, "1", MAX_RECORDS);
+	}
+
+	@Override
+	public String getDefinitons(String oid) throws IllegalArgumentException {
+		return client.getDefinitions(getAuthorizationHeader(), oid, MAX_RECORDS);
+	}
+
+	private String getAuthorizationHeader() {
+		return "Basic " + Base64.encodeBytes(
+		  (getCts2ValueSetRestUsername() + ":" + getCts2ValueSetRestPassword()).getBytes());
 	}
 
 }

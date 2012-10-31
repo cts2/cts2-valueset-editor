@@ -6,9 +6,7 @@ import mayo.edu.cts2.editor.server.Cts2EditorServiceImpl;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -63,15 +61,47 @@ public class Cts2ServiceImplTest {
 
 	@Test
 	public void testGetResolvedValueSet() {
-//		String oid = "2.16.840.1.113883.3.526.03.362";
-//
-//		try {
-//			ResolvedValueSet resolvedValueSet = new ResolvedValueSet(service.getResolvedValueSet(oid));
-//			assertEquals("84", resolvedValueSet.getNumberOfEntries());
-//		} catch (Exception e) {
-//			fail(e.getMessage());
-//		}
+		String oid = "2.16.840.1.113883.3.526.03.362";
 
+		try {
+			String resultXml = service.getResolvedValueSet(oid);
+			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder db = factory.newDocumentBuilder();
+			Document document = db.parse(new ByteArrayInputStream(resultXml.getBytes("UTF-8")));
+			NodeList nodes = document.getElementsByTagName("entry");
+			assertEquals(84, nodes.getLength());
+		} catch (Exception e) {
+			fail(e.getMessage());
+		}
+
+	}
+
+	@Test
+	public void testGetValueSetDefinition() {
+		String oid = "2.16.840.1.113883.3.526.03.362";
+
+		try {
+			String resultXml = service.getValueSetDefinition(oid);
+			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder db = factory.newDocumentBuilder();
+			Document document = db.parse(new ByteArrayInputStream(resultXml.getBytes("UTF-8")));
+			NodeList nodes = document.getElementsByTagName("entry");
+			assertEquals(3, nodes.getLength());
+		} catch (Exception e) {
+			fail(e.getMessage());
+		}
+	}
+
+	@Test
+	public void testGetDefinitions() {
+		String oid = "2.16.840.1.113883.3.526.03.362";
+
+		try {
+			String resultXml = service.getDefinitons(oid);
+			System.out.println(resultXml);
+		} catch (Exception e) {
+			fail(e.getMessage());
+		}
 	}
 
 }

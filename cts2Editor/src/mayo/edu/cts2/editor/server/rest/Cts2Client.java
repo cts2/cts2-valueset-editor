@@ -5,15 +5,16 @@ import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 public interface Cts2Client {
 
 	@GET
-	@Path("/valuesets?maxtoreturn={maxtoreturn}")
+	@Path("/valuesets")
 	@Produces(MediaType.APPLICATION_XML)
 	String getValueSets(@HeaderParam("Authorization") String auth,
-	                    @PathParam("maxtoreturn") int maxRecordsToReturn);
+	                    @QueryParam("maxtoreturn") int maxRecordsToReturn);
 
 	@GET
 	@Path("/valueset/{oid}")
@@ -22,11 +23,11 @@ public interface Cts2Client {
 	                   @PathParam("oid") String oid);
 
 	@GET
-	@Path("/valueset/{oid}/definitions?maxtoreturn={maxtoreturn}")
+	@Path("/valueset/{oid}/definitions")
 	@Produces(MediaType.APPLICATION_XML)
 	String getDefinitions(@HeaderParam("Authorization") String auth,
 	                      @PathParam("oid") String oid,
-	                      @PathParam("maxtoreturn") int maxRecordsToReturn);
+	                      @QueryParam("maxtoreturn") int maxRecordsToReturn);
 
 	@GET
 	@Path("/valueset/{oid}/definition/{version}")
@@ -36,10 +37,10 @@ public interface Cts2Client {
 	                             @PathParam("version") String version);
 
 	@GET
-	@Path("/valueset/{oid}/definition/{version}/resolution?maxtoreturn={maxtoreturn}")
+	@Path("/valueset/{oid}/definition/{version}/resolution")
 	@Produces(MediaType.APPLICATION_XML)
 	String getResolvedValueSet(@HeaderParam("Authorization") String auth,
 	                           @PathParam("oid") String oid,
 	                           @PathParam("version") String version,
-	                           @PathParam("maxtoreturn") int maxRecordsToReturn);
+	                           @QueryParam("maxtoreturn") int maxRecordsToReturn);
 }

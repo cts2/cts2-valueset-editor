@@ -14,4 +14,10 @@ public interface Cts2EditorServiceAsync {
 	void getValueSets(List<String> oids, AsyncCallback<String> async);
 
 	void getResolvedValueSet(String oid, AsyncCallback<String> async);
+
+	void getValueSetDefinition(String oid, AsyncCallback<String> async)
+	  ;
+
+	void getDefinitons(String oid, AsyncCallback<String> async)
+	  ;
 }
