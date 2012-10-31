@@ -21,20 +21,18 @@ import com.smartgwt.client.widgets.layout.VLayout;
 
 public class ValueSetsListGrid extends ListGrid {
 
-	private static final int HEIGHT = 200;
-
 	private static final String EMPTY_MESSAGE = "No value sets to display.";
 
 	private final ValueSetsXmlDS i_valueSetsXmlDS;
 	private String i_xmlData;
 
-	public ValueSetsListGrid(String oid) {
+	public ValueSetsListGrid() {
 		super();
 
-		i_valueSetsXmlDS = new ValueSetsXmlDS(oid);
+		i_valueSetsXmlDS = new ValueSetsXmlDS("ValueSetsXmlDS");
 
 		setWidth100();
-		setHeight(HEIGHT);
+		setHeight100();
 		setShowAllRecords(true);
 		setWrapCells(false);
 		setDataSource(i_valueSetsXmlDS);

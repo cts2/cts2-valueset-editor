@@ -14,9 +14,9 @@ import com.smartgwt.client.widgets.layout.VLayout;
  */
 public class ValueSetContainer extends VLayout {
 
-	private static final int HEIGHT = 250;
+	private static final int HEIGHT = 350;
 	private static final int TITLE_HEIGHT = 30;
-	private static final String TITLE = "Value Sets for Group ";
+	private static final String TITLE = "Value Sets";
 
 	private static final int BUTTON_LAYOUT_HEIGHT = 25;
 	private static final String BUTTON_ADD_TITLE = "Add...";
@@ -28,7 +28,7 @@ public class ValueSetContainer extends VLayout {
 	private final ValueSetsListGrid i_valueSetsListGrid;
 	private IButton i_addButton;
 
-	public ValueSetContainer(String title, ValueSetsListGrid valueSetListGrid) {
+	public ValueSetContainer(ValueSetsListGrid valueSetListGrid) {
 		super();
 
 		setWidth100();
@@ -36,7 +36,7 @@ public class ValueSetContainer extends VLayout {
 		setMargin(15);
 		setBorder("2px solid " + BACKGROUND_COLOR_BORDER);
 
-		i_title = createTitle(title);
+		i_title = createTitle();
 		i_valueSetsListGrid = valueSetListGrid;
 		HLayout buttonLayout = createButtonLayout();
 
@@ -48,6 +48,7 @@ public class ValueSetContainer extends VLayout {
 	private HLayout createButtonLayout() {
 		HLayout layout = new HLayout();
 		layout.setWidth100();
+		layout.setMargin(10);
 		layout.setHeight(BUTTON_LAYOUT_HEIGHT);
 		layout.setAlign(Alignment.CENTER);
 
@@ -67,11 +68,10 @@ public class ValueSetContainer extends VLayout {
 	/**
 	 * Create the Label that contains the title
 	 * 
-	 * @param title
 	 * @return
 	 */
-	private Label createTitle(String titleOid) {
-		Label titleLabel = new Label("<b>" + TITLE + titleOid + "</b>");
+	private Label createTitle() {
+		Label titleLabel = new Label("<b>" + TITLE + "</b>");
 		titleLabel.setWidth100();
 		titleLabel.setHeight(TITLE_HEIGHT);
 		titleLabel.setBackgroundColor(BACKGROUND_COLOR_TITLE);

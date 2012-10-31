@@ -11,5 +11,6 @@
 	<classpathentry kind="lib" path="lib/httpcore-4.1.2.jar"/>
 	<classpathentry kind="lib" path="lib/jaxrs-api-2.3.4.Final.jar"/>
 	<classpathentry kind="lib" path="lib/resteasy-jaxrs-2.3.4.Final.jar"/>
+	<classpathentry kind="lib" path="lib/junit-4.10.jar"/>
 	<classpathentry kind="output" path="war/WEB-INF/classes"/>
 </classpath>

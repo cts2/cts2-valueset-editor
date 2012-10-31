@@ -17,7 +17,7 @@ public class ValueSetsXmlDS extends DataSource {
 
 	private static final Logger logger = Logger.getLogger(ValueSetsXmlDS.class.getName());
 
-	private static final String RECORD_X_PATH = "/cts2:ValueSetCatalogEntryMsg/cts2:valueSetCatalogEntry";
+	private static final String RECORD_X_PATH = "/ValueSetCatalogEntryMsgList/cts2:ValueSetCatalogEntryMsg/cts2:valueSetCatalogEntry";
 
 	private static final String X_PATH_RESOURCE_ROOT = "/cts2:ValueSetCatalogEntryDirectory/core:heading/core:resourceRoot";
 	private static final String X_PATH_RESOURCE_SYNOPSIS = "core:resourceSynopsis/core:value";
@@ -44,6 +44,8 @@ public class ValueSetsXmlDS extends DataSource {
 		setRecordXPath(RECORD_X_PATH);
 
 		DataSourceTextField valueSetNamefField = new DataSourceTextField("valueSetName", "Value Set Name");
+		valueSetNamefField.setPrimaryKey(true);
+
 		DataSourceTextField aboutField = new DataSourceTextField("about", "About");
 		DataSourceTextField formalNameField = new DataSourceTextField("formalName", "Formal Name");
 		DataSourceTextField resourceSynopsisValueField = new DataSourceTextField("value", "Resource Synopsis");

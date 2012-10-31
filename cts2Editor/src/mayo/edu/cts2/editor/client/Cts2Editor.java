@@ -1,8 +1,8 @@
 package mayo.edu.cts2.editor.client;
 
 import java.util.ArrayList;
-import java.util.Map;
 
+import mayo.edu.cts2.editor.client.utils.ModalWindow;
 import mayo.edu.cts2.editor.client.widgets.ValueSetContainer;
 import mayo.edu.cts2.editor.client.widgets.ValueSetsLayout;
 import mayo.edu.cts2.editor.client.widgets.ValueSetsListGrid;
@@ -11,6 +11,7 @@ import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.RootLayoutPanel;
+import com.smartgwt.client.util.SC;
 import com.smartgwt.client.widgets.IButton;
 import com.smartgwt.client.widgets.events.ClickEvent;
 import com.smartgwt.client.widgets.events.ClickHandler;
@@ -20,6 +21,8 @@ import com.smartgwt.client.widgets.layout.VLayout;
  * Entry point classes define <code>onModuleLoad()</code>.
  */
 public class Cts2Editor implements EntryPoint {
+
+	private ModalWindow i_busyIndicator;
 
 	private VLayout i_mainLayout;
 	private ValueSetsLayout i_valueSetsLayout;
@@ -64,38 +67,53 @@ public class Cts2Editor implements EntryPoint {
 		oids.add("2.16.840.1.113883.3.464.0003.1017");
 		oids.add("2.16.840.1.113883.3.464.0001.231");
 
+		// Set the busy indicator to show while executing the
+		// phenotype.
+
+		// Need to send in the overall layout so the whole
+		// screen is greyed out.
+		i_busyIndicator = new ModalWindow(i_mainLayout, 40, "#dedede");
+		i_busyIndicator.setLoadingIcon("loading_circle.gif");
+		i_busyIndicator.show("Retrieving ValueSets...", true);
+
 		service.getValueSets(oids, new AsyncCallback<String>() {
 
 			@Override
 			public void onSuccess(String valueSets) {
-				/* NOTE: valueSets is an xml string of <ValueSetCatalogEntryMsg>s wrapped
-							in the <ValueSetCatalogEntryMsgList>.
-				   The XPath root is Cts2EditorServiceImpl.XPATH_VALUESETS_BASE */
+				/*
+				 * NOTE: valueSets is an xml string of
+				 * <ValueSetCatalogEntryMsg>s wrapped in the
+				 * <ValueSetCatalogEntryMsgList>. The XPath root is
+				 * Cts2EditorServiceImpl.XPATH_VALUESETS_BASE
+				 */
 
-				System.out.println(valueSets);
+				// System.out.println(valueSets);
 
-//				// clear out the existing value sets ListGrid
-//				i_valueSetsLayout.removeAll();
-//
-//				for (String oid : valueSetsMap.keySet()) {
-//
-//					// create the new value set ListGrid
-//					ValueSetsListGrid vsListGrid = new ValueSetsListGrid(oid);
-//					vsListGrid.populateData(valueSetsMap.get(oid));
-//
-//					// put the value set list grid and title into a vlayout.
-//					ValueSetContainer valueSetContainer = new ValueSetContainer(oid, vsListGrid);
-//
-//					// put the value set list grid layout (container) into the
-//					// main list grid container.
-//					i_valueSetsLayout.addMember(valueSetContainer);
-//					System.out.println("oid: " + oid + "\nXML:\n" + valueSetsMap.get(oid));
-//				}
+				// clear out the existing value sets ListGrid
+				i_valueSetsLayout.removeAll();
+
+				// create the new value set ListGrid
+				ValueSetsListGrid vsListGrid = new ValueSetsListGrid();
+				vsListGrid.populateData(valueSets);
+
+				// put the value set list grid and title into a vlayout.
+				ValueSetContainer valueSetContainer = new ValueSetContainer(vsListGrid);
+
+				// put the value set list grid layout (container) into the
+				// main list grid container.
+				i_valueSetsLayout.addMember(valueSetContainer);
+
+				// hide the progress panel.
+				i_busyIndicator.hide();
 			}
 
 			@Override
 			public void onFailure(Throwable caught) {
 
+				// hide the progress panel.
+				i_busyIndicator.hide();
+
+				SC.say("Error retrieving ValueSets.");
 			}
 		});
 
