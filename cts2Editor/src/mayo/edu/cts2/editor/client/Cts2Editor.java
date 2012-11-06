@@ -63,6 +63,8 @@ public class Cts2Editor implements EntryPoint {
 
 		// Sample list of oids for testing the call
 		final ArrayList<String> oids = new ArrayList<String>();
+		oids.add("2.16.840.1.114222.4.11.837");
+		oids.add("2.16.840.1.113883.3.221.5");
 		oids.add("2.16.840.1.113883.3.464.0003.1021");
 		oids.add("2.16.840.1.113883.3.464.0003.1017");
 		oids.add("2.16.840.1.113883.3.464.0001.231");
@@ -87,7 +89,7 @@ public class Cts2Editor implements EntryPoint {
 				 * Cts2EditorServiceImpl.XPATH_VALUESETS_BASE
 				 */
 
-				// System.out.println(valueSets);
+				System.out.println(valueSets);
 
 				// clear out the existing value sets ListGrid
 				i_valueSetsLayout.removeAll();
@@ -113,7 +115,7 @@ public class Cts2Editor implements EntryPoint {
 				// hide the progress panel.
 				i_busyIndicator.hide();
 
-				SC.say("Error retrieving ValueSets.");
+				SC.say("Error retrieving ValueSets.\n" + caught.getMessage());
 			}
 		});
 

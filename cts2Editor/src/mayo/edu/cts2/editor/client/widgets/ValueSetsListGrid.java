@@ -1,22 +1,17 @@
 package mayo.edu.cts2.editor.client.widgets;
 
-import java.util.Date;
-
+import mayo.edu.cts2.editor.client.datasource.ValueSetItemXmlDS;
 import mayo.edu.cts2.editor.client.datasource.ValueSetsXmlDS;
 
+import com.smartgwt.client.data.DataSource;
 import com.smartgwt.client.data.SortSpecifier;
-import com.smartgwt.client.types.Alignment;
 import com.smartgwt.client.types.SelectionAppearance;
 import com.smartgwt.client.types.SelectionStyle;
 import com.smartgwt.client.types.SortDirection;
 import com.smartgwt.client.widgets.Canvas;
-import com.smartgwt.client.widgets.IButton;
-import com.smartgwt.client.widgets.events.ClickEvent;
-import com.smartgwt.client.widgets.events.ClickHandler;
 import com.smartgwt.client.widgets.grid.ListGrid;
 import com.smartgwt.client.widgets.grid.ListGridField;
 import com.smartgwt.client.widgets.grid.ListGridRecord;
-import com.smartgwt.client.widgets.layout.HLayout;
 import com.smartgwt.client.widgets.layout.VLayout;
 
 public class ValueSetsListGrid extends ListGrid {
@@ -29,7 +24,7 @@ public class ValueSetsListGrid extends ListGrid {
 	public ValueSetsListGrid() {
 		super();
 
-		i_valueSetsXmlDS = new ValueSetsXmlDS("ValueSetsXmlDS");
+		i_valueSetsXmlDS = ValueSetsXmlDS.getInstance();
 
 		setWidth100();
 		setHeight100();
@@ -59,12 +54,6 @@ public class ValueSetsListGrid extends ListGrid {
 		setSelectionAppearance(SelectionAppearance.ROW_STYLE);
 		setSelectionType(SelectionStyle.SINGLE);
 
-		// When hover is on the arrow to open the sub list grid has a hover and
-		// is blank...
-		// setCanHover(true);
-		// setShowHover(true);
-		// setShowHoverComponents(true);
-
 		// set the initial sort
 		SortSpecifier[] sortspec = new SortSpecifier[1];
 		sortspec[0] = new SortSpecifier("formalName", SortDirection.ASCENDING);
@@ -72,81 +61,36 @@ public class ValueSetsListGrid extends ListGrid {
 
 	}
 
+	/**
+	 * Get the related datasource to show the inner grid in.
+	 */
+	@Override
+	public DataSource getRelatedDataSource(ListGridRecord record) {
+
+		String oid = record.getAttribute("valueSetName");
+
+		// create a unique ID for the datasource id.
+		oid = oid.trim().replace('.', '_');
+		oid = "ValueSetItemXmlDS" + oid;
+
+		return ValueSetItemXmlDS.getInstance(oid);
+	}
 	@Override
 	/**
 	 * Create the ListGrid that has the entities for this parent record.
 	 */
 	protected Canvas getExpansionComponent(final ListGridRecord record) {
 
-		final ListGrid grid = this;
+		System.out.println("getExpansionComponent called");
 
 		VLayout layout = new VLayout(5);
 		layout.setPadding(5);
 
-		String vsId = record.getAttribute("valueSetName");
-		String uniqueId = "valueSetIdentiers" + new Date().getTime();
+		DataSource childDatasource = getRelatedDataSource(record);
+		ValueSetEntitiesLayout valueSetEntitiesLayout = new ValueSetEntitiesLayout(record, childDatasource, this);
 
-		final ValueSetItemsListGrid valueSetItemsListGrid = new ValueSetItemsListGrid(uniqueId, vsId);
-		layout.addMember(valueSetItemsListGrid);
-
-		HLayout buttonLayout = new HLayout(10);
-		buttonLayout.setAlign(Alignment.CENTER);
-
-		IButton saveButton = new IButton("Save");
-		saveButton.setTop(250);
-		saveButton.addClickHandler(new ClickHandler() {
-			@Override
-			public void onClick(ClickEvent event) {
-				valueSetItemsListGrid.saveAllEdits();
-			}
-		});
-		buttonLayout.addMember(saveButton);
-
-		IButton discardButton = new IButton("Discard");
-		discardButton.addClickHandler(new ClickHandler() {
-			@Override
-			public void onClick(ClickEvent event) {
-				valueSetItemsListGrid.discardAllEdits();
-			}
-		});
-		buttonLayout.addMember(discardButton);
-
-		IButton closeButton = new IButton("Close");
-		closeButton.addClickHandler(new ClickHandler() {
-			@Override
-			public void onClick(ClickEvent event) {
-				grid.collapseRecord(record);
-			}
-		});
-
-		buttonLayout.addMember(closeButton);
-		layout.addMember(buttonLayout);
-		return layout;
+		return valueSetEntitiesLayout;
 	}
-
-	// @Override
-	// protected Canvas getCellHoverComponent(Record record, Integer rowNum,
-	// Integer colNum) {
-	// // only show a custom DetailViewer for the description column only
-	// if (colNum == 1) {
-	//
-	// DetailViewer detailViewer = new DetailViewer();
-	// detailViewer.setWidth(400);
-	//
-	// // Define the fields that we want to display in the details popup.
-	// // These fields are populated from the record of the selected
-	// // ValueSets.
-	// DetailViewerField descripitonField = new DetailViewerField("value",
-	// "Description");
-	// DetailViewerField formalNameField = new DetailViewerField("formalName",
-	// "Formal Name");
-	// detailViewer.setFields(formalNameField, descripitonField);
-	//
-	// detailViewer.setData(new Record[]{record});
-	// return detailViewer;
-	// }
-	// return null;
-	// }
 
 	/**
 	 * Call the search to get the matching data.
@@ -156,8 +100,8 @@ public class ValueSetsListGrid extends ListGrid {
 	public void populateData(String xmlData) {
 
 		i_xmlData = xmlData;
-
 		i_valueSetsXmlDS.setData(i_xmlData);
+
 		fetchData();
 		redraw();
 	}

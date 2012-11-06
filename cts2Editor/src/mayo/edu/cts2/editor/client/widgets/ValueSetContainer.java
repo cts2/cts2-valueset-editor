@@ -14,7 +14,7 @@ import com.smartgwt.client.widgets.layout.VLayout;
  */
 public class ValueSetContainer extends VLayout {
 
-	private static final int HEIGHT = 350;
+	private static final int HEIGHT = 450;
 	private static final int TITLE_HEIGHT = 30;
 	private static final String TITLE = "Value Sets";
 
