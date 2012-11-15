@@ -104,4 +104,15 @@ public class Cts2ServiceImplTest {
 		}
 	}
 
+	@Test
+	public void testGetMatchingValueSets() {
+		String term = "heart";
+		try {
+			String resultXml = service.getMatchingValueSets(term);
+			System.out.println("testGetMatchingValueSets:\n" + resultXml);
+		} catch (Exception e) {
+			fail(e.getMessage());
+		}
+	}
+
 }

@@ -70,6 +70,11 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 		return client.getDefinitions(getAuthorizationHeader(), oid, MAX_RECORDS);
 	}
 
+	@Override
+	public String getMatchingValueSets(String matchValue) throws IllegalArgumentException {
+		return client.getValueSets(getAuthorizationHeader(), MAX_RECORDS, matchValue);
+	}
+
 	private String getAuthorizationHeader() {
 		return "Basic "
 		        + Base64.encodeBytes((getCts2ValueSetRestUsername() + ":" + getCts2ValueSetRestPassword()).getBytes());

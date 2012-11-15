@@ -25,4 +25,7 @@ public interface Cts2EditorService extends RemoteService {
 
 	String getDefinitons(String oid)
 		throws IllegalArgumentException;
+
+	String getMatchingValueSets(String matchValue)
+		throws IllegalArgumentException;
 }

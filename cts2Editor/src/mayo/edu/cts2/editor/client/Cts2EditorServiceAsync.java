@@ -20,4 +20,7 @@ public interface Cts2EditorServiceAsync {
 
 	void getDefinitons(String oid, AsyncCallback<String> async)
 	  ;
+
+	void getMatchingValueSets(String matchValue, AsyncCallback<String> async)
+	  ;
 }

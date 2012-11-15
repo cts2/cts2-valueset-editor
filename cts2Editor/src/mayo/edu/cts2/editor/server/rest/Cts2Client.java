@@ -17,6 +17,13 @@ public interface Cts2Client {
 	                    @QueryParam("maxtoreturn") int maxRecordsToReturn);
 
 	@GET
+	@Path("/valuesets")
+	@Produces(MediaType.APPLICATION_XML)
+	String getValueSets(@HeaderParam("Authorization") String auth,
+	                       @QueryParam("maxtoreturn") int maxRecordsToReturn,
+	                       @QueryParam("matchvalue") String matchValue);
+
+	@GET
 	@Path("/valueset/{oid}")
 	@Produces(MediaType.APPLICATION_XML)
 	String getValueSet(@HeaderParam("Authorization") String auth,
