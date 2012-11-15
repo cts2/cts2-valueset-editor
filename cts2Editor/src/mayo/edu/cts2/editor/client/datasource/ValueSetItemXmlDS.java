@@ -112,7 +112,7 @@ public class ValueSetItemXmlDS extends DataSource {
 
 				@Override
 				public void onSuccess(String result) {
-					System.out.print(result);
+					// System.out.print(result);
 
 					// set this to true so we don't retrieve the data again.
 					i_getDataCalled = true;

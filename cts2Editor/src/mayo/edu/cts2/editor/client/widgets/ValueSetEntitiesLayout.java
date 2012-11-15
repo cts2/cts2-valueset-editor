@@ -1,5 +1,8 @@
 package mayo.edu.cts2.editor.client.widgets;
 
+import mayo.edu.cts2.editor.client.widgets.search.SearchValueSetItemsListGrid;
+import mayo.edu.cts2.editor.client.widgets.search.SearchWindow;
+
 import com.smartgwt.client.data.Criteria;
 import com.smartgwt.client.data.DataSource;
 import com.smartgwt.client.types.Alignment;
@@ -55,7 +58,11 @@ public class ValueSetEntitiesLayout extends VLayout {
 			@Override
 			public void onClick(ClickEvent event) {
 				// valueSetItemsListGrid.saveAllEdits();
-				SC.say("Open window to search for entities and allow the user to add.");
+				// SC.say("Open window to search for entities and allow the user to add.");
+
+				String message = "Search for entities.  Select the entities by checking the checkbox.";
+				SearchWindow searchWindow = new SearchWindow(new SearchValueSetItemsListGrid(), message);
+				searchWindow.show();
 
 				// ... after the addition, set boolean
 				i_additionsMade = true;
@@ -88,7 +95,7 @@ public class ValueSetEntitiesLayout extends VLayout {
 
 				if (i_additionsMade || i_removalsMade) {
 
-					String message = "Changes to the value set have been made.  Closing will discard your current changes for this value set.\n\nDo you want to discoard your changes?";
+					String message = "Changes to the value set have been made.  Closing will discard your current changes for this value set.\n\nDo you want to discard your changes?";
 					String title = "Changes Made";
 					SC.ask(title, message, new BooleanCallback() {
 
@@ -123,13 +130,25 @@ public class ValueSetEntitiesLayout extends VLayout {
 			@Override
 			public void onClick(ClickEvent event) {
 
-				valueSetItemsListGrid.removeSelectedData();
+				// valueSetItemsListGrid.removeSelectedData();
 
 				i_removalsMade = true;
 
 				// enable these buttons.
 				saveButton.setDisabled(false);
 				saveAsButton.setDisabled(false);
+
+				// *************
+
+				ListGridRecord[] records = valueSetItemsListGrid.getSelectedRecords();
+				for (ListGridRecord selectedRecord : records) {
+					selectedRecord.setAttribute(ValueSetItemsListGrid.ID_HIDDEN_ACTION,
+					        ValueSetItemsListGrid.ACTION_DELETE);
+					valueSetItemsListGrid.updateData(selectedRecord);
+				}
+				// refresh the icons in Action column
+				valueSetItemsListGrid.invalidateRecordComponents();
+
 			}
 		});
 
