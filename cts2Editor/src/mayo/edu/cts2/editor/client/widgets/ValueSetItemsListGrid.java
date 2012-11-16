@@ -88,6 +88,9 @@ public class ValueSetItemsListGrid extends ListGrid {
 	}
 
 	@Override
+	/**
+	 * Update the Action field
+	 */
 	protected Canvas createRecordComponent(final ListGridRecord record, Integer colNum) {
 
 		String fieldName = this.getFieldName(colNum);
@@ -166,8 +169,6 @@ public class ValueSetItemsListGrid extends ListGrid {
 
 	@Override
 	public void fetchRelatedData(Record record, DataSource dataSource) {
-		System.out.println("fetchRelatedData called");
-
 		Criteria criteria = new Criteria();
 		String oid = record.getAttribute("valueSetName");
 
@@ -186,7 +187,6 @@ public class ValueSetItemsListGrid extends ListGrid {
 
 	@Override
 	public void removeSelectedData() {
-		// TODO Auto-generated method stub
 		super.removeSelectedData();
 	}
 
@@ -199,7 +199,7 @@ public class ValueSetItemsListGrid extends ListGrid {
 	@Override
 	public boolean saveAllEdits() {
 
-		System.out.println("saveAllEdits called...");
+		// System.out.println("saveAllEdits called...");
 
 		return super.saveAllEdits();
 	}

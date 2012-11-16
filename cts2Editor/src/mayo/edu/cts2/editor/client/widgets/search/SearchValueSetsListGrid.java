@@ -1,10 +1,15 @@
 package mayo.edu.cts2.editor.client.widgets.search;
 
 import java.util.ArrayList;
-import java.util.Map;
 
+import mayo.edu.cts2.editor.client.Cts2Editor;
 import mayo.edu.cts2.editor.client.datasource.ValueSetsSearchXmlDS;
+import mayo.edu.cts2.editor.client.events.ValueSetsReceivedEvent;
 
+import com.smartgwt.client.data.Criteria;
+import com.smartgwt.client.data.DSCallback;
+import com.smartgwt.client.data.DSRequest;
+import com.smartgwt.client.data.DSResponse;
 import com.smartgwt.client.data.Record;
 import com.smartgwt.client.data.SortSpecifier;
 import com.smartgwt.client.types.ListGridFieldType;
@@ -13,7 +18,6 @@ import com.smartgwt.client.types.SelectionStyle;
 import com.smartgwt.client.types.SortDirection;
 import com.smartgwt.client.widgets.Canvas;
 import com.smartgwt.client.widgets.grid.CellFormatter;
-import com.smartgwt.client.widgets.grid.ListGrid;
 import com.smartgwt.client.widgets.grid.ListGridField;
 import com.smartgwt.client.widgets.grid.ListGridRecord;
 import com.smartgwt.client.widgets.viewer.DetailViewer;
@@ -22,20 +26,7 @@ import com.smartgwt.client.widgets.viewer.DetailViewerField;
 /**
  * ListGrid for displaying search results for a value sets.
  */
-public class SearchValueSetsListGrid extends ListGrid {
-
-	private static final String EMPTY_MESSAGE = "No value sets to display.";
-	private static final String ERROR_MESSAGE = "Value sets service unavailable.";
-
-	public static final String ID_ADD = "add";
-	public static final String ID_FORMAL_NAME = "formalName";
-	public static final String ID_VALUE_SET_NAME = "valueSetName";
-	public static final String ID_DESCRIPTION = "value";
-
-	public static final String TITLE_ADD = "Add";
-	public static final String TITLE_FORMAL_NAME = "Formal Name";
-	public static final String TITLE_VALUE_SET_NAME = "Value Set Identifier";
-	public static final String TITLE_DESCRIPTION = "Description";
+public class SearchValueSetsListGrid extends SearchListGrid {
 
 	private final ValueSetsSearchXmlDS i_valueSetsSearchXmlDS;
 	private String i_searchString;
@@ -178,7 +169,35 @@ public class SearchValueSetsListGrid extends ListGrid {
 	 * 
 	 * @param searchText
 	 */
-	public void getData(String serviceName, String searchText, Map<String, String> filters) {
+	@Override
+	public void getData(String searchText) {
+
+		i_searchString = searchText;
+
+		Criteria criteria = new Criteria();
+		criteria.addCriteria("searchText", searchText);
+
+		i_valueSetsSearchXmlDS.fetchData(criteria, new DSCallback() {
+
+			@Override
+			public void execute(DSResponse response, Object rawData, DSRequest request) {
+
+				if ((response != null) && (response.getAttribute("reason") != null)) {
+					setEmptyMessage("<b><font color=\"red\">" + ERROR_MESSAGE + "</font></b>");
+				} else {
+					setEmptyMessage(EMPTY_MESSAGE);
+				}
+
+				setData(new ListGridRecord[0]);
+				fetchData();
+
+				redraw();
+
+				// let others know that the data has been retrieved.
+				Cts2Editor.EVENT_BUS.fireEvent(new ValueSetsReceivedEvent());
+			}
+		});
+
 		/*
 		 * if (!Cts2Viewer.s_showAll &&
 		 * Authentication.getInstance().getCredentials(serviceName) == null ||
@@ -212,6 +231,16 @@ public class SearchValueSetsListGrid extends ListGrid {
 		 * redraw(); // let others know that the data has been retrieved.
 		 * Cts2Viewer.EVENT_BUS.fireEvent(new ValueSetsReceivedEvent()); } }); }
 		 */
+	}
+
+	@Override
+	public void clearData() {
+
+		i_valueSetsSearchXmlDS.setTestData(new Record[0]);
+		setData(new ListGridRecord[0]);
+		fetchData();
+
+		redraw();
 	}
 
 	/**

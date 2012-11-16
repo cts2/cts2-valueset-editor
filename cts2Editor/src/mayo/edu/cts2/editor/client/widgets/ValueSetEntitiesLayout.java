@@ -34,16 +34,12 @@ public class ValueSetEntitiesLayout extends VLayout {
 		setPadding(5);
 
 		String oid = record.getAttribute("valueSetName");
-		System.out.println("OID = " + oid);
-
 		Criteria criteria = new Criteria();
 		criteria.setAttribute("oid", oid);
 
 		final ValueSetItemsListGrid valueSetItemsListGrid = new ValueSetItemsListGrid();
 
 		valueSetItemsListGrid.setDataSource(childDatasource);
-
-		// valueSetItemsListGrid.fetchRelatedData(record, childDatasource);
 		valueSetItemsListGrid.fetchData(criteria);
 
 		addMember(valueSetItemsListGrid);
@@ -57,8 +53,6 @@ public class ValueSetEntitiesLayout extends VLayout {
 		addButton.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
-				// valueSetItemsListGrid.saveAllEdits();
-				// SC.say("Open window to search for entities and allow the user to add.");
 
 				String message = "Search for entities.  Select the entities by checking the checkbox.";
 				SearchWindow searchWindow = new SearchWindow(new SearchValueSetItemsListGrid(), message);
@@ -130,15 +124,11 @@ public class ValueSetEntitiesLayout extends VLayout {
 			@Override
 			public void onClick(ClickEvent event) {
 
-				// valueSetItemsListGrid.removeSelectedData();
-
 				i_removalsMade = true;
 
 				// enable these buttons.
 				saveButton.setDisabled(false);
 				saveAsButton.setDisabled(false);
-
-				// *************
 
 				ListGridRecord[] records = valueSetItemsListGrid.getSelectedRecords();
 				for (ListGridRecord selectedRecord : records) {
@@ -146,9 +136,9 @@ public class ValueSetEntitiesLayout extends VLayout {
 					        ValueSetItemsListGrid.ACTION_DELETE);
 					valueSetItemsListGrid.updateData(selectedRecord);
 				}
+
 				// refresh the icons in Action column
 				valueSetItemsListGrid.invalidateRecordComponents();
-
 			}
 		});
 

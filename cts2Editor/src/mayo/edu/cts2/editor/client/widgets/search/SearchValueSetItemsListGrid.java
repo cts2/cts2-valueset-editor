@@ -3,7 +3,9 @@ package mayo.edu.cts2.editor.client.widgets.search;
 import java.util.ArrayList;
 import java.util.Map;
 
+import mayo.edu.cts2.editor.client.Cts2Editor;
 import mayo.edu.cts2.editor.client.datasource.ValueSetItemSearchXmlDS;
+import mayo.edu.cts2.editor.client.events.ValueSetsReceivedEvent;
 
 import com.smartgwt.client.data.Record;
 import com.smartgwt.client.data.SortSpecifier;
@@ -13,7 +15,6 @@ import com.smartgwt.client.types.SelectionStyle;
 import com.smartgwt.client.types.SortDirection;
 import com.smartgwt.client.widgets.Canvas;
 import com.smartgwt.client.widgets.grid.CellFormatter;
-import com.smartgwt.client.widgets.grid.ListGrid;
 import com.smartgwt.client.widgets.grid.ListGridField;
 import com.smartgwt.client.widgets.grid.ListGridRecord;
 import com.smartgwt.client.widgets.viewer.DetailViewer;
@@ -22,7 +23,7 @@ import com.smartgwt.client.widgets.viewer.DetailViewerField;
 /**
  * ListGrid for displaying search results for a entities.
  */
-public class SearchValueSetItemsListGrid extends ListGrid {
+public class SearchValueSetItemsListGrid extends SearchListGrid {
 
 	private static final String EMPTY_MESSAGE = "No entities to display.";
 	private static final String ERROR_MESSAGE = "Entity service unavailable.";
@@ -209,6 +210,9 @@ public class SearchValueSetItemsListGrid extends ListGrid {
 		 * redraw(); // let others know that the data has been retrieved.
 		 * Cts2Viewer.EVENT_BUS.fireEvent(new ValueSetsReceivedEvent()); } }); }
 		 */
+
+		// let others know that the data has been retrieved.
+		Cts2Editor.EVENT_BUS.fireEvent(new ValueSetsReceivedEvent());
 	}
 
 	/**
@@ -235,6 +239,20 @@ public class SearchValueSetItemsListGrid extends ListGrid {
 		}
 
 		return cellText;
+	}
+
+	@Override
+	public void getData(String searchText) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void clearData() {
+		setData(new ListGridRecord[0]);
+		fetchData();
+
+		redraw();
 	}
 
 }

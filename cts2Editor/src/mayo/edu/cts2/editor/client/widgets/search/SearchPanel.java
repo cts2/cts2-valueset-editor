@@ -20,9 +20,9 @@ public class SearchPanel extends HLayout {
 	private static final String SEARCH_HINT = "Enter Search Text";
 
 	private final DynamicForm i_searchForm;
-
 	private final TextItem i_searchTextItem;
 	private final IButton i_clearButton;
+	private String i_previousText = "";
 
 	public SearchPanel() {
 		super();
@@ -58,6 +58,25 @@ public class SearchPanel extends HLayout {
 	}
 	public String getSearchText() {
 		return i_searchTextItem.getValueAsString();
+	}
+
+	/**
+	 * A valid search text would be different than the previous search text.
+	 * 
+	 * @return
+	 */
+	public boolean isValidSearchText() {
+
+		String currentText = i_searchTextItem.getValueAsString();
+		currentText = currentText == null ? "" : currentText;
+
+		boolean isValid = !i_previousText.equals(currentText);
+
+		if (isValid) {
+			i_previousText = currentText;
+		}
+
+		return isValid;
 	}
 
 }

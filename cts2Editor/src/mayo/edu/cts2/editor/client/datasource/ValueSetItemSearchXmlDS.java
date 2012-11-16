@@ -1,9 +1,8 @@
 package mayo.edu.cts2.editor.client.datasource;
 
-import com.smartgwt.client.data.DataSource;
 import com.smartgwt.client.types.DSDataFormat;
 
-public class ValueSetItemSearchXmlDS extends DataSource {
+public class ValueSetItemSearchXmlDS extends BaseValueSetItemXmlDS {
 
 	private static ValueSetItemSearchXmlDS instance = null;
 
@@ -19,8 +18,5 @@ public class ValueSetItemSearchXmlDS extends DataSource {
 
 		setID(id);
 		setDataFormat(DSDataFormat.XML);
-
-		// i_nsMap = getNameSpaceHashMap();
-
 	}
 }
