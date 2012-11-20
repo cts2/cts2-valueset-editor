@@ -9,6 +9,8 @@ import mayo.edu.cts2.editor.client.widgets.ValueSetsListGrid;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.event.shared.EventBus;
+import com.google.gwt.event.shared.SimpleEventBus;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.RootLayoutPanel;
 import com.smartgwt.client.util.SC;
@@ -26,6 +28,9 @@ public class Cts2Editor implements EntryPoint {
 
 	private VLayout i_mainLayout;
 	private ValueSetsLayout i_valueSetsLayout;
+
+	// Event Bus to capture global events and act upon them.
+	public static EventBus EVENT_BUS = GWT.create(SimpleEventBus.class);
 
 	/**
 	 * This is the entry point method.

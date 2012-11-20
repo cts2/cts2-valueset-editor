@@ -1,7 +1,14 @@
 package mayo.edu.cts2.editor.client.widgets;
 
+import mayo.edu.cts2.editor.client.Cts2Editor;
+import mayo.edu.cts2.editor.client.events.AddRecordsEvent;
+import mayo.edu.cts2.editor.client.events.AddRecordsEventHandler;
+import mayo.edu.cts2.editor.client.widgets.search.SearchListGrid;
+import mayo.edu.cts2.editor.client.widgets.search.SearchValueSetsListGrid;
+import mayo.edu.cts2.editor.client.widgets.search.SearchWindow;
+
+import com.smartgwt.client.data.Record;
 import com.smartgwt.client.types.Alignment;
-import com.smartgwt.client.util.SC;
 import com.smartgwt.client.widgets.IButton;
 import com.smartgwt.client.widgets.Label;
 import com.smartgwt.client.widgets.events.ClickEvent;
@@ -16,17 +23,18 @@ public class ValueSetContainer extends VLayout {
 
 	private static final int HEIGHT = 450;
 	private static final int TITLE_HEIGHT = 30;
-	private static final String TITLE = "Value Sets";
+	private static final String TITLE = "<em style=\"font-size:1.2em;font-weight:bold; margin-left:5px\">Value Sets</em>";
 
 	private static final int BUTTON_LAYOUT_HEIGHT = 25;
 	private static final String BUTTON_ADD_TITLE = "Add...";
 
 	private static final String BACKGROUND_COLOR_BORDER = "#5479ef";
-	private static final String BACKGROUND_COLOR_TITLE = "#efc953";
+	private static final String BACKGROUND_COLOR_TITLE = "#89a0ba";
 
 	private final Label i_title;
 	private final ValueSetsListGrid i_valueSetsListGrid;
 	private IButton i_addButton;
+	private SearchWindow i_searchWindow;
 
 	public ValueSetContainer(ValueSetsListGrid valueSetListGrid) {
 		super();
@@ -43,6 +51,8 @@ public class ValueSetContainer extends VLayout {
 		addMember(i_title);
 		addMember(i_valueSetsListGrid);
 		addMember(buttonLayout);
+
+		createAddRecordEvent();
 	}
 
 	private HLayout createButtonLayout() {
@@ -57,7 +67,10 @@ public class ValueSetContainer extends VLayout {
 
 			@Override
 			public void onClick(ClickEvent event) {
-				SC.say("Add a Value Set here");
+				String message = "Search for value sets.  Select the value sets by checking the checkbox and then click Add to add them.";
+				i_searchWindow = new SearchWindow(new SearchValueSetsListGrid(), message);
+				i_searchWindow.setInitialFocus();
+				i_searchWindow.show();
 			}
 		});
 		layout.addMember(i_addButton);
@@ -77,5 +90,44 @@ public class ValueSetContainer extends VLayout {
 		titleLabel.setBackgroundColor(BACKGROUND_COLOR_TITLE);
 
 		return titleLabel;
+	}
+
+	private void createAddRecordEvent() {
+
+		Cts2Editor.EVENT_BUS.addHandler(AddRecordsEvent.TYPE, new AddRecordsEventHandler() {
+
+			@Override
+			public void onRecordsAdded(AddRecordsEvent event) {
+
+				SearchListGrid listGrid = i_searchWindow.getSearchListGrid();
+				if (listGrid instanceof SearchValueSetsListGrid) {
+					SearchValueSetsListGrid searchValueSetsListGrid = (SearchValueSetsListGrid) listGrid;
+
+					Record[] records = searchValueSetsListGrid.getRecords();
+					for (int i = 0; i < records.length; i++) {
+
+						// if the checkbox is checked, then we need to add this
+						// record
+						if (records[i].getAttributeAsBoolean(SearchListGrid.ID_ADD)) {
+							addValueSetRecord(records[i]);
+						}
+					}
+				}
+			}
+		});
+
+	}
+
+	/**
+	 * Add a record that the user selected to the ValueSets.
+	 * 
+	 * @param record
+	 */
+	private void addValueSetRecord(Record record) {
+
+		String formalName = record.getAttribute(SearchValueSetsListGrid.ID_FORMAL_NAME);
+		String vsIdentifier = record.getAttribute(SearchValueSetsListGrid.ID_VALUE_SET_NAME);
+
+		i_valueSetsListGrid.createNewRecord(formalName, vsIdentifier);
 	}
 }

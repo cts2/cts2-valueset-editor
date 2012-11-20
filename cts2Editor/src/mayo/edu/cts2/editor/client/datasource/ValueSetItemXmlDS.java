@@ -2,7 +2,6 @@ package mayo.edu.cts2.editor.client.datasource;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -15,17 +14,15 @@ import com.smartgwt.client.data.Criteria;
 import com.smartgwt.client.data.DSCallback;
 import com.smartgwt.client.data.DSRequest;
 import com.smartgwt.client.data.DSResponse;
-import com.smartgwt.client.data.DataSource;
 import com.smartgwt.client.data.Record;
 import com.smartgwt.client.data.XMLTools;
-import com.smartgwt.client.data.XmlNamespaces;
 import com.smartgwt.client.data.fields.DataSourceTextField;
 import com.smartgwt.client.types.DSDataFormat;
 
 /**
  * Datasource that models the data in a resolved value set (entities).
  */
-public class ValueSetItemXmlDS extends DataSource {
+public class ValueSetItemXmlDS extends BaseValueSetItemXmlDS {
 
 	private static final Logger logger = Logger.getLogger(ValueSetItemXmlDS.class.getName());
 
@@ -34,9 +31,6 @@ public class ValueSetItemXmlDS extends DataSource {
 	private static final String X_PATH_ENTRY_NAMESPACE = "core:namespace";
 	private static final String X_PATH_ENTRY_NAME = "core:name";
 	private static final String X_PATH_DESIGNATION = "core:designation";
-
-	private final XmlNamespaces i_xmlNamespaces;
-	private final LinkedHashMap<String, String> i_nsMap;
 
 	private static final HashMap<String, ValueSetItemXmlDS> i_instances = new HashMap<String, ValueSetItemXmlDS>();
 
@@ -74,15 +68,6 @@ public class ValueSetItemXmlDS extends DataSource {
 		// create new list to hold records to delete for this instance.
 		i_recordsToDelete = new ArrayList<Record>();
 
-		i_nsMap = getNameSpaceHashMap();
-
-		// Set the namespaces
-		i_xmlNamespaces = new XmlNamespaces();
-		i_xmlNamespaces.addNamespace("cts2", "http://schema.omg.org/spec/CTS2/1.0/ValueSetDefinition");
-		i_xmlNamespaces.addNamespace("core", "http://schema.omg.org/spec/CTS2/1.0/Core");
-		i_xmlNamespaces.addNamespace("xsi", "http://www.w3.org/2001/XMLSchema-instance");
-		setXmlNamespaces(i_xmlNamespaces);
-
 		// set the XPath
 		setRecordXPath(RECORD_X_PATH);
 
@@ -112,7 +97,6 @@ public class ValueSetItemXmlDS extends DataSource {
 
 				@Override
 				public void onSuccess(String result) {
-					System.out.print(result);
 
 					// set this to true so we don't retrieve the data again.
 					i_getDataCalled = true;
@@ -181,7 +165,6 @@ public class ValueSetItemXmlDS extends DataSource {
 	}
 
 	private void executeRemove(DSResponse response) {
-		System.out.println("executeRemove row");
 
 		Record[] records = response.getData();
 
@@ -199,19 +182,4 @@ public class ValueSetItemXmlDS extends DataSource {
 	private void saveAs() {
 		System.out.println("SAVE AS called");
 	}
-
-	/**
-	 * Create a HashMap of the nameSpaces.
-	 * 
-	 * @return
-	 */
-	private LinkedHashMap<String, String> getNameSpaceHashMap() {
-		LinkedHashMap<String, String> nsMap = new LinkedHashMap<String, String>();
-		nsMap.put("cts2", "http://schema.omg.org/spec/CTS2/1.0/ValueSetDefinition");
-		nsMap.put("core", "http://schema.omg.org/spec/CTS2/1.0/Core");
-		nsMap.put("xsi", "http://www.w3.org/2001/XMLSchema-instance");
-
-		return nsMap;
-	}
-
 }
