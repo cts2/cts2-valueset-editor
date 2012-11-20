@@ -28,4 +28,18 @@ public interface Cts2EditorService extends RemoteService {
 
 	String getMatchingValueSets(String matchValue)
 		throws IllegalArgumentException;
+
+	String createChangeSet();
+
+	String deleteChangeSet(String uri)
+	  throws IllegalArgumentException;
+
+	String getChangeSet(String uri)
+	  throws IllegalArgumentException;
+
+	String updateChangeSet(String uri)
+	  throws IllegalArgumentException;
+
+	String getMatchingEntities(String matchValue)
+		throws IllegalArgumentException;
 }

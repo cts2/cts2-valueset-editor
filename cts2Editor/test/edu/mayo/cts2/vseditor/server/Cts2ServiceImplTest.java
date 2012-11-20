@@ -10,20 +10,26 @@ import org.w3c.dom.NodeList;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class Cts2ServiceImplTest {
 
 	private static Cts2EditorService service;
+	private static DocumentBuilderFactory factory;
+	private static DocumentBuilder documentBuilder;
 
 	@BeforeClass
-	public static void initClass() {
+	public static void initClass() throws ParserConfigurationException {
 		service = new Cts2EditorServiceImpl();
+		factory = DocumentBuilderFactory.newInstance();
+		documentBuilder = factory.newDocumentBuilder();
 	}
 
 	@Test
@@ -49,9 +55,7 @@ public class Cts2ServiceImplTest {
 
 		String resultXml = service.getValueSets(oids);
 		try {
-			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-			DocumentBuilder db = factory.newDocumentBuilder();
-			Document document = db.parse(new ByteArrayInputStream(resultXml.getBytes("UTF-8")));
+			Document document = documentBuilder.parse(new ByteArrayInputStream(resultXml.getBytes("UTF-8")));
 			NodeList nodes = document.getElementsByTagName("ValueSetCatalogEntryMsg");
 			assertEquals(2, nodes.getLength());
 		} catch (Exception e) {
@@ -65,9 +69,7 @@ public class Cts2ServiceImplTest {
 
 		try {
 			String resultXml = service.getResolvedValueSet(oid);
-			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-			DocumentBuilder db = factory.newDocumentBuilder();
-			Document document = db.parse(new ByteArrayInputStream(resultXml.getBytes("UTF-8")));
+			Document document = documentBuilder.parse(new ByteArrayInputStream(resultXml.getBytes("UTF-8")));
 			NodeList nodes = document.getElementsByTagName("entry");
 			assertEquals(84, nodes.getLength());
 		} catch (Exception e) {
@@ -82,11 +84,9 @@ public class Cts2ServiceImplTest {
 
 		try {
 			String resultXml = service.getValueSetDefinition(oid);
-			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-			DocumentBuilder db = factory.newDocumentBuilder();
-			Document document = db.parse(new ByteArrayInputStream(resultXml.getBytes("UTF-8")));
+			Document document = documentBuilder.parse(new ByteArrayInputStream(resultXml.getBytes("UTF-8")));
 			NodeList nodes = document.getElementsByTagName("entry");
-			assertEquals(3, nodes.getLength());
+			assertTrue(nodes.getLength() > 0) ;
 		} catch (Exception e) {
 			fail(e.getMessage());
 		}
@@ -106,13 +106,51 @@ public class Cts2ServiceImplTest {
 
 	@Test
 	public void testGetMatchingValueSets() {
-		String term = "heart";
+		String term = "asthma";
 		try {
 			String resultXml = service.getMatchingValueSets(term);
+			Document document = documentBuilder.parse(new ByteArrayInputStream(resultXml.getBytes("UTF-8")));
+			NodeList nodes = document.getElementsByTagName("entry");
+			assertTrue(nodes.getLength() > 0);
 			System.out.println("testGetMatchingValueSets:\n" + resultXml);
 		} catch (Exception e) {
 			fail(e.getMessage());
 		}
+	}
+
+	@Test
+	public void testCreateChangeSet() throws Exception {
+		assertTrue(service.createChangeSet() != null);
+	}
+
+	@Test
+	public void testDeleteChangeSet() throws Exception {
+		String uri = service.createChangeSet();
+		String resultXml = service.deleteChangeSet(uri);
+		/* TODO: test that change set has been deleted */
+	}
+
+	@Test
+	public void testGetChangeSet() throws Exception {
+		String uri = service.createChangeSet();
+		String resultXml = service.getChangeSet(uri);
+		/* TODO: test that the correct change set has been returned */
+	}
+
+	@Test
+	public void testUpdateChangeSet() throws Exception {
+		String uri = service.createChangeSet();
+		String resultXml = service.updateChangeSet(uri);
+		/* TODO: test that the change set has been updated */
+	}
+
+	@Test
+	public void testGetMatchingEntities() throws Exception {
+		String resultXml = service.getMatchingEntities("Acute exacerbation of chronic asthmatic bronchitis");
+		System.out.println("resultXml: " + resultXml);
+		Document document = documentBuilder.parse(new ByteArrayInputStream(resultXml.getBytes("UTF-8")));
+		NodeList nodes = document.getElementsByTagName("entry");
+		assertTrue(nodes.getLength() == 1);
 	}
 
 }

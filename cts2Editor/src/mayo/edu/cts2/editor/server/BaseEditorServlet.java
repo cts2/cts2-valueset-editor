@@ -29,6 +29,10 @@ public class BaseEditorServlet extends RemoteServiceServlet {
 		return getStartupProperties().getProperty("cts2ValueSetRestPassword");
 	}
 
+	public String getEntityRestUrl() {
+		return getStartupProperties().getProperty("cts2EntityRestUrl");
+	}
+
 	protected Properties getStartupProperties() {
 		if (serviceProperties == null) {
 			Properties props = new Properties();

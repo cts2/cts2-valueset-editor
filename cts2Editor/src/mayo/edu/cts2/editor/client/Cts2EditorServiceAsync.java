@@ -23,4 +23,18 @@ public interface Cts2EditorServiceAsync {
 
 	void getMatchingValueSets(String matchValue, AsyncCallback<String> async)
 	  ;
+
+	void createChangeSet(AsyncCallback<String> async);
+
+	void deleteChangeSet(String uri, AsyncCallback<String> async)
+	  ;
+
+	void getChangeSet(String uri, AsyncCallback<String> async)
+	  ;
+
+	void updateChangeSet(String uri, AsyncCallback<String> async)
+	  ;
+
+	void getMatchingEntities(String matchValue, AsyncCallback<String> async)
+	  ;
 }
