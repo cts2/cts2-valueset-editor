@@ -1,10 +1,15 @@
 package mayo.edu.cts2.editor.client.widgets;
 
+import mayo.edu.cts2.editor.client.Cts2Editor;
+import mayo.edu.cts2.editor.client.events.AddRecordsEvent;
+import mayo.edu.cts2.editor.client.events.AddRecordsEventHandler;
+import mayo.edu.cts2.editor.client.widgets.search.SearchListGrid;
 import mayo.edu.cts2.editor.client.widgets.search.SearchValueSetItemsListGrid;
 import mayo.edu.cts2.editor.client.widgets.search.SearchWindow;
 
 import com.smartgwt.client.data.Criteria;
 import com.smartgwt.client.data.DataSource;
+import com.smartgwt.client.data.Record;
 import com.smartgwt.client.types.Alignment;
 import com.smartgwt.client.util.BooleanCallback;
 import com.smartgwt.client.util.SC;
@@ -25,8 +30,16 @@ import com.smartgwt.client.widgets.layout.VLayout;
  */
 public class ValueSetEntitiesLayout extends VLayout {
 
-	private boolean i_additionsMade = false;
+	private final boolean i_additionsMade = false;
 	private boolean i_removalsMade = false;
+	private final ValueSetItemsListGrid i_valueSetItemsListGrid;
+	private SearchWindow i_searchWindow;
+
+	private final IButton i_addButton;
+	private final IButton i_deleteButton;
+	private final IButton i_saveButton;
+	private final IButton i_saveAsButton;
+	private final IButton i_closeButton;
 
 	public ValueSetEntitiesLayout(final ListGridRecord record, DataSource childDatasource, final ListGrid parentGrid) {
 		super();
@@ -37,53 +50,50 @@ public class ValueSetEntitiesLayout extends VLayout {
 		Criteria criteria = new Criteria();
 		criteria.setAttribute("oid", oid);
 
-		final ValueSetItemsListGrid valueSetItemsListGrid = new ValueSetItemsListGrid();
+		i_valueSetItemsListGrid = new ValueSetItemsListGrid();
 
-		valueSetItemsListGrid.setDataSource(childDatasource);
-		valueSetItemsListGrid.fetchData(criteria);
+		i_valueSetItemsListGrid.setDataSource(childDatasource);
+		i_valueSetItemsListGrid.fetchData(criteria);
 
-		addMember(valueSetItemsListGrid);
+		addMember(i_valueSetItemsListGrid);
 
 		HLayout buttonLayout = new HLayout(10);
 		buttonLayout.setMargin(5);
 		buttonLayout.setAlign(Alignment.CENTER);
 
-		final IButton addButton = new IButton("Add...");
-		addButton.setTop(250);
-		addButton.addClickHandler(new ClickHandler() {
+		i_addButton = new IButton("Add...");
+		i_addButton.setTop(250);
+		i_addButton.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
-
 				String message = "Search for entities.  Select the entities by checking the checkbox.";
-				SearchWindow searchWindow = new SearchWindow(new SearchValueSetItemsListGrid(), message);
-				searchWindow.show();
-
-				// ... after the addition, set boolean
-				i_additionsMade = true;
+				i_searchWindow = new SearchWindow(new SearchValueSetItemsListGrid(), message);
+				i_searchWindow.setInitialFocus();
+				i_searchWindow.show();
 			}
 		});
 
-		final IButton saveButton = new IButton("Save");
-		saveButton.setTop(250);
-		saveButton.addClickHandler(new ClickHandler() {
+		i_saveButton = new IButton("Save");
+		i_saveButton.setTop(250);
+		i_saveButton.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
-				valueSetItemsListGrid.saveAllEdits();
+				i_valueSetItemsListGrid.saveAllEdits();
 			}
 		});
 
-		final IButton saveAsButton = new IButton("Save As...");
-		saveAsButton.setTop(250);
-		saveAsButton.addClickHandler(new ClickHandler() {
+		i_saveAsButton = new IButton("Save As...");
+		i_saveAsButton.setTop(250);
+		i_saveAsButton.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
-				valueSetItemsListGrid.saveAllEdits();
+				i_valueSetItemsListGrid.saveAllEdits();
 
 			}
 		});
 
-		final IButton closeButton = new IButton("Close");
-		closeButton.addClickHandler(new ClickHandler() {
+		i_closeButton = new IButton("Close");
+		i_closeButton.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
 
@@ -103,7 +113,7 @@ public class ValueSetEntitiesLayout extends VLayout {
 								// User chose to discard changes
 								// remove their Datasource so it will recreated
 								// fresh next time.
-								String datasourceId = valueSetItemsListGrid.getDataSource().getID();
+								String datasourceId = i_valueSetItemsListGrid.getDataSource().getID();
 								// ValueSetItemXmlDS.removeInstance(datasourceId);
 
 							}
@@ -118,53 +128,118 @@ public class ValueSetEntitiesLayout extends VLayout {
 			}
 		});
 
-		final IButton deleteButton = new IButton("Delete Row(s)");
-		deleteButton.setTop(250);
-		deleteButton.addClickHandler(new ClickHandler() {
+		i_deleteButton = new IButton("Delete Row(s)");
+		i_deleteButton.setTop(250);
+		i_deleteButton.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
 
 				i_removalsMade = true;
 
 				// enable these buttons.
-				saveButton.setDisabled(false);
-				saveAsButton.setDisabled(false);
+				i_saveButton.setDisabled(false);
+				i_saveAsButton.setDisabled(false);
 
-				ListGridRecord[] records = valueSetItemsListGrid.getSelectedRecords();
+				ListGridRecord[] records = i_valueSetItemsListGrid.getSelectedRecords();
 				for (ListGridRecord selectedRecord : records) {
 					selectedRecord.setAttribute(ValueSetItemsListGrid.ID_HIDDEN_ACTION,
 					        ValueSetItemsListGrid.ACTION_DELETE);
-					valueSetItemsListGrid.updateData(selectedRecord);
+					i_valueSetItemsListGrid.updateData(selectedRecord);
 				}
 
 				// refresh the icons in Action column
-				valueSetItemsListGrid.invalidateRecordComponents();
+				i_valueSetItemsListGrid.invalidateRecordComponents();
 			}
 		});
 
 		// default these buttons to disabled.
-		deleteButton.setDisabled(true);
-		saveButton.setDisabled(true);
-		saveAsButton.setDisabled(true);
+		i_deleteButton.setDisabled(true);
+		i_saveButton.setDisabled(true);
+		i_saveAsButton.setDisabled(true);
 
 		// add the buttons to the layout
-		buttonLayout.addMember(addButton);
-		buttonLayout.addMember(deleteButton);
-		buttonLayout.addMember(saveButton);
-		buttonLayout.addMember(saveAsButton);
-		buttonLayout.addMember(closeButton);
+		buttonLayout.addMember(i_addButton);
+		buttonLayout.addMember(i_deleteButton);
+		buttonLayout.addMember(i_saveButton);
+		buttonLayout.addMember(i_saveAsButton);
+		buttonLayout.addMember(i_closeButton);
 
 		addMember(buttonLayout);
 
 		// listen for selection changes to update the buttons
-		valueSetItemsListGrid.addSelectionUpdatedHandler(new SelectionUpdatedHandler() {
+		i_valueSetItemsListGrid.addSelectionUpdatedHandler(new SelectionUpdatedHandler() {
 
 			@Override
 			public void onSelectionUpdated(SelectionUpdatedEvent event) {
-				ListGridRecord[] records = valueSetItemsListGrid.getSelectedRecords();
-				deleteButton.setDisabled(records.length == 0);
+				ListGridRecord[] records = i_valueSetItemsListGrid.getSelectedRecords();
+
+				boolean disableDelete = false;
+				String hiddenAction;
+
+				for (Record record : records) {
+
+					hiddenAction = record.getAttribute(ValueSetItemsListGrid.ID_HIDDEN_ACTION);
+					if (hiddenAction != null
+					        && (hiddenAction.equals(ValueSetItemsListGrid.ACTION_ADD) || hiddenAction
+					                .equals(ValueSetItemsListGrid.ACTION_DELETE))) {
+						disableDelete = true;
+						break;
+					}
+				}
+				i_deleteButton.setDisabled(disableDelete);
+			}
+		});
+
+		createAddRecordEvent();
+	}
+
+	private void createAddRecordEvent() {
+
+		Cts2Editor.EVENT_BUS.addHandler(AddRecordsEvent.TYPE, new AddRecordsEventHandler() {
+
+			@Override
+			public void onRecordsAdded(AddRecordsEvent event) {
+
+				if (i_searchWindow == null) {
+					return;
+				}
+
+				SearchListGrid listGrid = i_searchWindow.getSearchListGrid();
+				if (listGrid instanceof SearchValueSetItemsListGrid) {
+					SearchValueSetItemsListGrid searchValueSetItemsListGrid = (SearchValueSetItemsListGrid) listGrid;
+
+					Record[] records = searchValueSetItemsListGrid.getRecords();
+					for (int i = 0; i < records.length; i++) {
+
+						// if the checkbox is checked, then we need to add this
+						// record
+						if (records[i].getAttributeAsBoolean(SearchListGrid.ID_ADD)) {
+							addValueSetRecord(records[i]);
+						}
+					}
+				}
 			}
 		});
 	}
 
+	/**
+	 * Add a record that the user selected to the Value Set Items.
+	 * 
+	 * @param record
+	 */
+	private void addValueSetRecord(Record record) {
+
+		String code = record.getAttribute(SearchValueSetItemsListGrid.ID_NAME);
+		String codeSystemName = record.getAttribute(SearchValueSetItemsListGrid.ID_NAME_SPACE);
+		String designation = record.getAttribute(SearchValueSetItemsListGrid.ID_DESIGNATION);
+
+		// this will be used as the PK
+		String href = record.getAttribute(SearchValueSetItemsListGrid.ID_HREF);
+
+		// System.out.println("href = " + href + " code = " + code +
+		// " codeSystemName = " + codeSystemName
+		// + " --- designation = " + designation);
+
+		i_valueSetItemsListGrid.createNewRecord(href, code, codeSystemName, designation);
+	}
 }

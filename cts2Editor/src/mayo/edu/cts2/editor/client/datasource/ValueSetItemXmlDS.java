@@ -143,7 +143,7 @@ public class ValueSetItemXmlDS extends BaseValueSetItemXmlDS {
 				}
 					break;
 				case FETCH : {
-					System.out.println(request.getDataAsString());
+					// System.out.println(request.getDataAsString());
 
 					// executeFetch(request);
 				}

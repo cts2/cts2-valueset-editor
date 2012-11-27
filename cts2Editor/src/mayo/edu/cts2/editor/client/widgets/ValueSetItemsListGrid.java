@@ -27,6 +27,7 @@ public class ValueSetItemsListGrid extends ListGrid {
 	public static final String ACTION_DELETE = "MARKED TO DELETE";
 	public static final String ACTION_ADD = "MARKED TO ADD";
 
+	public static final String ID_URI = "uri";
 	public static final String ID_NAME_SPACE = "nameSpace";
 	public static final String ID_NAME = "name";
 	public static final String ID_DESIGNATION = "designation";
@@ -95,37 +96,67 @@ public class ValueSetItemsListGrid extends ListGrid {
 
 		String fieldName = this.getFieldName(colNum);
 
-		if (fieldName.equals(ID_ACTION) && record.getAttribute(ID_HIDDEN_ACTION) != null
-		        && record.getAttribute(ID_HIDDEN_ACTION).equals(ACTION_DELETE)) {
+		if (fieldName.equals(ID_ACTION) && record.getAttribute(ID_HIDDEN_ACTION) != null) {
 
-			HLayout recordCanvas = new HLayout(1);
-			recordCanvas.setHeight(22);
-			recordCanvas.setAlign(Alignment.LEFT);
-			ImgButton undoImg = createUndoImage("Undo Delete");
+			// if this is a row marked for delete, then shwo the "undo delete"
+			// option
+			if (record.getAttribute(ID_HIDDEN_ACTION).equals(ACTION_DELETE)) {
 
-			// undoImg.setID("delete");
-			undoImg.addClickHandler(new ClickHandler() {
+				HLayout recordCanvas = new HLayout(1);
+				recordCanvas.setHeight(22);
+				recordCanvas.setAlign(Alignment.LEFT);
+				ImgButton undoImg = createImage("undo.png", "Undo Delete");
 
-				@Override
-				public void onClick(ClickEvent event) {
+				// undoImg.setID("delete");
+				undoImg.addClickHandler(new ClickHandler() {
 
-					record.setAttribute(ValueSetItemsListGrid.ID_HIDDEN_ACTION, ValueSetItemsListGrid.ACTION_NONE);
-					updateData(record);
+					@Override
+					public void onClick(ClickEvent event) {
 
-					// refresh the icons in Action column
-					invalidateRecordComponents();
-				}
-			});
+						record.setAttribute(ValueSetItemsListGrid.ID_HIDDEN_ACTION, ValueSetItemsListGrid.ACTION_NONE);
+						updateData(record);
 
-			recordCanvas.addMember(undoImg);
+						// refresh the icons in Action column
+						invalidateRecordComponents();
+					}
+				});
 
-			Label dataLabel = new Label("<em style=\"font-weight:bold; color:red;margin-left:8px\">" + ACTION_DELETE
-			        + "</em>");
-			dataLabel.setAutoFit(true);
-			dataLabel.setWrap(false);
-			recordCanvas.addMember(dataLabel);
+				recordCanvas.addMember(undoImg);
 
-			return recordCanvas;
+				Label dataLabel = new Label("<em style=\"font-weight:bold; color:red;margin-left:8px\">"
+				        + ACTION_DELETE + "</em>");
+				dataLabel.setAutoFit(true);
+				dataLabel.setWrap(false);
+				recordCanvas.addMember(dataLabel);
+
+				return recordCanvas;
+			}
+			// if this is a row was added, then show the "delete" option
+			else if (record.getAttribute(ID_HIDDEN_ACTION).equals(ACTION_ADD)) {
+
+				HLayout recordCanvas = new HLayout(1);
+				recordCanvas.setHeight(22);
+				recordCanvas.setAlign(Alignment.LEFT);
+				ImgButton undoImg = createImage("delete.png", "Remove");
+
+				undoImg.addClickHandler(new ClickHandler() {
+
+					@Override
+					public void onClick(ClickEvent event) {
+						removeData(record);
+					}
+				});
+
+				recordCanvas.addMember(undoImg);
+
+				Label dataLabel = new Label("<em style=\"font-weight:bold; color:green;margin-left:8px\">" + ACTION_ADD
+				        + "</em>");
+				dataLabel.setAutoFit(true);
+				dataLabel.setWrap(false);
+				recordCanvas.addMember(dataLabel);
+
+				return recordCanvas;
+			}
 		}
 
 		return super.createRecordComponent(record, colNum);
@@ -204,13 +235,38 @@ public class ValueSetItemsListGrid extends ListGrid {
 		return super.saveAllEdits();
 	}
 
-	private ImgButton createUndoImage(String prompt) {
+	/**
+	 * Create and add a new record.
+	 * 
+	 * @param href
+	 * @param code
+	 * @param codeSystemName
+	 * @param designation
+	 */
+	public void createNewRecord(String href, String code, String codeSystemName, String designation) {
+
+		ListGridRecord newRecord = new ListGridRecord();
+
+		// Set the PK -- Note: we are setting the uri with the href. The Value
+		// Set Entities Search does not have a URI. This is only used as a
+		// unique ID.
+		newRecord.setAttribute(ID_URI, href);
+		newRecord.setAttribute(ID_NAME, code);
+		newRecord.setAttribute(ID_NAME_SPACE, codeSystemName);
+		newRecord.setAttribute(ID_DESIGNATION, designation);
+
+		// add a hidden attribute to indicate it was added.
+		newRecord.setAttribute(ID_HIDDEN_ACTION, ACTION_ADD);
+		addData(newRecord);
+	}
+
+	private ImgButton createImage(String imgName, String prompt) {
 
 		ImgButton undoImg = new ImgButton();
 		undoImg.setShowDown(false);
 		undoImg.setShowRollOver(false);
 		undoImg.setLayoutAlign(Alignment.CENTER);
-		undoImg.setSrc("undo.png");
+		undoImg.setSrc(imgName);
 		undoImg.setPrompt(prompt);
 		undoImg.setHeight(16);
 		undoImg.setWidth(16);

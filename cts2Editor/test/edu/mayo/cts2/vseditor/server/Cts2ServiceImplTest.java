@@ -1,23 +1,26 @@
 package edu.mayo.cts2.vseditor.server;
 
-import edu.mayo.cts2.vseditor.server.helpers.ValueSet;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.io.ByteArrayInputStream;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
 import mayo.edu.cts2.editor.client.Cts2EditorService;
 import mayo.edu.cts2.editor.server.Cts2EditorServiceImpl;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.ByteArrayInputStream;
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import edu.mayo.cts2.vseditor.server.helpers.ValueSet;
 
 public class Cts2ServiceImplTest {
 
@@ -86,7 +89,7 @@ public class Cts2ServiceImplTest {
 			String resultXml = service.getValueSetDefinition(oid);
 			Document document = documentBuilder.parse(new ByteArrayInputStream(resultXml.getBytes("UTF-8")));
 			NodeList nodes = document.getElementsByTagName("entry");
-			assertTrue(nodes.getLength() > 0) ;
+			assertTrue(nodes.getLength() > 0);
 		} catch (Exception e) {
 			fail(e.getMessage());
 		}

@@ -59,6 +59,7 @@ public class ValueSetContainer extends VLayout {
 		HLayout layout = new HLayout();
 		layout.setWidth100();
 		layout.setMargin(10);
+		layout.setMembersMargin(5);
 		layout.setHeight(BUTTON_LAYOUT_HEIGHT);
 		layout.setAlign(Alignment.CENTER);
 
@@ -73,6 +74,7 @@ public class ValueSetContainer extends VLayout {
 				i_searchWindow.show();
 			}
 		});
+
 		layout.addMember(i_addButton);
 
 		return layout;
@@ -98,6 +100,10 @@ public class ValueSetContainer extends VLayout {
 
 			@Override
 			public void onRecordsAdded(AddRecordsEvent event) {
+
+				if (i_searchWindow == null) {
+					return;
+				}
 
 				SearchListGrid listGrid = i_searchWindow.getSearchListGrid();
 				if (listGrid instanceof SearchValueSetsListGrid) {

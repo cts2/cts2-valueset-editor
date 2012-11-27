@@ -94,8 +94,6 @@ public class Cts2Editor implements EntryPoint {
 				 * Cts2EditorServiceImpl.XPATH_VALUESETS_BASE
 				 */
 
-				System.out.println(valueSets);
-
 				// clear out the existing value sets ListGrid
 				i_valueSetsLayout.removeAll();
 

@@ -5,8 +5,13 @@ import java.util.Map;
 
 import mayo.edu.cts2.editor.client.Cts2Editor;
 import mayo.edu.cts2.editor.client.datasource.ValueSetItemSearchXmlDS;
+import mayo.edu.cts2.editor.client.events.ValueSetItemsReceivedEvent;
 import mayo.edu.cts2.editor.client.events.ValueSetsReceivedEvent;
 
+import com.smartgwt.client.data.Criteria;
+import com.smartgwt.client.data.DSCallback;
+import com.smartgwt.client.data.DSRequest;
+import com.smartgwt.client.data.DSResponse;
 import com.smartgwt.client.data.Record;
 import com.smartgwt.client.data.SortSpecifier;
 import com.smartgwt.client.types.ListGridFieldType;
@@ -28,6 +33,7 @@ public class SearchValueSetItemsListGrid extends SearchListGrid {
 	private static final String EMPTY_MESSAGE = "No entities to display.";
 	private static final String ERROR_MESSAGE = "Entity service unavailable.";
 
+	public static final String ID_HREF = "href";
 	public static final String ID_NAME_SPACE = "nameSpace";
 	public static final String ID_NAME = "name";
 	public static final String ID_DESIGNATION = "designation";
@@ -243,12 +249,36 @@ public class SearchValueSetItemsListGrid extends SearchListGrid {
 
 	@Override
 	public void getData(String searchText) {
-		// TODO Auto-generated method stub
+		i_searchString = searchText;
 
+		Criteria criteria = new Criteria();
+		criteria.addCriteria("searchText", searchText);
+
+		i_valueSetItemSearchXmlDS.fetchData(criteria, new DSCallback() {
+
+			@Override
+			public void execute(DSResponse response, Object rawData, DSRequest request) {
+
+				if ((response != null) && (response.getAttribute("reason") != null)) {
+					setEmptyMessage("<b><font color=\"red\">" + ERROR_MESSAGE + "</font></b>");
+				} else {
+					setEmptyMessage(EMPTY_MESSAGE);
+				}
+
+				setData(new ListGridRecord[0]);
+				fetchData();
+
+				redraw();
+
+				// let others know that the data has been retrieved.
+				Cts2Editor.EVENT_BUS.fireEvent(new ValueSetItemsReceivedEvent());
+			}
+		});
 	}
 
 	@Override
 	public void clearData() {
+		i_valueSetItemSearchXmlDS.setTestData(new Record[0]);
 		setData(new ListGridRecord[0]);
 		fetchData();
 

@@ -1,8 +1,11 @@
 package mayo.edu.cts2.editor.client.widgets.search;
 
 import mayo.edu.cts2.editor.client.Cts2Editor;
+import mayo.edu.cts2.editor.client.datasource.ValueSetItemSearchXmlDS;
 import mayo.edu.cts2.editor.client.datasource.ValueSetsSearchXmlDS;
 import mayo.edu.cts2.editor.client.events.AddRecordsEvent;
+import mayo.edu.cts2.editor.client.events.ValueSetItemsReceivedEvent;
+import mayo.edu.cts2.editor.client.events.ValueSetItemsReceivedEventHandler;
 import mayo.edu.cts2.editor.client.events.ValueSetsReceivedEvent;
 import mayo.edu.cts2.editor.client.events.ValueSetsReceivedEventHandler;
 
@@ -85,8 +88,9 @@ public class SearchWindow extends Window {
 		layout.addMember(getButtons());
 
 		addItem(layout);
-		createValueSetsReceivedEvent();
 
+		createValueSetsReceivedEvent();
+		createValueSetItemsReceivedEvent();
 	}
 
 	private VLayout createDisplayLabel(String message) {
@@ -279,36 +283,57 @@ public class SearchWindow extends Window {
 	}
 
 	/**
-	 * Listen for the event that ValueSets were retrieved.
+	 * Listen for the event that Value Sets were retrieved.
 	 */
 	private void createValueSetsReceivedEvent() {
 		Cts2Editor.EVENT_BUS.addHandler(ValueSetsReceivedEvent.TYPE, new ValueSetsReceivedEventHandler() {
 
 			@Override
 			public void onValueSetsReceived(ValueSetsReceivedEvent event) {
-
 				DataClass[] dc = ValueSetsSearchXmlDS.getInstance().getTestData();
-
-				if (dc.length >= 1) {
-
-					String numEntries = dc[0].getAttribute("numEntries");
-					String complete = dc[0].getAttribute("complete");
-
-					if (complete != null && !complete.equals("COMPLETE")) {
-						i_rowsRetrievedLabel.setContents(ROWS_RETRIEVED_TITLE + "<b> " + numEntries + "</b>+");
-					} else {
-						i_rowsRetrievedLabel.setContents(ROWS_RETRIEVED_TITLE + " <b>" + numEntries + "</b>");
-					}
-
-					String searchText = i_searchTextItem.getValueAsString();
-					if (searchText == null || searchText.length() == 0) {
-						i_rowsRetrievedLabel.setContents("");
-					}
-				} else {
-					i_rowsRetrievedLabel.setContents(ROWS_RETRIEVED_TITLE + " <b>0</b>");
-				}
+				updateRowsRetrieved(dc);
 			}
 		});
+	}
+
+	/**
+	 * Listen for the event that Value Sets Items were retrieved.
+	 */
+	private void createValueSetItemsReceivedEvent() {
+		Cts2Editor.EVENT_BUS.addHandler(ValueSetItemsReceivedEvent.TYPE, new ValueSetItemsReceivedEventHandler() {
+
+			@Override
+			public void onValueSetItemssReceived(ValueSetItemsReceivedEvent event) {
+				DataClass[] dc = ValueSetItemSearchXmlDS.getInstance().getTestData();
+				updateRowsRetrieved(dc);
+			}
+		});
+	}
+
+	/**
+	 * Update the rows retrieved label based on the search results.
+	 * 
+	 * @param dc
+	 */
+	private void updateRowsRetrieved(DataClass[] dc) {
+		if (dc.length >= 1) {
+
+			String numEntries = dc[0].getAttribute("numEntries");
+			String complete = dc[0].getAttribute("complete");
+
+			if (complete != null && !complete.equals("COMPLETE")) {
+				i_rowsRetrievedLabel.setContents(ROWS_RETRIEVED_TITLE + "<b> " + numEntries + "</b>+");
+			} else {
+				i_rowsRetrievedLabel.setContents(ROWS_RETRIEVED_TITLE + " <b>" + numEntries + "</b>");
+			}
+
+			String searchText = i_searchTextItem.getValueAsString();
+			if (searchText == null || searchText.length() == 0) {
+				i_rowsRetrievedLabel.setContents("");
+			}
+		} else {
+			i_rowsRetrievedLabel.setContents(ROWS_RETRIEVED_TITLE + " <b>0</b>");
+		}
 	}
 
 	public void setInitialFocus() {
