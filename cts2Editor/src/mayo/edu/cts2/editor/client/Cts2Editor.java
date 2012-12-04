@@ -1,6 +1,7 @@
 package mayo.edu.cts2.editor.client;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import mayo.edu.cts2.editor.client.utils.ModalWindow;
 import mayo.edu.cts2.editor.client.widgets.ValueSetContainer;
@@ -14,9 +15,6 @@ import com.google.gwt.event.shared.SimpleEventBus;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.RootLayoutPanel;
 import com.smartgwt.client.util.SC;
-import com.smartgwt.client.widgets.IButton;
-import com.smartgwt.client.widgets.events.ClickEvent;
-import com.smartgwt.client.widgets.events.ClickHandler;
 import com.smartgwt.client.widgets.layout.VLayout;
 
 /**
@@ -26,11 +24,13 @@ public class Cts2Editor implements EntryPoint {
 
 	private ModalWindow i_busyIndicator;
 
-	private VLayout i_mainLayout;
 	private ValueSetsLayout i_valueSetsLayout;
 
 	// Event Bus to capture global events and act upon them.
 	public static EventBus EVENT_BUS = GWT.create(SimpleEventBus.class);
+
+	private static final boolean s_standAlone = false;
+	private static boolean s_readOnly = true;
 
 	/**
 	 * This is the entry point method.
@@ -38,48 +38,65 @@ public class Cts2Editor implements EntryPoint {
 	@Override
 	public void onModuleLoad() {
 
-		IButton testButton = new IButton("Get the Value Sets");
-		testButton.setWidth(150);
-		testButton.addClickHandler(new ClickHandler() {
-
-			@Override
-			public void onClick(ClickEvent event) {
-				getValueSets();
-			}
-		});
-
-		i_valueSetsLayout = new ValueSetsLayout();
-
-		i_mainLayout = new VLayout();
-		i_mainLayout.setWidth100();
-		i_mainLayout.setHeight100();
-		i_mainLayout.setMargin(15);
-
-		i_mainLayout.addMember(testButton);
-		i_mainLayout.addMember(i_valueSetsLayout);
-
-		// Draw the Layout - main layout
-		RootLayoutPanel.get().add(i_mainLayout);
-	}
-
-	private void getValueSets() {
-
-		Cts2EditorServiceAsync service = GWT.create(Cts2EditorService.class);
+		/****************************************************************
+		 * NOTE: If you want to run this editor standalone, you need to set the
+		 * s_standAlone variable (above) to true.
+		 * 
+		 * There is another option too for making the editor readonly. You will
+		 * need to call setReadOnly(boolean readonly) before creating the main
+		 * layout.
+		 ****************************************************************/
 
 		// Sample list of oids for testing the call
-		final ArrayList<String> oids = new ArrayList<String>();
+		final List<String> oids = new ArrayList<String>();
 		oids.add("2.16.840.1.114222.4.11.837");
 		oids.add("2.16.840.1.113883.3.221.5");
 		oids.add("2.16.840.1.113883.3.464.0003.1021");
 		oids.add("2.16.840.1.113883.3.464.0003.1017");
 		oids.add("2.16.840.1.113883.3.464.0001.231");
 
+		setReadOnly(true);
+
+		// create and add to the root only if we are in stand alone mode.
+		if (s_standAlone) {
+			// Draw the Layout - main layout
+			RootLayoutPanel.get().add(getMainLayout(oids));
+		}
+	}
+
+	public static void setReadOnly(boolean readOnly) {
+		s_readOnly = readOnly;
+	}
+
+	public static boolean getReadOnly() {
+		return s_readOnly;
+	}
+
+	/**
+	 * Entry method when the CTS2Editor is used as a component.
+	 * 
+	 * @return
+	 */
+	public VLayout getMainLayout(List<String> oids) {
+
+		i_valueSetsLayout = new ValueSetsLayout();
+
+		// get the value sets
+		getValueSets(oids);
+
+		return i_valueSetsLayout;
+	}
+
+	private void getValueSets(List<String> oids) {
+
+		Cts2EditorServiceAsync service = GWT.create(Cts2EditorService.class);
+
 		// Set the busy indicator to show while executing the
 		// phenotype.
 
 		// Need to send in the overall layout so the whole
 		// screen is greyed out.
-		i_busyIndicator = new ModalWindow(i_mainLayout, 40, "#dedede");
+		i_busyIndicator = new ModalWindow(i_valueSetsLayout, 40, "#dedede");
 		i_busyIndicator.setLoadingIcon("loading_circle.gif");
 		i_busyIndicator.show("Retrieving ValueSets...", true);
 

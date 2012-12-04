@@ -14,6 +14,7 @@ import com.smartgwt.client.types.Alignment;
 import com.smartgwt.client.util.BooleanCallback;
 import com.smartgwt.client.util.SC;
 import com.smartgwt.client.widgets.IButton;
+import com.smartgwt.client.widgets.Label;
 import com.smartgwt.client.widgets.events.ClickEvent;
 import com.smartgwt.client.widgets.events.ClickHandler;
 import com.smartgwt.client.widgets.grid.ListGrid;
@@ -29,6 +30,8 @@ import com.smartgwt.client.widgets.layout.VLayout;
  * 
  */
 public class ValueSetEntitiesLayout extends VLayout {
+
+	private static final String TITLE_ENTITIES = "Entities";
 
 	private final boolean i_additionsMade = false;
 	private boolean i_removalsMade = false;
@@ -49,6 +52,9 @@ public class ValueSetEntitiesLayout extends VLayout {
 		String oid = record.getAttribute("valueSetName");
 		Criteria criteria = new Criteria();
 		criteria.setAttribute("oid", oid);
+
+		Label titleLabel = getTitleLabel();
+		addMember(titleLabel);
 
 		i_valueSetItemsListGrid = new ValueSetItemsListGrid();
 
@@ -164,7 +170,10 @@ public class ValueSetEntitiesLayout extends VLayout {
 		buttonLayout.addMember(i_saveAsButton);
 		buttonLayout.addMember(i_closeButton);
 
-		addMember(buttonLayout);
+		// Don't add the buttons if we are in readOnly mode.
+		if (!Cts2Editor.getReadOnly()) {
+			addMember(buttonLayout);
+		}
 
 		// listen for selection changes to update the buttons
 		i_valueSetItemsListGrid.addSelectionUpdatedHandler(new SelectionUpdatedHandler() {
@@ -191,6 +200,19 @@ public class ValueSetEntitiesLayout extends VLayout {
 		});
 
 		createAddRecordEvent();
+	}
+
+	/**
+	 * Create a label for the entites list grid.
+	 * 
+	 * @return
+	 */
+	private Label getTitleLabel() {
+		Label label = new Label("<b>" + TITLE_ENTITIES + "</b>");
+		label.setWidth100();
+		label.setHeight(25);
+
+		return label;
 	}
 
 	private void createAddRecordEvent() {

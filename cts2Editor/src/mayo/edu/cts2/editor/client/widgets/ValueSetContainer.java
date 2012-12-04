@@ -21,15 +21,11 @@ import com.smartgwt.client.widgets.layout.VLayout;
  */
 public class ValueSetContainer extends VLayout {
 
-	private static final int HEIGHT = 450;
 	private static final int TITLE_HEIGHT = 30;
 	private static final String TITLE = "<em style=\"font-size:1.2em;font-weight:bold; margin-left:5px\">Value Sets</em>";
 
 	private static final int BUTTON_LAYOUT_HEIGHT = 25;
 	private static final String BUTTON_ADD_TITLE = "Add...";
-
-	private static final String BACKGROUND_COLOR_BORDER = "#5479ef";
-	private static final String BACKGROUND_COLOR_TITLE = "#89a0ba";
 
 	private final Label i_title;
 	private final ValueSetsListGrid i_valueSetsListGrid;
@@ -40,9 +36,7 @@ public class ValueSetContainer extends VLayout {
 		super();
 
 		setWidth100();
-		setHeight(HEIGHT);
-		setMargin(15);
-		setBorder("2px solid " + BACKGROUND_COLOR_BORDER);
+		setMargin(5);
 
 		i_title = createTitle();
 		i_valueSetsListGrid = valueSetListGrid;
@@ -50,7 +44,11 @@ public class ValueSetContainer extends VLayout {
 
 		addMember(i_title);
 		addMember(i_valueSetsListGrid);
-		addMember(buttonLayout);
+
+		// Don't add the buttons if we are in readOnly mode.
+		if (!Cts2Editor.getReadOnly()) {
+			addMember(buttonLayout);
+		}
 
 		createAddRecordEvent();
 	}
@@ -89,7 +87,6 @@ public class ValueSetContainer extends VLayout {
 		Label titleLabel = new Label("<b>" + TITLE + "</b>");
 		titleLabel.setWidth100();
 		titleLabel.setHeight(TITLE_HEIGHT);
-		titleLabel.setBackgroundColor(BACKGROUND_COLOR_TITLE);
 
 		return titleLabel;
 	}
