@@ -5,8 +5,8 @@ import java.util.logging.Logger;
 
 import mayo.edu.cts2.editor.client.Cts2EditorService;
 import mayo.edu.cts2.editor.server.rest.Cts2Client;
-
 import mayo.edu.cts2.editor.server.rest.EntityClient;
+
 import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.client.ProxyFactory;
 import org.jboss.resteasy.util.Base64;
@@ -27,18 +27,13 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 
 	private final int MAX_RECORDS = 100;
 
-	private final Cts2Client valueSetclient;
-	private final EntityClient entityClient;
-
 	public Cts2EditorServiceImpl() {
 		super();
-		valueSetclient = ProxyFactory.create(Cts2Client.class, getCts2ValueSetRestUrl());
-		entityClient = ProxyFactory.create(EntityClient.class, getEntityRestUrl());
 	}
 
 	@Override
 	public String getValueSet(String oid) throws IllegalArgumentException {
-		return valueSetclient.getValueSet(getAuthorizationHeader(), oid);
+		return getCts2Client().getValueSet(getAuthorizationHeader(), oid);
 	}
 
 	@Override
@@ -49,7 +44,7 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 		StringBuilder sb = new StringBuilder(XML_HEADER + XML_ROOT_START);
 
 		for (String oid : oids) {
-			String xmlResponse = valueSetclient.getValueSet(getAuthorizationHeader(), oid);
+			String xmlResponse = getCts2Client().getValueSet(getAuthorizationHeader(), oid);
 			int end = xmlResponse.indexOf(XML_HEADER) + XML_HEADER.length();
 			xmlResponse = xmlResponse.substring(end);
 			sb.append(xmlResponse);
@@ -61,27 +56,27 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 
 	@Override
 	public String getValueSetDefinition(String oid) throws IllegalArgumentException {
-		return valueSetclient.getValueSetDefinition(getAuthorizationHeader(), oid, "1");
+		return getCts2Client().getValueSetDefinition(getAuthorizationHeader(), oid, "1");
 	}
 
 	@Override
 	public String getResolvedValueSet(String oid) throws IllegalArgumentException {
-		return valueSetclient.getResolvedValueSet(getAuthorizationHeader(), oid, "1", MAX_RECORDS);
+		return getCts2Client().getResolvedValueSet(getAuthorizationHeader(), oid, "1", MAX_RECORDS);
 	}
 
 	@Override
 	public String getDefinitons(String oid) throws IllegalArgumentException {
-		return valueSetclient.getDefinitions(getAuthorizationHeader(), oid, MAX_RECORDS);
+		return getCts2Client().getDefinitions(getAuthorizationHeader(), oid, MAX_RECORDS);
 	}
 
 	@Override
 	public String getMatchingValueSets(String matchValue) throws IllegalArgumentException {
-		return valueSetclient.getValueSets(getAuthorizationHeader(), MAX_RECORDS, matchValue);
+		return getCts2Client().getValueSets(getAuthorizationHeader(), MAX_RECORDS, matchValue);
 	}
 
 	@Override
 	public String createChangeSet() {
-		ClientResponse<String> response = valueSetclient.createChangeSet(getAuthorizationHeader());
+		ClientResponse<String> response = getCts2Client().createChangeSet(getAuthorizationHeader());
 		String uri = null;
 		if (response.getStatus() == 201) {
 			uri = response.getHeaders().get("location").get(0);
@@ -92,28 +87,39 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 
 	@Override
 	public String deleteChangeSet(String uri) throws IllegalArgumentException {
-		return valueSetclient.deleteChangeSet(getAuthorizationHeader(), uri);
+		return getCts2Client().deleteChangeSet(getAuthorizationHeader(), uri);
 	}
 
 	@Override
 	public String getChangeSet(String uri) throws IllegalArgumentException {
-		return valueSetclient.getChangeSet(getAuthorizationHeader(), uri);
+		return getCts2Client().getChangeSet(getAuthorizationHeader(), uri);
 	}
 
 	@Override
 	public String updateChangeSet(String uri) throws IllegalArgumentException {
-		/* TODO: Pass along the changed metadata (creator, changeInstructions, officialEffectiveDate) */
-		return valueSetclient.updateChangeSet(getAuthorizationHeader(), uri);
+		/*
+		 * TODO: Pass along the changed metadata (creator, changeInstructions,
+		 * officialEffectiveDate)
+		 */
+		return getCts2Client().updateChangeSet(getAuthorizationHeader(), uri);
 	}
 
 	@Override
 	public String getMatchingEntities(String matchValue) throws IllegalArgumentException {
-		return entityClient.getMatchingEntities(getAuthorizationHeader(), MAX_RECORDS, matchValue);
+		return getEntityClient().getMatchingEntities(getAuthorizationHeader(), MAX_RECORDS, matchValue);
 	}
 
 	private String getAuthorizationHeader() {
 		return "Basic "
 		        + Base64.encodeBytes((getCts2ValueSetRestUsername() + ":" + getCts2ValueSetRestPassword()).getBytes());
+	}
+
+	private Cts2Client getCts2Client() {
+		return ProxyFactory.create(Cts2Client.class, getCts2ValueSetRestUrl());
+	}
+
+	private EntityClient getEntityClient() {
+		return ProxyFactory.create(EntityClient.class, getEntityRestUrl());
 	}
 
 }
