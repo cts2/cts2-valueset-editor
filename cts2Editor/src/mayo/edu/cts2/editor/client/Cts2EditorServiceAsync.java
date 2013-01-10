@@ -42,4 +42,6 @@ public interface Cts2EditorServiceAsync {
 	                  List<ValueSetDefinitionEntry> removedEntries, AsyncCallback<String> async);
 
 	void getUserDefinitions(String oid, String username, AsyncCallback<String> async);
+
+	void getDefinition(String oid, String version, AsyncCallback<String> async);
 }

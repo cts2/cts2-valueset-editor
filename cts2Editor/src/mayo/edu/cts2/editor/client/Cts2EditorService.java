@@ -54,4 +54,6 @@ public interface Cts2EditorService extends RemoteService {
 	                      List<ValueSetDefinitionEntry> removedEntries) throws IllegalArgumentException;
 
 	String getUserDefinitions(String oid, String username) throws IllegalArgumentException;
+
+	String getDefinition(String oid, String version) throws IllegalArgumentException;
 }

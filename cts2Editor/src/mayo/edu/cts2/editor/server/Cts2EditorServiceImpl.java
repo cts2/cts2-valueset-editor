@@ -212,7 +212,12 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 
 	@Override
 	public String getUserDefinitions(String oid, String username) throws IllegalArgumentException {
-		return getCts2Client().getUserDefinitions(getAuthorizationHeader(), oid, username, 100);
+		return getCts2Client().getUserDefinitions(getAuthorizationHeader(), oid, "creator", username, 100);
+	}
+
+	@Override
+	public String getDefinition(String oid, String version) throws IllegalArgumentException {
+		return getCts2Client().getDefinition(getAuthorizationHeader(), oid, version);
 	}
 
 	@Override
