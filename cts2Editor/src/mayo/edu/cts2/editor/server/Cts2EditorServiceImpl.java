@@ -237,7 +237,7 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 		metadata.setUpdatedState(state);
 
 		Cts2RestClient restClient = Cts2RestClient.instance();
-		restClient.postCts2Resource(getCts2ValueSetRestUrl() + "/changeset/" + uri, "dsuesse", "cts2Mayo()", metadata);
+		restClient.postCts2Resource(getCts2ValueSetRestUrl() + "/changeset/" + uri, getCts2ValueSetRestUsername(), getCts2ValueSetRestPassword(), metadata);
 	}
 
 	private boolean saveValueSet(ValueSetDefinition definition, String creator, String description) {
