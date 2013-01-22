@@ -1,9 +1,10 @@
 package mayo.edu.cts2.editor.shared;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Definition {
+public class Definition implements Serializable {
 
 	private String valueSetOid;
 	private String about;
