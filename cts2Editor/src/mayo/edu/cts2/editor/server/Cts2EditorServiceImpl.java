@@ -1,17 +1,10 @@
 package mayo.edu.cts2.editor.server;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.StringReader;
-import java.io.StringWriter;
-import java.net.HttpURLConnection;
 import java.net.URI;
-import java.net.URL;
-import java.security.cert.CertPathParameters;
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.Calendar;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -19,13 +12,19 @@ import java.util.logging.Logger;
 import edu.mayo.cts2.framework.core.client.Cts2RestClient;
 import edu.mayo.cts2.framework.core.constants.URIHelperInterface;
 import edu.mayo.cts2.framework.core.xml.DelegatingMarshaller;
+import edu.mayo.cts2.framework.model.core.ChangeableElementGroup;
+import edu.mayo.cts2.framework.model.core.Comment;
 import edu.mayo.cts2.framework.model.core.RoleReference;
+import edu.mayo.cts2.framework.model.core.SourceAndNotation;
 import edu.mayo.cts2.framework.model.core.SourceAndRoleReference;
 import edu.mayo.cts2.framework.model.core.SourceReference;
+import edu.mayo.cts2.framework.model.core.TsAnyType;
 import edu.mayo.cts2.framework.model.core.URIAndEntityName;
+import edu.mayo.cts2.framework.model.core.ValueSetReference;
 import edu.mayo.cts2.framework.model.core.VersionTagReference;
-import edu.mayo.cts2.framework.model.core.types.EntryState;
 import edu.mayo.cts2.framework.model.core.types.FinalizableState;
+import edu.mayo.cts2.framework.model.core.types.NoteType;
+import edu.mayo.cts2.framework.model.core.types.SetOperator;
 import edu.mayo.cts2.framework.model.service.core.UpdateChangeSetMetadataRequest;
 import edu.mayo.cts2.framework.model.service.core.UpdatedChangeInstructions;
 import edu.mayo.cts2.framework.model.service.core.UpdatedCreator;
@@ -34,21 +33,17 @@ import edu.mayo.cts2.framework.model.util.ModelUtils;
 import edu.mayo.cts2.framework.model.valuesetdefinition.SpecificEntityList;
 import edu.mayo.cts2.framework.model.valuesetdefinition.ValueSetDefinition;
 import edu.mayo.cts2.framework.model.valuesetdefinition.ValueSetDefinitionMsg;
-import edu.mayo.cts2.framework.model.wsdl.valuesetdefinitionmaintenance.UpdateChangeSetMetadata;
 import mayo.edu.cts2.editor.client.Cts2EditorService;
 import mayo.edu.cts2.editor.server.rest.Cts2Client;
 import mayo.edu.cts2.editor.server.rest.EntityClient;
-import mayo.edu.cts2.editor.shared.ValueSetDefinitionEntry;
+import mayo.edu.cts2.editor.shared.CTS2Result;
+import mayo.edu.cts2.editor.shared.Definition;
+import mayo.edu.cts2.editor.shared.DefinitionEntry;
 
-import org.jboss.resteasy.client.ClientRequest;
 import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.client.ProxyFactory;
 import org.jboss.resteasy.util.Base64;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
 /**
@@ -71,16 +66,35 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 		super();
 	}
 
+	/**
+	 * Returns the xml representation of the value set
+	 *
+	 * @param oid id of the value set to return
+	 * @return the xml representation of the value set
+	 * @throws IllegalArgumentException if any argument is <code>null</code>
+	 */
 	@Override
 	public String getValueSet(String oid) throws IllegalArgumentException {
+		if (oid == null) {
+			throw new IllegalArgumentException("Argument can not be null.");
+		}
 		return getCts2Client().getValueSet(getAuthorizationHeader(), oid);
 	}
 
-	@Override
 	/**
-	 * For each OID in the list, return the XML representation of the value sets.
+	 * Returns the xml representation of the value sets in <code>oids</code>
+	 *
+	 * @param oids ids of the value sets to fetch
+	 * @return xml representation of the value sets in <code>oids</code>
+	 * @throws IllegalArgumentException if any argument is <code>null</code>
 	 */
+	@Override
 	public String getValueSets(List<String> oids) throws IllegalArgumentException {
+		if (oids == null) {
+			throw new IllegalArgumentException("Argument can not be null.");
+		}
+
+		/* For each OID in the list, return the XML representation of the value sets. */
 		StringBuilder sb = new StringBuilder(XML_HEADER + XML_ROOT_START);
 
 		for (String oid : oids) {
@@ -94,30 +108,86 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 		return sb.toString();
 	}
 
+	/**
+	 * Returns the current definition for the value set
+	 *
+	 * @param oid id of the value set
+	 * @return the current defintion for the value set
+	 * @throws IllegalArgumentException if any argument is <code>null</code>
+	 */
 	@Override
 	public String getValueSetDefinition(String oid) throws IllegalArgumentException {
+		if (oid == null) {
+			throw new IllegalArgumentException("Argument can not be null.");
+		}
 		return getValueSetDefinition(oid, "1");
 	}
 
+	/**
+	 * Returns the value set definition for the value set oid and definition version
+	 *
+	 * @param oid id of the value set
+	 * @param version id of the version
+	 * @return value set definition matching the value set oid and definition version
+	 * @throws IllegalArgumentException if any argument is <code>null</code>
+	 */
 	public String getValueSetDefinition(String oid, String version) throws IllegalArgumentException {
+		if (oid == null || version == null) {
+			throw new IllegalArgumentException("Argument can not be null.");
+		}
 		return getCts2Client().getValueSetDefinition(getAuthorizationHeader(), oid, version);
 	}
 
+	/**
+	 * Returns the entities for the current version of the value set
+	 *
+	 * @param oid id of the value set to fetch the current version for
+	 * @return the entities for the current version
+	 * @throws IllegalArgumentException if any argument is <code>null</code>
+	 */
 	@Override
 	public String getResolvedValueSet(String oid) throws IllegalArgumentException {
+		if (oid == null) {
+			throw new IllegalArgumentException("Argument can not be null.");
+		}
 		return getCts2Client().getResolvedValueSet(getAuthorizationHeader(), oid, "1", MAX_RECORDS);
 	}
 
+	/**
+	 * Returns all the definitions of a value set
+	 *
+	 * @param oid id of the value set to fetch the definitions for
+	 * @return the definitions of the value set
+	 * @throws IllegalArgumentException if any argument is <code>null</code>
+	 */
 	@Override
 	public String getDefinitions(String oid) throws IllegalArgumentException {
+		if (oid == null) {
+			throw new IllegalArgumentException("Argument can not be null.");
+		}
 		return getCts2Client().getDefinitions(getAuthorizationHeader(), oid, MAX_RECORDS);
 	}
 
+	/**
+	 * Returns value sets matching the match value criteria
+	 *
+	 * @param matchValue
+	 * @return value sets matching the match value criteria
+	 * @throws IllegalArgumentException if any argument is <code>null</code>
+	 */
 	@Override
 	public String getMatchingValueSets(String matchValue) throws IllegalArgumentException {
+		if (matchValue == null) {
+			throw new IllegalArgumentException("Argument can not be null.");
+		}
 		return getCts2Client().getValueSets(getAuthorizationHeader(), MAX_RECORDS, matchValue);
 	}
 
+	/**
+	 * Creates a change set with the CTS2 service
+	 *
+	 * @return the id of the created change set
+	 */
 	@Override
 	public String createChangeSet() {
 		ClientResponse<String> response = getCts2Client().createChangeSet(getAuthorizationHeader());
@@ -130,98 +200,124 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 		return uri;
 	}
 
+	/**
+	 * Marks a change set for deletion with the CTS2 service
+	 *
+	 * @param uri id of the change set to marked for deletion
+	 * @return the updated change set marked for deletion
+	 * @throws IllegalArgumentException if any argument is <code>null</code>
+	 */
 	@Override
 	public String deleteChangeSet(String uri) throws IllegalArgumentException {
+		if (uri == null) {
+			throw new IllegalArgumentException("Argument can not be null.");
+		}
 		return getCts2Client().deleteChangeSet(getAuthorizationHeader(), uri);
 	}
 
+	/**
+	 * Returns the change set.
+	 *
+	 * @param uri id of the change set
+	 * @return the change set
+	 * @throws IllegalArgumentException if any argument is <code>null</code>
+	 */
 	@Override
 	public String getChangeSet(String uri) throws IllegalArgumentException {
 		return getCts2Client().getChangeSet(getAuthorizationHeader(), uri);
 	}
 
-//	@Override
-//	public String updateChangeSet(String uri, UpdateChangeSetMetadataRequest metadataRequest) throws IllegalArgumentException {
-//		return null;
-//	}
-
+	/**
+	 * Returns the xml representation of the matching entities
+	 *
+	 * @param matchValue
+	 * @return the xml representation of the matching entities
+	 * @throws IllegalArgumentException if any argument is <code>null</code>
+	 */
 	@Override
 	public String getMatchingEntities(String matchValue) throws IllegalArgumentException {
+		if (matchValue == null) {
+			throw new IllegalArgumentException("Argument can not be null.");
+		}
 		return getEntityClient().getMatchingEntities(getAuthorizationHeader(), MAX_RECORDS, matchValue);
 	}
 
-	private String getAuthorizationHeader() {
-		return "Basic "
-		        + Base64.encodeBytes((getCts2ValueSetRestUsername() + ":" + getCts2ValueSetRestPassword()).getBytes());
-	}
-
-	private Cts2Client getCts2Client() {
-		return ProxyFactory.create(Cts2Client.class, getCts2ValueSetRestUrl());
-	}
-
-	private EntityClient getEntityClient() {
-		return ProxyFactory.create(EntityClient.class, getEntityRestUrl());
-	}
-
+	/**
+	 *
+	 * @param definition to save
+	 * @return the results
+	 * @throws IllegalArgumentException if any argument is <code>null</code>
+	 */
 	@Override
-	public String saveValueSet(String valueSetDefinitionId, String creator, String description,
-	                           List<ValueSetDefinitionEntry> addedEntries,
-	                           List<ValueSetDefinitionEntry> removedEntries) {
-		/* get ValueSetDefinintion
-		 * if state = final
-		 *     saveValuesetas
-		 * else
-		 *      create changeset => update
-		 *      update definition
-		 */
+	public CTS2Result saveDefinition(Definition definition) throws IllegalArgumentException {
+		if (definition == null)
+			throw new IllegalArgumentException("Argument can not be null.");
 
-		String valueSetDefinitionXml = getValueSetDefinition(valueSetDefinitionId);
-		ValueSetDefinition definition = unmarshallValueSetDefinition(valueSetDefinitionXml);
-
-		if (definition.getState().equals(FinalizableState.FINAL)) {
-			saveValueSetAs(definition, creator, description, addedEntries, removedEntries);
-		} else {
-
-		}
-		/*  state: FINAL | OPEN
-			creator: username
-			about: user entered */
-
-		/* entities: uri, href, namespace, name */
-
-		return null;
-	}
-
-	@Override
-	public String saveValueSetAs(String parentValueSetDefinitionId,
-	                             String creator, String description,
-	                             List<ValueSetDefinitionEntry> addedEntries,
-	                             List<ValueSetDefinitionEntry> removedEntries) {
-		String result = null;
-		String valueSetDefinitionXml = getValueSetDefinition(parentValueSetDefinitionId);
-		ValueSetDefinition definition = unmarshallValueSetDefinition(valueSetDefinitionXml);
-
-		if (definition != null) {
-			if (saveValueSetAs(definition, creator, description, addedEntries, removedEntries)) {
-				result = getValueSetDefinition(parentValueSetDefinitionId, definition.getDocumentURI());
-			}
-		}
-
+		definition.setVersion(null);
+		CTS2Result result = saveValueSet(toValueSetDefinition(definition));
 		return result;
 	}
 
+	/**
+	 *
+	 * @param definition to clone and save
+	 * @return the results
+	 * @throws IllegalArgumentException if any argument is <code>null</code>
+	 */
+	@Override
+	public CTS2Result saveDefinitionAs(Definition definition) throws IllegalArgumentException {
+		if (definition == null)
+			throw new IllegalArgumentException("Argument can not be null.");
+
+		definition.setDocumentUri(null);
+		definition.setVersion(null);
+		CTS2Result result = saveValueSetAs(toValueSetDefinition(definition));
+		return result;
+	}
+
+	/**
+	 * Returns the definitions for a value set by a specific creator.
+	 *
+	 * @param oid id of the value set
+	 * @param username id of the creator
+	 * @return the xml representation of user's definitions
+	 * @throws IllegalArgumentException if any argument is <code>null</code>
+	 */
 	@Override
 	public String getUserDefinitions(String oid, String username) throws IllegalArgumentException {
+		if (oid == null || username == null)
+			throw new IllegalArgumentException("Arguments can not be null.");
+
 		return getCts2Client().getUserDefinitions(getAuthorizationHeader(), oid, "creator", username, 100);
 	}
 
+	/**
+	 * Returns a specific value set definition.
+	 *
+	 * @param oid id of the value set
+	 * @param version id of the version
+	 * @return the value set definition version
+	 * @throws IllegalArgumentException if any argument is <code>null</code>
+	 */
 	@Override
 	public String getDefinition(String oid, String version) throws IllegalArgumentException {
+		if (oid == null || version == null)
+			throw new IllegalArgumentException("Arguments can not be null.");
 		return getCts2Client().getDefinition(getAuthorizationHeader(), oid, version);
 	}
 
+	/**
+	 * Updates the change set metadata
+	 * @param uri id of the change set
+	 * @param creator updated creator
+	 * @param changeInstructions updated change instructions
+	 * @throws IllegalArgumentException  if any argument is <code>null</code>
+	 */
 	@Override
-	public void updateChangeSet(String uri, String creator, String changeInstructions) {
+	public void updateChangeSet(String uri, String creator, String changeInstructions) throws IllegalArgumentException {
+		if (uri == null || creator == null || changeInstructions == null)
+			throw new IllegalArgumentException("Arguments can not be null.");
+
 		UpdateChangeSetMetadataRequest metadata = new UpdateChangeSetMetadataRequest();
 
 		UpdatedCreator updatedCreator = new UpdatedCreator();
@@ -240,104 +336,140 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 		restClient.postCts2Resource(getCts2ValueSetRestUrl() + "/changeset/" + uri, getCts2ValueSetRestUsername(), getCts2ValueSetRestPassword(), metadata);
 	}
 
-	private boolean saveValueSet(ValueSetDefinition definition, String creator, String description) {
-		boolean result = false;
-		String changeSetUri = createChangeSet();
-		updateChangeSet(changeSetUri, creator, description);
+	/**
+	 * Returns <code>true</code> if the definition version is marked FINAL.
+	 * Returns <code>false</code> if the definition version is not marked FINAL.
+	 *
+	 * @param valueSetOid id of the value set to check
+	 * @param version id of the version to check
+	 * @return <code>true</code> if the definition version is marked FINAL, <code>false</code> if the definition version is not marked FINAL
+	 * @throws IllegalArgumentException if any argument is <code>null</code>
+	 */
+	@Override
+	public boolean isFinal(String valueSetOid, String version) throws IllegalArgumentException {
+		if (valueSetOid == null || version == null)
+			throw new IllegalArgumentException("Arguments can not be null.");
 
-		if (changeSetUri != null) {
-			try {
-				persistValueSetToService(definition, changeSetUri);
-				result = true;
-			}
-			catch (Exception e) {
-				logger.log(Level.WARNING, "Unable to persist the value set definition.", e);
-				result = false;
+		String definitionXml = getCts2Client().getDefinition(getAuthorizationHeader(), valueSetOid, version);
+		ValueSetDefinition definition = unmarshallValueSetDefinition(definitionXml);
+		return definition.getState() == FinalizableState.FINAL;
+	}
+
+	private ValueSetDefinition toValueSetDefinition(Definition definition) {
+		ValueSetDefinition vsd = new ValueSetDefinition();
+
+		vsd.setDefinedValueSet(new ValueSetReference(definition.getValueSetOid()));
+		vsd.setDocumentURI(
+		  definition.getDocumentUri() != null
+		    ? definition.getDocumentUri()
+		    : UUID.randomUUID().toString());
+		vsd.setAbout(vsd.getDocumentURI());
+
+		VersionTagReference[] references = new VersionTagReference[] {
+		  new VersionTagReference(
+		    definition.getVersion() != null
+		      ? definition.getVersion()
+		      : UUID.randomUUID().toString())
+		};
+		vsd.setVersionTag(references);
+		vsd.setState(FinalizableState.OPEN);
+		vsd.setOfficialReleaseDate(Calendar.getInstance().getTime());
+
+		ChangeableElementGroup group = new ChangeableElementGroup();
+		vsd.setChangeableElementGroup(group);
+
+		SourceAndRoleReference snrr = new SourceAndRoleReference();
+		SourceReference sourceReference = new SourceReference();
+		sourceReference.setContent(definition.getCreator());
+		RoleReference roleReference = new RoleReference();
+		roleReference.setContent("creator");
+		roleReference.setUri("http://purl.org/dc/elements/1.1/creator");
+		snrr.setSource(sourceReference);
+		snrr.setRole(roleReference);
+		SourceAndRoleReference[] sourceAndRoleReferences = new SourceAndRoleReference[]{snrr};
+		vsd.setSourceAndRole(sourceAndRoleReferences);
+
+		Comment comment = new Comment();
+		comment.setType(NoteType.EDITORIALNOTE);
+		TsAnyType anyType = new TsAnyType();
+		anyType.setContent(definition.getNote());
+		comment.setValue(anyType);
+		vsd.setNote(new Comment[]{comment});
+
+		SourceAndNotation snn = new SourceAndNotation();
+		snn.setSourceDocument("");
+		vsd.setSourceAndNotation(snn);
+
+		edu.mayo.cts2.framework.model.valuesetdefinition.ValueSetDefinitionEntry entry = new edu.mayo.cts2.framework.model.valuesetdefinition.ValueSetDefinitionEntry();
+		entry.setOperator(SetOperator.UNION);
+		entry.setEntryOrder(1L);
+		entry.setEntityList(createEntityList(definition.getEntries()));
+		vsd.setEntry(new edu.mayo.cts2.framework.model.valuesetdefinition.ValueSetDefinitionEntry[]{entry});
+
+		return vsd;
+	}
+
+	private SpecificEntityList createEntityList(List<DefinitionEntry> definitionEntries) {
+		SpecificEntityList entityList = new SpecificEntityList();
+
+		for (DefinitionEntry definitionEntry : definitionEntries) {
+			URIAndEntityName entity = new URIAndEntityName();
+			entity.setName(definitionEntry.getName());
+			entity.setNamespace(definitionEntry.getNamespace());
+			entity.setUri(definitionEntry.getUri());
+			entity.setHref(definitionEntry.getHref());
+			entityList.addReferencedEntity(entity);
+		}
+
+		return entityList;
+	}
+
+	private CTS2Result saveValueSet(ValueSetDefinition definition) {
+		/* TODO: implement */
+		CTS2Result result = new CTS2Result();
+		result.setError(true);
+		result.setMessage("Save Method is not implemented.");
+		return result;
+	}
+
+	private CTS2Result saveValueSetAs(ValueSetDefinition definition) {
+		CTS2Result result = new CTS2Result();
+		if (definition.getState().equals(FinalizableState.FINAL)) {
+			result.setError(true);
+			result.setMessage("Value Set Definition is final and can not be updated.");
+		} else {
+			String changeSetUri = createChangeSet();
+
+			if (changeSetUri != null) {
+				updateChangeSet(changeSetUri, definition.getSourceAndRole(0).getSource().getContent(), definition.getNote(0).getValue().toString());
+
+				try {
+					if (saveAsToService(definition, changeSetUri)) {
+						result.setChangeSetUri(changeSetUri);
+						result.setValueSetOid(definition.getDefinedValueSet().getContent());
+						result.setValueSetDefinitionId(definition.getDocumentURI());
+						result.setValueSetVersion(definition.getVersionTag(0).getContent());
+					}
+					else {
+						result.setError(true);
+						result.setMessage("An error occurred while saving the definition to the service.");
+					}
+				}
+				catch (Exception e) {
+					logger.log(Level.WARNING, "Unable to persist the value set definition.", e);
+					result.setError(true);
+					result.setMessage("Failed to persist the definition. Error: " + e.getMessage());
+				}
 			}
 		}
 		return result;
 	}
 
-	private boolean saveValueSetAs(ValueSetDefinition parentDefinition,
-	                               String creator, String description,
-	                               List<ValueSetDefinitionEntry> addedEntries,
-	                               List<ValueSetDefinitionEntry> removedEntries) {
-		boolean result = false;
-		String changeSetUri = createChangeSet();
-		updateChangeSet(changeSetUri, creator, description);
-
-		if (changeSetUri != null) {
-			/* todo: clone value set definition instead */
-			parentDefinition.setDocumentURI(UUID.randomUUID().toString());
-			parentDefinition.setVersionTag(
-			  Collections.singletonList(
-			    new VersionTagReference(UUID.randomUUID().toString())));
-			parentDefinition.setState(FinalizableState.OPEN);
-			parentDefinition.setEntryState(EntryState.ACTIVE);
-
-			SourceReference source = new SourceReference();
-			source.setContent(creator);
-			SourceAndRoleReference sourceAndRole = new SourceAndRoleReference();
-			sourceAndRole.setSource(source);
-			RoleReference role = new RoleReference();
-			role.setContent("creator");
-			role.setUri("http://purl.org/dc/elements/1.1/creator");
-			sourceAndRole.setRole(role);
-			parentDefinition.setSourceAndRole(new SourceAndRoleReference[]{ sourceAndRole });
-
-			/* Remove entities */
-			edu.mayo.cts2.framework.model.valuesetdefinition.ValueSetDefinitionEntry[] currentEntries = parentDefinition.getEntry();
-			for (ValueSetDefinitionEntry entry : removedEntries) {
-				for (edu.mayo.cts2.framework.model.valuesetdefinition.ValueSetDefinitionEntry e : currentEntries) {
-//					if (e.getCompleteCodeSystem().getCodeSystem().getContent().equals(entry.getNamespace())) {
-						SpecificEntityList entityList = e.getEntityList();
-						for (URIAndEntityName entity : entityList.getReferencedEntity()) {
-							if (entity.getName().equalsIgnoreCase(entry.getName()) &&
-							  entity.getNamespace().equalsIgnoreCase(entry.getNamespace())) {
-								entityList.removeReferencedEntity(entity);
-							}
-						}
-						e.setEntityList(entityList);
-//					}
-				}
-			}
-
-			/* Add entities */
-			for (ValueSetDefinitionEntry entry : addedEntries) {
-				boolean added = false;
-				for (edu.mayo.cts2.framework.model.valuesetdefinition.ValueSetDefinitionEntry e : currentEntries) {
-//					if (e.getCompleteCodeSystem().getCodeSystem().getContent().equals(entry.getNamespace())) {
-						SpecificEntityList entityList = e.getEntityList();
-						URIAndEntityName entityToAdd = new URIAndEntityName();
-						entityToAdd.setHref(entry.getHref());
-						entityToAdd.setName(entry.getName());
-						entityToAdd.setNamespace(entry.getNamespace());
-						entityToAdd.setUri(entry.getUri());
-						entityList.addReferencedEntity(entityToAdd);
-						e.setEntityList(entityList);
-						added = true;
-						break;
-//					}
-				}
-//				if (!added) {
-//					/* TODO create new edu.mayo.cts2.framework.model.valuesetdefinition.ValueSetDefinitionEntry and
-//					 * add entity */
-//				}
-			}
-			parentDefinition.setEntry(currentEntries);
-
-			try {
-				result = persistValueSetToService(parentDefinition, changeSetUri);
-			}
-			catch (Exception e) {
-				logger.log(Level.WARNING, "Unable to persist the value set definition.", e);
-				result = false;
-			}
-		}
-		return result;
+	private boolean saveToService(ValueSetDefinition definition, String changeSetUri) throws Exception {
+		return false;
 	}
 
-	private boolean persistValueSetToService(ValueSetDefinition definition, String changeSetUri) throws Exception {
+	private boolean saveAsToService(ValueSetDefinition definition, String changeSetUri) throws Exception {
 		Cts2RestClient restClient = Cts2RestClient.instance();
 		URI uri = restClient.postCts2Resource(getCts2ValueSetRestUrl() + URIHelperInterface.PATH_VALUESETDEFINITION + "?" +
 		  URIHelperInterface.PARAM_CHANGESETCONTEXT + "=" + changeSetUri,
@@ -350,7 +482,7 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 	private ValueSetDefinition unmarshallValueSetDefinition(String xml) {
 		DelegatingMarshaller marshaller = new DelegatingMarshaller();
 		StringReader reader = new StringReader(xml);
-		ValueSetDefinitionMsg message = null;
+		ValueSetDefinitionMsg message;
 		ValueSetDefinition definition = null;
 		try {
 			message = (ValueSetDefinitionMsg) marshaller.unmarshal(new StreamSource(reader));
@@ -361,6 +493,19 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 			logger.warning("Unable to unmarshal the returned value set definition xml. Message: " + ioe.getMessage()) ;
 		}
 		return definition;
+	}
+
+	private String getAuthorizationHeader() {
+		return "Basic "
+		  + Base64.encodeBytes((getCts2ValueSetRestUsername() + ":" + getCts2ValueSetRestPassword()).getBytes());
+	}
+
+	private Cts2Client getCts2Client() {
+		return ProxyFactory.create(Cts2Client.class, getCts2ValueSetRestUrl());
+	}
+
+	private EntityClient getEntityClient() {
+		return ProxyFactory.create(EntityClient.class, getEntityRestUrl());
 	}
 
 }

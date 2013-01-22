@@ -4,8 +4,10 @@ import java.util.List;
 
 import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
-import edu.mayo.cts2.framework.model.service.core.UpdateChangeSetMetadataRequest;
-import mayo.edu.cts2.editor.shared.ValueSetDefinitionEntry;
+import edu.mayo.cts2.framework.model.valuesetdefinition.ValueSetDefinition;
+import mayo.edu.cts2.editor.shared.CTS2Result;
+import mayo.edu.cts2.editor.shared.Definition;
+import mayo.edu.cts2.editor.shared.DefinitionEntry;
 
 /**
  * The client side stub for the RPC service.
@@ -34,26 +36,14 @@ public interface Cts2EditorService extends RemoteService {
 
 	String getMatchingEntities(String matchValue) throws IllegalArgumentException;
 
-	String saveValueSet(String valueSetDefinitionId, String creator, String description,
-	                    List<ValueSetDefinitionEntry> addedEntries,
-	                    List<ValueSetDefinitionEntry> removedEntries) throws IllegalArgumentException;
+	CTS2Result saveDefinition(Definition definition) throws IllegalArgumentException;
 
-	/**
-	 * Creates a new value set definition based off of the parentValueSetDefinitionId
-	 *
-	 * @param parentValueSetDefinitionId
-	 * @param creator
-	 * @param description
-	 * @param addedEntries
-	 * @param removedEntries
-	 * @return
-	 * @throws IllegalArgumentException
-	 */
-	String saveValueSetAs(String parentValueSetDefinitionId, String creator, String description,
-	                      List<ValueSetDefinitionEntry> addedEntries,
-	                      List<ValueSetDefinitionEntry> removedEntries) throws IllegalArgumentException;
+	CTS2Result saveDefinitionAs(Definition definition) throws IllegalArgumentException;
 
 	String getUserDefinitions(String oid, String username) throws IllegalArgumentException;
 
 	String getDefinition(String oid, String version) throws IllegalArgumentException;
+
+	boolean isFinal(String valueSetOid, String version) throws IllegalArgumentException;
+
 }
