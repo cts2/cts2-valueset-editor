@@ -81,6 +81,13 @@ public interface Cts2Client {
 	@Path("/valueset/{oid}/definition/{version}")
 	String getDefinition(@HeaderParam("Authorization") String auth,
 	                     @PathParam("oid") String oid,
+	                     @PathParam("version") String version,
+	                     @QueryParam("changeseturi") String changeSetUri);
+
+	@GET
+	@Path("/valueset/{oid}/definition/{version}")
+	String getDefinition(@HeaderParam("Authorization") String auth,
+	                     @PathParam("oid") String oid,
 	                     @PathParam("version") String version);
 
 	@GET

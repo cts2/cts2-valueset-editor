@@ -42,8 +42,8 @@ public interface Cts2EditorService extends RemoteService {
 
 	String getUserDefinitions(String oid, String username) throws IllegalArgumentException;
 
-	String getDefinition(String oid, String version) throws IllegalArgumentException;
+	String getDefinition(String oid, String version, String changeSetUri) throws IllegalArgumentException;
 
-	boolean isFinal(String valueSetOid, String version) throws IllegalArgumentException;
+	boolean isFinal(Definition definition) throws IllegalArgumentException;
 
 }

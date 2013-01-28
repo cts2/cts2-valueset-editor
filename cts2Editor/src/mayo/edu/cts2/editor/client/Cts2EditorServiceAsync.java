@@ -38,7 +38,7 @@ public interface Cts2EditorServiceAsync {
 
 	void getUserDefinitions(String oid, String username, AsyncCallback<String> async);
 
-	void getDefinition(String oid, String version, AsyncCallback<String> async);
+	void getDefinition(String oid, String version, String changeSetUri, AsyncCallback<String> async);
 
-	void isFinal(String valueSetOid, String version, AsyncCallback<Boolean> async);
+	void isFinal(Definition definition, AsyncCallback<Boolean> async);
 }

@@ -7,12 +7,12 @@ import java.util.List;
 public class Definition implements Serializable {
 
 	private String valueSetOid;
-	private String about;
 	private String version;
+	private String changeSetUri;
+	private String about;
 	private String formalName;
 	private String resourceSynopsis;
 	private String creator;
-	private String documentUri;
 	private String note;
 	private List<DefinitionEntry> entries = new ArrayList<DefinitionEntry>();
 
@@ -64,12 +64,12 @@ public class Definition implements Serializable {
 		this.creator = creator;
 	}
 
-	public String getDocumentUri() {
-		return documentUri;
+	public String getChangeSetUri() {
+		return changeSetUri;
 	}
 
-	public void setDocumentUri(String documentUri) {
-		this.documentUri = documentUri;
+	public void setChangeSetUri(String changeSetUri) {
+		this.changeSetUri = changeSetUri;
 	}
 
 	public String getNote() {

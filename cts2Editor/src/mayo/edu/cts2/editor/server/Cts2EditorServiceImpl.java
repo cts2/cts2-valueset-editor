@@ -253,8 +253,13 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 		if (definition == null)
 			throw new IllegalArgumentException("Argument can not be null.");
 
-		definition.setVersion(null);
-		CTS2Result result = saveValueSet(toValueSetDefinition(definition));
+		CTS2Result result = new CTS2Result();
+		if (isFinal(definition)) {
+			result.setError(true);
+			result.setMessage("The value set definition is final and can not be updated.");
+		} else {
+			result = saveValueSet(toValueSetDefinition(definition));
+		}
 		return result;
 	}
 
@@ -269,8 +274,6 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 		if (definition == null)
 			throw new IllegalArgumentException("Argument can not be null.");
 
-		definition.setDocumentUri(null);
-		definition.setVersion(null);
 		CTS2Result result = saveValueSetAs(toValueSetDefinition(definition));
 		return result;
 	}
@@ -295,15 +298,19 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 	 * Returns a specific value set definition.
 	 *
 	 * @param oid id of the value set
-	 * @param version id of the version
+	 * @param changeSetUri id of the change set to apply
 	 * @return the value set definition version
 	 * @throws IllegalArgumentException if any argument is <code>null</code>
 	 */
 	@Override
-	public String getDefinition(String oid, String version) throws IllegalArgumentException {
+	public String getDefinition(String oid, String version, String changeSetUri) throws IllegalArgumentException {
 		if (oid == null || version == null)
-			throw new IllegalArgumentException("Arguments can not be null.");
-		return getCts2Client().getDefinition(getAuthorizationHeader(), oid, version);
+			throw new IllegalArgumentException("Oid and version can not be null.");
+		if (changeSetUri == null || changeSetUri.equals("")) {
+			return getCts2Client().getDefinition(getAuthorizationHeader(), oid, version);
+		} else {
+			return getCts2Client().getDefinition(getAuthorizationHeader(), oid, version, changeSetUri);
+		}
 	}
 
 	/**
@@ -340,36 +347,33 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 	 * Returns <code>true</code> if the definition version is marked FINAL.
 	 * Returns <code>false</code> if the definition version is not marked FINAL.
 	 *
-	 * @param valueSetOid id of the value set to check
-	 * @param version id of the version to check
+	 * @param definition
 	 * @return <code>true</code> if the definition version is marked FINAL, <code>false</code> if the definition version is not marked FINAL
 	 * @throws IllegalArgumentException if any argument is <code>null</code>
 	 */
 	@Override
-	public boolean isFinal(String valueSetOid, String version) throws IllegalArgumentException {
-		if (valueSetOid == null || version == null)
+	public boolean isFinal(Definition definition) throws IllegalArgumentException {
+		if (definition == null)
 			throw new IllegalArgumentException("Arguments can not be null.");
 
-		String definitionXml = getCts2Client().getDefinition(getAuthorizationHeader(), valueSetOid, version);
-		ValueSetDefinition definition = unmarshallValueSetDefinition(definitionXml);
-		return definition.getState() == FinalizableState.FINAL;
+		String definitionXml = getCts2Client().getDefinition(
+		  getAuthorizationHeader(),
+		  definition.getValueSetOid(),
+		  definition.getVersion(),
+		  definition.getChangeSetUri());
+		ValueSetDefinition vsDefinition = unmarshallValueSetDefinition(definitionXml);
+		return vsDefinition.getState() == FinalizableState.FINAL;
 	}
 
 	private ValueSetDefinition toValueSetDefinition(Definition definition) {
 		ValueSetDefinition vsd = new ValueSetDefinition();
 
 		vsd.setDefinedValueSet(new ValueSetReference(definition.getValueSetOid()));
-		vsd.setDocumentURI(
-		  definition.getDocumentUri() != null
-		    ? definition.getDocumentUri()
-		    : UUID.randomUUID().toString());
-		vsd.setAbout(vsd.getDocumentURI());
+		vsd.setDocumentURI(UUID.randomUUID().toString());
+		vsd.setAbout(definition.getValueSetOid());
 
 		VersionTagReference[] references = new VersionTagReference[] {
-		  new VersionTagReference(
-		    definition.getVersion() != null
-		      ? definition.getVersion()
-		      : UUID.randomUUID().toString())
+		  new VersionTagReference(definition.getVersion())
 		};
 		vsd.setVersionTag(references);
 		vsd.setState(FinalizableState.OPEN);
@@ -425,48 +429,73 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 	}
 
 	private CTS2Result saveValueSet(ValueSetDefinition definition) {
-		/* TODO: implement */
 		CTS2Result result = new CTS2Result();
-		result.setError(true);
-		result.setMessage("Save Method is not implemented.");
+
+		String changeSetUri = createChangeSet();
+		if (changeSetUri != null) {
+			updateChangeSet(changeSetUri, definition.getSourceAndRole(0).getSource().getContent(), definition.getNote(0).getValue().toString());
+			try {
+				if (saveToService(definition, changeSetUri)) {
+					result.setChangeSetUri(changeSetUri);
+					result.setValueSetOid(definition.getDefinedValueSet().getContent());
+					result.setValueSetDefinitionId(definition.getDocumentURI());
+					result.setValueSetVersion(definition.getVersionTag(0).getContent());
+				}
+			} catch (Exception e) {
+				logger.log(Level.WARNING, "Unable to persist the value set definition.", e);
+				result.setError(true);
+				result.setMessage("Failed to persist the definition. Error: " + e.getMessage());
+			}
+		} else {
+			result.setError(true);
+			result.setMessage("An error occurred while creating the change set.");
+		}
 		return result;
 	}
 
 	private CTS2Result saveValueSetAs(ValueSetDefinition definition) {
 		CTS2Result result = new CTS2Result();
-		if (definition.getState().equals(FinalizableState.FINAL)) {
-			result.setError(true);
-			result.setMessage("Value Set Definition is final and can not be updated.");
-		} else {
-			String changeSetUri = createChangeSet();
+		String changeSetUri = createChangeSet();
 
-			if (changeSetUri != null) {
-				updateChangeSet(changeSetUri, definition.getSourceAndRole(0).getSource().getContent(), definition.getNote(0).getValue().toString());
+		if (changeSetUri != null) {
+			updateChangeSet(changeSetUri, definition.getSourceAndRole(0).getSource().getContent(), definition.getNote(0).getValue().toString());
 
-				try {
-					if (saveAsToService(definition, changeSetUri)) {
-						result.setChangeSetUri(changeSetUri);
-						result.setValueSetOid(definition.getDefinedValueSet().getContent());
-						result.setValueSetDefinitionId(definition.getDocumentURI());
-						result.setValueSetVersion(definition.getVersionTag(0).getContent());
-					}
-					else {
-						result.setError(true);
-						result.setMessage("An error occurred while saving the definition to the service.");
-					}
+			try {
+				if (saveAsToService(definition, changeSetUri)) {
+					result.setChangeSetUri(changeSetUri);
+					result.setValueSetOid(definition.getDefinedValueSet().getContent());
+					result.setValueSetDefinitionId(definition.getDocumentURI());
+					result.setValueSetVersion(definition.getVersionTag(0).getContent());
 				}
-				catch (Exception e) {
-					logger.log(Level.WARNING, "Unable to persist the value set definition.", e);
+				else {
 					result.setError(true);
-					result.setMessage("Failed to persist the definition. Error: " + e.getMessage());
+					result.setMessage("An error occurred while saving the definition to the service.");
 				}
 			}
+			catch (Exception e) {
+				logger.log(Level.WARNING, "Unable to persist the value set definition.", e);
+				result.setError(true);
+				result.setMessage("Failed to persist the definition. Error: " + e.getMessage());
+			}
+		} else {
+			result.setError(true);
+			result.setMessage("An error occurred while creating the change set.");
 		}
 		return result;
 	}
 
 	private boolean saveToService(ValueSetDefinition definition, String changeSetUri) throws Exception {
-		return false;
+		/* "PUT /valueset/{oid}/definition/{version}?changesetcontext={changeSetUri} */
+		Cts2RestClient restClient = Cts2RestClient.instance();
+		String url = getCts2ValueSetRestUrl()
+		  + "/valueset/" + definition.getDefinedValueSet().getContent()
+		  + "/definition/" + definition.getVersionTag(definition.getVersionTag().length - 1).getContent()
+		  + "?" +URIHelperInterface.PARAM_CHANGESETCONTEXT + "=" + changeSetUri;
+		restClient.putCts2Resource(url,
+		  getCts2ValueSetRestUsername(),
+		  getCts2ValueSetRestPassword(),
+		  definition);
+		return true;
 	}
 
 	private boolean saveAsToService(ValueSetDefinition definition, String changeSetUri) throws Exception {
