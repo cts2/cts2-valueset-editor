@@ -93,7 +93,7 @@ public class ValueSetItemXmlDS extends BaseValueSetItemXmlDS {
 
 		if (!i_getDataCalled) {
 			Cts2EditorServiceAsync service = GWT.create(Cts2EditorService.class);
-			service.getResolvedValueSet(criteria.getAttribute("oid"), new AsyncCallback<String>() {
+			service.getResolvedValueSet(criteria.getAttribute("oid"), null, null, new AsyncCallback<String>() {
 
 				@Override
 				public void onSuccess(String result) {
