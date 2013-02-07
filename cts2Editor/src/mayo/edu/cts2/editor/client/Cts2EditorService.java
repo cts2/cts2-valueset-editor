@@ -20,7 +20,7 @@ public interface Cts2EditorService extends RemoteService {
 
 	String getValueSetDefinition(String oid) throws IllegalArgumentException;
 
-	String getResolvedValueSet(String oid) throws IllegalArgumentException;
+	String getResolvedValueSet(String oid, String version, String changeSetUri) throws IllegalArgumentException;
 
 	String getDefinitions(String oid) throws IllegalArgumentException;
 

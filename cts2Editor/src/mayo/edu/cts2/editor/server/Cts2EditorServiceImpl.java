@@ -51,7 +51,7 @@ import javax.xml.transform.stream.StreamSource;
  */
 public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2EditorService {
 
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 5L;
 	private static final String XML_ROOT = "ValueSetCatalogEntryMsgList";
 	private static final String XML_HEADER = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
 	private static final String XML_ROOT_START = "<" + XML_ROOT + ">\n";
@@ -139,18 +139,28 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 	}
 
 	/**
-	 * Returns the entities for the current version of the value set
+	 * Returns the entities for the value set.
+	 * If version is <code>null</code> returns the entities for the current version.
+	 * If the changeSetUri is <code>null</code> returns the enitites with no change set applied.
 	 *
-	 * @param oid id of the value set to fetch the current version for
+	 * @param oid id of the value set to fetch
+	 * @param version of the value set definition
+	 * @param changeSetUri id of the change set to apply
 	 * @return the entities for the current version
-	 * @throws IllegalArgumentException if any argument is <code>null</code>
+	 * @throws IllegalArgumentException if oid argument is <code>null</code>
 	 */
 	@Override
-	public String getResolvedValueSet(String oid) throws IllegalArgumentException {
+	public String getResolvedValueSet(String oid, String version, String changeSetUri) throws IllegalArgumentException {
 		if (oid == null) {
 			throw new IllegalArgumentException("Argument can not be null.");
 		}
-		return getCts2Client().getResolvedValueSet(getAuthorizationHeader(), oid, "1", MAX_RECORDS);
+		version = version == null || version.equals("") ? "1" : version;
+
+		if (changeSetUri == null || changeSetUri.equals("")) {
+			return getCts2Client().getResolvedValueSet(getAuthorizationHeader(), oid, version, MAX_RECORDS);
+		} else {
+			return getCts2Client().getResolvedValueSet(getAuthorizationHeader(), oid, version, changeSetUri, MAX_RECORDS);
+		}
 	}
 
 	/**
@@ -274,6 +284,8 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 		if (definition == null)
 			throw new IllegalArgumentException("Argument can not be null.");
 
+		/* Set new random version */
+		definition.setVersion(UUID.randomUUID().toString());
 		CTS2Result result = saveValueSetAs(toValueSetDefinition(definition));
 		return result;
 	}

@@ -71,6 +71,15 @@ public interface Cts2Client {
 	                           @PathParam("version") String version,
 	                           @QueryParam("maxtoreturn") int maxRecordsToReturn);
 
+	@GET
+	@Path("/valueset/{oid}/definition/{version}/resolution")
+	@Produces(MediaType.APPLICATION_XML)
+	String getResolvedValueSet(@HeaderParam("Authorization") String auth,
+	                           @PathParam("oid") String oid,
+	                           @PathParam("version") String version,
+	                           @QueryParam("changesetcontext") String changeSetUri,
+	                           @QueryParam("maxtoreturn") int maxRecordsToReturn);
+
 	@POST
 	@Path("/valuesetdefinition")
 	@Produces(MediaType.APPLICATION_XML)
