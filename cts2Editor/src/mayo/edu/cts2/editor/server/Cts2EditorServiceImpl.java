@@ -352,7 +352,7 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 		metadata.setUpdatedState(state);
 
 		Cts2RestClient restClient = Cts2RestClient.instance();
-		restClient.postCts2Resource(getCts2ValueSetRestUrl() + "/changeset/" + uri, getCts2ValueSetRestUsername(), getCts2ValueSetRestPassword(), metadata);
+		restClient.postCts2Resource(Cts2EditorServiceProperties.getValueSetDefinitionMaintenanceUrl() + "/changeset/" + uri, Cts2EditorServiceProperties.getCts2ValueSetRestUsername(), Cts2EditorServiceProperties.getCts2ValueSetRestPassword(), metadata);
 	}
 
 	/**
@@ -499,23 +499,23 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 	private boolean saveToService(ValueSetDefinition definition, String changeSetUri) throws Exception {
 		/* "PUT /valueset/{oid}/definition/{version}?changesetcontext={changeSetUri} */
 		Cts2RestClient restClient = Cts2RestClient.instance();
-		String url = getCts2ValueSetRestUrl()
+		String url = Cts2EditorServiceProperties.getValueSetDefinitionMaintenanceUrl()
 		  + "/valueset/" + definition.getDefinedValueSet().getContent()
 		  + "/definition/" + definition.getVersionTag(definition.getVersionTag().length - 1).getContent()
 		  + "?" +URIHelperInterface.PARAM_CHANGESETCONTEXT + "=" + changeSetUri;
 		restClient.putCts2Resource(url,
-		  getCts2ValueSetRestUsername(),
-		  getCts2ValueSetRestPassword(),
+		  Cts2EditorServiceProperties.getCts2ValueSetRestUsername(),
+		  Cts2EditorServiceProperties.getCts2ValueSetRestPassword(),
 		  definition);
 		return true;
 	}
 
 	private boolean saveAsToService(ValueSetDefinition definition, String changeSetUri) throws Exception {
 		Cts2RestClient restClient = Cts2RestClient.instance();
-		URI uri = restClient.postCts2Resource(getCts2ValueSetRestUrl() + URIHelperInterface.PATH_VALUESETDEFINITION + "?" +
+		URI uri = restClient.postCts2Resource(Cts2EditorServiceProperties.getValueSetDefinitionMaintenanceUrl() + URIHelperInterface.PATH_VALUESETDEFINITION + "?" +
 		  URIHelperInterface.PARAM_CHANGESETCONTEXT + "=" + changeSetUri,
-		  getCts2ValueSetRestUsername(),
-		  getCts2ValueSetRestPassword(),
+		  Cts2EditorServiceProperties.getCts2ValueSetRestUsername(),
+		  Cts2EditorServiceProperties.getCts2ValueSetRestPassword(),
 		  definition);
 		return uri != null;
 	}
@@ -538,15 +538,15 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 
 	private String getAuthorizationHeader() {
 		return "Basic "
-		  + Base64.encodeBytes((getCts2ValueSetRestUsername() + ":" + getCts2ValueSetRestPassword()).getBytes());
+		  + Base64.encodeBytes((Cts2EditorServiceProperties.getCts2ValueSetRestUsername() + ":" + Cts2EditorServiceProperties.getCts2ValueSetRestPassword()).getBytes());
 	}
 
 	private Cts2Client getCts2Client() {
-		return ProxyFactory.create(Cts2Client.class, getCts2ValueSetRestUrl());
+		return ProxyFactory.create(Cts2Client.class, Cts2EditorServiceProperties.getValueSetDefinitionMaintenanceUrl());
 	}
 
 	private EntityClient getEntityClient() {
-		return ProxyFactory.create(EntityClient.class, getEntityRestUrl());
+		return ProxyFactory.create(EntityClient.class, Cts2EditorServiceProperties.getValueSetDefinitionMaintenanceEntitiesUrl());
 	}
 
 }
