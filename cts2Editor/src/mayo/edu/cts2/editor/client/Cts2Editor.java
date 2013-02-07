@@ -29,8 +29,8 @@ public class Cts2Editor implements EntryPoint {
 	// Event Bus to capture global events and act upon them.
 	public static EventBus EVENT_BUS = GWT.create(SimpleEventBus.class);
 
-	private static final boolean s_standAlone = false;
-	private static boolean s_readOnly = true;
+	private static final boolean s_standAlone = true;
+	private static final boolean s_readOnly = false;
 
 	/**
 	 * This is the entry point method.
@@ -49,23 +49,18 @@ public class Cts2Editor implements EntryPoint {
 
 		// Sample list of oids for testing the call
 		final List<String> oids = new ArrayList<String>();
+		oids.add("2.16.840.1.113883.1.11.1");
 		oids.add("2.16.840.1.114222.4.11.837");
 		oids.add("2.16.840.1.113883.3.221.5");
-		oids.add("2.16.840.1.113883.3.464.0003.1021");
-		oids.add("2.16.840.1.113883.3.464.0003.1017");
-		oids.add("2.16.840.1.113883.3.464.0001.231");
-
-		setReadOnly(true);
+		// oids.add("2.16.840.1.113883.3.464.0003.1021");
+		// oids.add("2.16.840.1.113883.3.464.0003.1017");
+		// oids.add("2.16.840.1.113883.3.464.0001.231");
 
 		// create and add to the root only if we are in stand alone mode.
 		if (s_standAlone) {
 			// Draw the Layout - main layout
 			RootLayoutPanel.get().add(getMainLayout(oids));
 		}
-	}
-
-	public static void setReadOnly(boolean readOnly) {
-		s_readOnly = readOnly;
 	}
 
 	public static boolean getReadOnly() {
@@ -83,6 +78,8 @@ public class Cts2Editor implements EntryPoint {
 
 		// get the value sets
 		getValueSets(oids);
+
+		getValueSetVersions(oids, "admin");
 
 		return i_valueSetsLayout;
 	}
@@ -140,4 +137,40 @@ public class Cts2Editor implements EntryPoint {
 		});
 
 	}
+
+	private void getValueSetVersions(List<String> oids, String username) {
+		Cts2EditorServiceAsync service = GWT.create(Cts2EditorService.class);
+
+		// Set the busy indicator to show while executing the
+		// phenotype.
+
+		// Need to send in the overall layout so the whole
+		// screen is greyed out.
+		i_busyIndicator = new ModalWindow(i_valueSetsLayout, 40, "#dedede");
+		i_busyIndicator.setLoadingIcon("loading_circle.gif");
+		i_busyIndicator.show("Retrieving ValueSet versions...", true);
+
+		service.getUserDefinitions(oids, username, new AsyncCallback<String>() {
+
+			@Override
+			public void onSuccess(String valueSets) {
+
+				System.out.println("get VS Versions...");
+
+				// hide the progress panel.
+				i_busyIndicator.hide();
+			}
+
+			@Override
+			public void onFailure(Throwable caught) {
+
+				// hide the progress panel.
+				i_busyIndicator.hide();
+
+				SC.say("Error retrieving ValueSets.\n" + caught.getMessage());
+			}
+		});
+
+	}
+
 }

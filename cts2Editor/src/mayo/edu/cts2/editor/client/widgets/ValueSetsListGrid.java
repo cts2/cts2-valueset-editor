@@ -2,6 +2,7 @@ package mayo.edu.cts2.editor.client.widgets;
 
 import mayo.edu.cts2.editor.client.datasource.ValueSetItemXmlDS;
 import mayo.edu.cts2.editor.client.datasource.ValueSetsXmlDS;
+import mayo.edu.cts2.editor.client.widgets.versions.VersionWindow;
 
 import com.smartgwt.client.data.DataSource;
 import com.smartgwt.client.data.SortSpecifier;
@@ -14,12 +15,15 @@ import com.smartgwt.client.widgets.ImgButton;
 import com.smartgwt.client.widgets.Label;
 import com.smartgwt.client.widgets.events.ClickEvent;
 import com.smartgwt.client.widgets.events.ClickHandler;
+import com.smartgwt.client.widgets.grid.CellFormatter;
 import com.smartgwt.client.widgets.grid.ListGridField;
 import com.smartgwt.client.widgets.grid.ListGridRecord;
 import com.smartgwt.client.widgets.layout.HLayout;
 import com.smartgwt.client.widgets.layout.VLayout;
 
 public class ValueSetsListGrid extends BaseValueSetsListGrid {
+
+	private static final String DEFAULT_VERSION_COMMENT = "Initial Version";
 
 	private final ValueSetsXmlDS i_valueSetsXmlDS;
 	private String i_xmlData;
@@ -43,16 +47,45 @@ public class ValueSetsListGrid extends BaseValueSetsListGrid {
 		setCanExpandRecords(true);
 
 		ListGridField resourceNamefField = new ListGridField(ID_VALUE_SET_NAME, TITLE_VALUE_SET_NAME);
-		resourceNamefField.setWidth("40%");
+		resourceNamefField.setWidth("20%");
 		resourceNamefField.setWrap(false);
 		resourceNamefField.setShowHover(true);
 		resourceNamefField.setCanEdit(false);
 
 		ListGridField formalNameField = new ListGridField(ID_FORMAL_NAME, TITLE_FORMAL_NAME);
-		formalNameField.setWidth("40%");
+		formalNameField.setWidth("20%");
 		formalNameField.setWrap(false);
 		formalNameField.setShowHover(true);
 		formalNameField.setCanEdit(false);
+
+		// ListGridField currentVersionField = new
+		// ListGridField(ID_CURRENT_VERSION, TITLE_CURRENT_VERSION);
+		ListGridField currentVersionField = new ListGridField(ID_CURRENT_VERSION, TITLE_CURRENT_VERSION);
+		currentVersionField.setWidth("20%");
+		currentVersionField.setWrap(false);
+		currentVersionField.setShowHover(true);
+		currentVersionField.setCanEdit(false);
+
+		// If the version is 1, then add a comment, else add the user's comment.
+		currentVersionField.setCellFormatter(new CellFormatter() {
+
+			@Override
+			public String format(Object value, ListGridRecord record, int rowNum, int colNum) {
+				if (record == null) {
+					return null;
+				} else {
+					String version = record.getAttribute(ID_URI);
+					String comment = record.getAttribute(ID_COMMENT);
+					return getVersion(version, comment);
+				}
+			}
+		});
+
+		ListGridField versionsChangeField = new ListGridField(ID_CHANGE_VERSION, TITLE_CHANGE_VERSION);
+		versionsChangeField.setWidth("20%");
+		versionsChangeField.setWrap(false);
+		versionsChangeField.setShowHover(true);
+		versionsChangeField.setCanEdit(false);
 
 		ListGridField actionField = new ListGridField(ID_ACTION, TITLE_ACTION);
 		actionField.setWrap(false);
@@ -60,7 +93,7 @@ public class ValueSetsListGrid extends BaseValueSetsListGrid {
 		actionField.setCanEdit(false);
 		actionField.setAttribute(ID_HIDDEN_ACTION, ACTION_NONE);
 
-		setFields(formalNameField, resourceNamefField, actionField);
+		setFields(formalNameField, resourceNamefField, currentVersionField, versionsChangeField, actionField);
 
 		setSelectOnEdit(true);
 		setSelectionAppearance(SelectionAppearance.ROW_STYLE);
@@ -86,6 +119,7 @@ public class ValueSetsListGrid extends BaseValueSetsListGrid {
 
 		return ValueSetItemXmlDS.getInstance(oid);
 	}
+
 	@Override
 	/**
 	 * Create the ListGrid that has the entities for this parent record.
@@ -97,6 +131,9 @@ public class ValueSetsListGrid extends BaseValueSetsListGrid {
 
 		DataSource childDatasource = getRelatedDataSource(record);
 		ValueSetEntitiesLayout valueSetEntitiesLayout = new ValueSetEntitiesLayout(record, childDatasource, this);
+
+		// save the id for later. Can use it to refresh the expansion component.
+		record.setAttribute("_expansionComponentID", valueSetEntitiesLayout.getID());
 
 		return valueSetEntitiesLayout;
 	}
@@ -115,7 +152,7 @@ public class ValueSetsListGrid extends BaseValueSetsListGrid {
 			HLayout recordCanvas = new HLayout(1);
 			recordCanvas.setHeight(22);
 			recordCanvas.setAlign(Alignment.LEFT);
-			ImgButton undoImg = createUndoImage("Remove added value set");
+			ImgButton undoImg = createImage("undo.png", "Remove added value set");
 
 			undoImg.addClickHandler(new ClickHandler() {
 
@@ -133,6 +170,31 @@ public class ValueSetsListGrid extends BaseValueSetsListGrid {
 			dataLabel.setWrap(false);
 			recordCanvas.addMember(dataLabel);
 
+			return recordCanvas;
+
+		} else if (fieldName.equals(ID_CHANGE_VERSION)) {
+
+			// Add a clickable image to change the version for this column
+			HLayout recordCanvas = new HLayout(2);
+			recordCanvas.setHeight(22);
+			recordCanvas.setWidth(18);
+			recordCanvas.setAlign(Alignment.RIGHT);
+			ImgButton versionImg = createImage("version.png", "Change Version...");
+
+			versionImg.addClickHandler(new ClickHandler() {
+
+				@Override
+				public void onClick(ClickEvent event) {
+
+					String userName = "admin";
+					String valueSetId = record.getAttribute("valueSetName");
+
+					VersionWindow versionWindow = new VersionWindow(valueSetId, userName);
+					versionWindow.show();
+				}
+			});
+
+			recordCanvas.addMember(versionImg);
 			return recordCanvas;
 		}
 
@@ -154,6 +216,23 @@ public class ValueSetsListGrid extends BaseValueSetsListGrid {
 	}
 
 	/**
+	 * Get the text to display as the version
+	 * 
+	 * @param version
+	 * @return
+	 */
+	private String getVersion(String version, String comment) {
+		if (version.equals("1")) {
+			return version + " (" + DEFAULT_VERSION_COMMENT + ")";
+		}
+		if (comment != null) {
+			return version + " (" + comment + ")";
+		} else {
+			return version;
+		}
+	}
+
+	/**
 	 * Create and add a new record.
 	 * 
 	 * @param formalName
@@ -170,18 +249,67 @@ public class ValueSetsListGrid extends BaseValueSetsListGrid {
 		addData(newRecord);
 	}
 
-	private ImgButton createUndoImage(String prompt) {
+	/**
+	 * Update the version of an existing value set record.
+	 * 
+	 * @param recordToUpdate
+	 * @param vsIdentifier
+	 * @param versionId
+	 * @param comment
+	 * @param changeSetId
+	 */
+	public void updateRecord(ListGridRecord recordToUpdate, String vsIdentifier, String versionId, String comment,
+	        String changeSetId) {
 
-		ImgButton undoImg = new ImgButton();
-		undoImg.setShowDown(false);
-		undoImg.setShowRollOver(false);
-		undoImg.setLayoutAlign(Alignment.CENTER);
-		undoImg.setSrc("undo.png");
-		undoImg.setPrompt(prompt);
-		undoImg.setHeight(16);
-		undoImg.setWidth(16);
+		if (versionId != null) {
+			recordToUpdate.setAttribute(ID_URI, versionId);
+			recordToUpdate.setAttribute(ID_COMMENT, comment);
+			recordToUpdate.setAttribute(ID_CURRENT_VERSION, getVersion(versionId, comment));
+		}
 
-		return undoImg;
+		// TODO CME: update the changeSetId
+		updateData(recordToUpdate);
+		updateExpansionComponent(recordToUpdate);
+	}
+
+	/**
+	 * If the value set record is expanded, then we need to update the expansion
+	 * record (value set entities).
+	 * 
+	 * @param recordToUpdate
+	 */
+	private void updateExpansionComponent(ListGridRecord recordToUpdate) {
+
+		// if the updated record is expanded, then we need to update it.
+		System.out.println("Record expanded ==> " + isExpanded(recordToUpdate));
+
+		if (isExpanded(recordToUpdate) != null && isExpanded(recordToUpdate)) {
+
+			String expansionComponentID = recordToUpdate.getAttribute("_expansionComponentID");
+			if (expansionComponentID != null) {
+				Canvas expansionComponent = Canvas.getById(expansionComponentID);
+				if (expansionComponent instanceof ValueSetEntitiesLayout) {
+
+					// refresh
+					ValueSetEntitiesLayout entitiesLayout = (ValueSetEntitiesLayout) expansionComponent;
+					System.out.println("Got the expansion component... ready to refresh");
+				}
+			}
+		}
+	}
+
+	private ImgButton createImage(String imgName, String prompt) {
+
+		ImgButton img = new ImgButton();
+		img.setShowDown(false);
+		img.setShowRollOver(false);
+		img.setLayoutAlign(Alignment.CENTER);
+		img.setSrc(imgName);
+		img.setPrompt(prompt);
+		img.setHeight(16);
+		img.setWidth(16);
+
+		return img;
 	}
 
 }

@@ -230,7 +230,7 @@ public class ValueSetItemsListGrid extends ListGrid {
 	@Override
 	public boolean saveAllEdits() {
 
-		// System.out.println("saveAllEdits called...");
+		System.out.println("saveAllEdits called...");
 
 		return super.saveAllEdits();
 	}

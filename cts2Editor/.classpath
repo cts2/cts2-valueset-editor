@@ -12,5 +12,16 @@
 	<classpathentry kind="lib" path="lib/jaxrs-api-2.3.4.Final.jar"/>
 	<classpathentry kind="lib" path="lib/resteasy-jaxrs-2.3.4.Final.jar"/>
 	<classpathentry kind="lib" path="lib/junit-4.10.jar"/>
+	<classpathentry kind="lib" path="lib/castor-core-1.3.2.jar"/>
+	<classpathentry kind="lib" path="lib/castor-xml-1.3.2.jar"/>
+	<classpathentry kind="lib" path="lib/commons-httpclient-3.1.jar"/>
+	<classpathentry kind="lib" path="lib/core-0.8.2-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib/google-collections-1.0.jar"/>
+	<classpathentry kind="lib" path="lib/model-0.8.2-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib/resteasy-jaxb-provider-2.3.5.Final.jar"/>
+	<classpathentry kind="lib" path="lib/spring-beans-3.2.0.RELEASE.jar"/>
+	<classpathentry kind="lib" path="lib/spring-core-3.2.0.RELEASE.jar"/>
+	<classpathentry kind="lib" path="lib/spring-oxm-3.2.0.RELEASE.jar"/>
+	<classpathentry kind="lib" path="lib/spring-web-3.2.0.RELEASE.jar"/>
 	<classpathentry kind="output" path="war/WEB-INF/classes"/>
 </classpath>

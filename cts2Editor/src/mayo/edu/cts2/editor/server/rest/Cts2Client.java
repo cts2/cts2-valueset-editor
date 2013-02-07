@@ -2,6 +2,7 @@ package mayo.edu.cts2.editor.server.rest;
 
 import org.jboss.resteasy.client.ClientResponse;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -37,12 +38,23 @@ public interface Cts2Client {
 	String getValueSet(@HeaderParam("Authorization") String auth,
 	                   @PathParam("oid") String oid);
 
+	/***********************************/
+	/* VALUE SET DEFINITION OPERATIONS */
+	/***********************************/
 	@GET
 	@Path("/valueset/{oid}/definitions")
 	@Produces(MediaType.APPLICATION_XML)
 	String getDefinitions(@HeaderParam("Authorization") String auth,
 	                      @PathParam("oid") String oid,
 	                      @QueryParam("maxtoreturn") int maxRecordsToReturn);
+
+	@PUT
+	@Path("/valueset/{oid}/definition/{definitionId}")
+	@Produces(MediaType.APPLICATION_XML)
+	String updateValueSetDefinition(@HeaderParam("Authorization") String auth,
+	                                @PathParam("oid") String oid,
+	                                @PathParam("definitionId") String definitionId,
+	                                @QueryParam("changeseturi") String changeSetUri);
 
 	@GET
 	@Path("/valueset/{oid}/definition/{version}")
@@ -58,6 +70,49 @@ public interface Cts2Client {
 	                           @PathParam("oid") String oid,
 	                           @PathParam("version") String version,
 	                           @QueryParam("maxtoreturn") int maxRecordsToReturn);
+
+	@POST
+	@Path("/valuesetdefinition")
+	@Produces(MediaType.APPLICATION_XML)
+	String createValueSetDefinition(@HeaderParam("Authorization") String auth,
+	                                @QueryParam("changeseturi") String changeSetUri);
+
+	@GET
+	@Path("/valueset/{oid}/definition/{version}")
+	String getDefinition(@HeaderParam("Authorization") String auth,
+	                     @PathParam("oid") String oid,
+	                     @PathParam("version") String version,
+	                     @QueryParam("changeseturi") String changeSetUri);
+
+	@GET
+	@Path("/valueset/{oid}/definition/{version}")
+	String getDefinition(@HeaderParam("Authorization") String auth,
+	                     @PathParam("oid") String oid,
+	                     @PathParam("version") String version);
+
+	@GET
+	@Path("/valueset/{oid}/definitions")
+	String getUserDefinitions(@HeaderParam("Authorization") String auth,
+	                          @PathParam("oid")String oid,
+	                          @QueryParam("filtercomponent") String filter,
+	                          @QueryParam("matchvalue") String creator,
+	                          @QueryParam("maxtoreturn") int maxRecordsToReturn);
+
+	@DELETE
+	@Path("/valueset/{oid}/definition/{valuesetdefid}")
+	@Produces(MediaType.APPLICATION_XML)
+	String deleteValueSetDefinition(@HeaderParam("Authorization") String auth,
+	                                @PathParam("oid") String oid,
+	                                @PathParam("valuesetdefid") String valueSetDefId,
+	                                @QueryParam("changeseturi") String changeSetUri);
+
+	@DELETE
+	@Path("/valueset/{oid}/definition/{valuesetdefid}/entry/{definitionentry}")
+	@Produces(MediaType.APPLICATION_XML)
+	String deleteValueSetDefinitionEntry(@HeaderParam("Authorization") String auth,
+	                                     @PathParam("oid") String oid,
+	                                     @PathParam("valuesetdefid") String valueSetDefId,
+	                                     @PathParam("definitionentry") String definitionEntry);
 
 	/*************************/
 	/* CHANGE SET OPERATIONS */
@@ -78,9 +133,12 @@ public interface Cts2Client {
 	String getChangeSet(@HeaderParam("Authorization") String auth,
 	                    @PathParam("uri") String changeSetUri);
 
-	@PUT
+	@POST
 	@Path("/changeset/{uri}")
+	@Consumes(MediaType.APPLICATION_XML)
 	@Produces(MediaType.APPLICATION_XML)
 	String updateChangeSet(@HeaderParam("Authorization") String auth,
-	                       @PathParam("uri") String changeSetUri);
+	                       @PathParam("uri") String changeSetUri,
+	                       String metadataRequest);
+
 }

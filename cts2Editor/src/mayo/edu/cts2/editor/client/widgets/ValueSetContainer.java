@@ -3,6 +3,8 @@ package mayo.edu.cts2.editor.client.widgets;
 import mayo.edu.cts2.editor.client.Cts2Editor;
 import mayo.edu.cts2.editor.client.events.AddRecordsEvent;
 import mayo.edu.cts2.editor.client.events.AddRecordsEventHandler;
+import mayo.edu.cts2.editor.client.events.UpdateValueSetVersionEvent;
+import mayo.edu.cts2.editor.client.events.UpdateValueSetVersionEventHandler;
 import mayo.edu.cts2.editor.client.widgets.search.SearchListGrid;
 import mayo.edu.cts2.editor.client.widgets.search.SearchValueSetsListGrid;
 import mayo.edu.cts2.editor.client.widgets.search.SearchWindow;
@@ -13,6 +15,7 @@ import com.smartgwt.client.widgets.IButton;
 import com.smartgwt.client.widgets.Label;
 import com.smartgwt.client.widgets.events.ClickEvent;
 import com.smartgwt.client.widgets.events.ClickHandler;
+import com.smartgwt.client.widgets.grid.ListGridRecord;
 import com.smartgwt.client.widgets.layout.HLayout;
 import com.smartgwt.client.widgets.layout.VLayout;
 
@@ -51,6 +54,7 @@ public class ValueSetContainer extends VLayout {
 		}
 
 		createAddRecordEvent();
+		createUpdateRecordEvent();
 	}
 
 	private HLayout createButtonLayout() {
@@ -119,6 +123,48 @@ public class ValueSetContainer extends VLayout {
 			}
 		});
 
+	}
+
+	/**
+	 * Listen for when a value set version has been updated.
+	 */
+	private void createUpdateRecordEvent() {
+
+		Cts2Editor.EVENT_BUS.addHandler(UpdateValueSetVersionEvent.TYPE, new UpdateValueSetVersionEventHandler() {
+
+			@Override
+			public void onValueSetVersionUpdated(UpdateValueSetVersionEvent event) {
+				String comment = event.getComment();
+				String valueSetId = event.getValueSetId();
+				String versionId = event.getVersionId();
+				String changeSetId = event.getChangeSetUri();
+
+				// find the record to update and update it.
+				ListGridRecord recordToUpdate = findRecord(valueSetId);
+
+				if (recordToUpdate != null) {
+					i_valueSetsListGrid.updateRecord(recordToUpdate, valueSetId, versionId, comment, changeSetId);
+				}
+			}
+		});
+	}
+
+	/**
+	 * Find the record with the matching oid/value set id.
+	 * 
+	 * @param oid
+	 * @return
+	 */
+	private ListGridRecord findRecord(String oid) {
+
+		ListGridRecord[] records = i_valueSetsListGrid.getRecords();
+		for (ListGridRecord record : records) {
+			if (record.getAttribute(ValueSetsListGrid.ID_VALUE_SET_NAME).equals(oid)) {
+				return record;
+			}
+		}
+
+		return null;
 	}
 
 	/**

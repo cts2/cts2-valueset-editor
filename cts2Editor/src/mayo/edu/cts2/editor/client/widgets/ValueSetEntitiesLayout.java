@@ -1,11 +1,15 @@
 package mayo.edu.cts2.editor.client.widgets;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import mayo.edu.cts2.editor.client.Cts2Editor;
 import mayo.edu.cts2.editor.client.events.AddRecordsEvent;
 import mayo.edu.cts2.editor.client.events.AddRecordsEventHandler;
 import mayo.edu.cts2.editor.client.widgets.search.SearchListGrid;
 import mayo.edu.cts2.editor.client.widgets.search.SearchValueSetItemsListGrid;
 import mayo.edu.cts2.editor.client.widgets.search.SearchWindow;
+import mayo.edu.cts2.editor.shared.DefinitionEntry;
 
 import com.smartgwt.client.data.Criteria;
 import com.smartgwt.client.data.DataSource;
@@ -33,6 +37,8 @@ public class ValueSetEntitiesLayout extends VLayout {
 
 	private static final String TITLE_ENTITIES = "Entities";
 
+	private final ListGridRecord i_valueSetRecord;
+
 	private final boolean i_additionsMade = false;
 	private boolean i_removalsMade = false;
 	private final ValueSetItemsListGrid i_valueSetItemsListGrid;
@@ -49,7 +55,8 @@ public class ValueSetEntitiesLayout extends VLayout {
 
 		setPadding(5);
 
-		String oid = record.getAttribute("valueSetName");
+		i_valueSetRecord = record;
+		String oid = i_valueSetRecord.getAttribute("valueSetName");
 		Criteria criteria = new Criteria();
 		criteria.setAttribute("oid", oid);
 
@@ -84,7 +91,9 @@ public class ValueSetEntitiesLayout extends VLayout {
 		i_saveButton.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
-				i_valueSetItemsListGrid.saveAllEdits();
+				// i_valueSetItemsListGrid.saveAllEdits();
+				ListGridRecord[] records = i_valueSetItemsListGrid.getRecords();
+				saveValueSetEntities(records);
 			}
 		});
 
@@ -114,7 +123,7 @@ public class ValueSetEntitiesLayout extends VLayout {
 							if (value != null && value.booleanValue()) {
 
 								// collapse the parent ListGrid
-								parentGrid.collapseRecord(record);
+								parentGrid.collapseRecord(i_valueSetRecord);
 
 								// User chose to discard changes
 								// remove their Datasource so it will recreated
@@ -263,5 +272,61 @@ public class ValueSetEntitiesLayout extends VLayout {
 		// + " --- designation = " + designation);
 
 		i_valueSetItemsListGrid.createNewRecord(href, code, codeSystemName, designation);
+	}
+
+	/**
+	 * Save all the entities for a given value set. Iterate through the
+	 * ListGridRecord[] to get entities and fill the Definition class
+	 * 
+	 * @param records
+	 */
+	private void saveValueSetEntities(ListGridRecord[] records) {
+
+		List<DefinitionEntry> entries = getDefinitionEntries(records);
+
+		// Definition definition = new Definition();
+		// definition.setAbout(about);
+		// definition.setChangeSetUri(changeSetUri);
+		// definition.setCreator(creator);
+		// definition.setEntries(entries);
+		// definition.setFormalName(formalName);
+		// definition.setNote(note);
+		// definition.setResourceSynopsis(resourceSynopsis);
+		// definition.setValueSetOid(valueSetOid);
+		// definition.setVersion(version);
+
+		// create a
+
+	}
+
+	/**
+	 * For a ListGridRecord[] list, iterate through the records and create a
+	 * List<DefinitionEntry>.
+	 * 
+	 * @param records
+	 * @return
+	 */
+	private List<DefinitionEntry> getDefinitionEntries(ListGridRecord[] records) {
+
+		List<DefinitionEntry> entries = new ArrayList<DefinitionEntry>();
+
+		for (ListGridRecord record : records) {
+
+			String uri = record.getAttribute(ValueSetItemsListGrid.ID_URI);
+			String name = record.getAttribute(ValueSetItemsListGrid.ID_NAME);
+			String nameSpace = record.getAttribute(ValueSetItemsListGrid.ID_NAME_SPACE);
+			String designation = record.getAttribute(ValueSetItemsListGrid.ID_DESIGNATION);
+
+			DefinitionEntry definitionEntry = new DefinitionEntry();
+			// DefinitionEntry definitionEntry = new DefinitionEntry(uri, );
+
+			// definitionEntry.setHref(href);
+			definitionEntry.setName(name);
+			definitionEntry.setNamespace(nameSpace);
+			definitionEntry.setUri(uri);
+			entries.add(definitionEntry);
+		}
+
+		return entries;
 	}
 }

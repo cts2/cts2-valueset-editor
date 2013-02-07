@@ -18,6 +18,7 @@ public class ValueSetsXmlDS extends BaseValueSetXmlDS {
 
 	private static final String X_PATH_RESOURCE_ROOT = "/cts2:ValueSetCatalogEntryDirectory/core:heading/core:resourceRoot";
 	private static final String X_PATH_RESOURCE_SYNOPSIS = "core:resourceSynopsis/core:value";
+	private static final String X_PATH_CURRENT_DEFINITION = "cts2:currentDefinition/core:valueSetDefinition";
 
 	private static ValueSetsXmlDS instance = null;
 
@@ -52,7 +53,14 @@ public class ValueSetsXmlDS extends BaseValueSetXmlDS {
 		DataSourceTextField resourceSynopsisValueField = new DataSourceTextField("value", "Resource Synopsis");
 		resourceSynopsisValueField.setValueXPath(X_PATH_RESOURCE_SYNOPSIS);
 
-		setFields(valueSetNameField, aboutField, formalNameField, resourceSynopsisValueField);
+		DataSourceTextField versionField = new DataSourceTextField("uri", "Versions");
+		versionField.setValueXPath(X_PATH_CURRENT_DEFINITION);
+
+		// This field is not filled by the DS, it is filled in the List Grid
+		DataSourceTextField commentField = new DataSourceTextField("comment", "Comments");
+
+		setFields(valueSetNameField, aboutField, formalNameField, resourceSynopsisValueField, versionField,
+		        commentField);
 
 		setClientOnly(true);
 	}
