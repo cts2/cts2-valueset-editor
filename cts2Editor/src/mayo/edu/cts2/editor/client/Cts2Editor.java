@@ -30,7 +30,7 @@ public class Cts2Editor implements EntryPoint {
 	public static EventBus EVENT_BUS = GWT.create(SimpleEventBus.class);
 
 	private static final boolean s_standAlone = true;
-	private static final boolean s_readOnly = false;
+	private static final boolean s_readOnly = true;
 
 	/**
 	 * This is the entry point method.
@@ -155,7 +155,7 @@ public class Cts2Editor implements EntryPoint {
 			@Override
 			public void onSuccess(String valueSets) {
 
-				System.out.println("get VS Versions...");
+				// System.out.println("get VS Versions...");
 
 				// hide the progress panel.
 				i_busyIndicator.hide();

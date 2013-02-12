@@ -4,6 +4,7 @@ import mayo.edu.cts2.editor.client.datasource.ValueSetItemXmlDS;
 import mayo.edu.cts2.editor.client.datasource.ValueSetsXmlDS;
 import mayo.edu.cts2.editor.client.widgets.versions.VersionWindow;
 
+import com.smartgwt.client.data.Criteria;
 import com.smartgwt.client.data.DataSource;
 import com.smartgwt.client.data.SortSpecifier;
 import com.smartgwt.client.types.Alignment;
@@ -15,6 +16,8 @@ import com.smartgwt.client.widgets.ImgButton;
 import com.smartgwt.client.widgets.Label;
 import com.smartgwt.client.widgets.events.ClickEvent;
 import com.smartgwt.client.widgets.events.ClickHandler;
+import com.smartgwt.client.widgets.events.DoubleClickEvent;
+import com.smartgwt.client.widgets.events.DoubleClickHandler;
 import com.smartgwt.client.widgets.grid.CellFormatter;
 import com.smartgwt.client.widgets.grid.ListGridField;
 import com.smartgwt.client.widgets.grid.ListGridRecord;
@@ -103,8 +106,87 @@ public class ValueSetsListGrid extends BaseValueSetsListGrid {
 		SortSpecifier[] sortspec = new SortSpecifier[1];
 		sortspec[0] = new SortSpecifier(ID_FORMAL_NAME, SortDirection.ASCENDING);
 		setInitialSort(sortspec);
-	}
 
+		// When the user clicks on the triangle to collapse, verify there are no
+		// unsaved changes.
+		// addRecordCollapseHandler(new RecordCollapseHandler() {
+		//
+		// @Override
+		// public void onRecordCollapse(final RecordCollapseEvent event) {
+		// synchronized (event) {
+		//
+		// final Record record = event.getRecord();
+		//
+		// if (record != null) {
+		//
+		// // get the expansion component and see if any unsaved
+		// // changes are pending
+		// final ValueSetEntitiesLayout entitiesLayout =
+		// getExpansionComponentById(record
+		// .getAttribute("_expansionComponentID"));
+		// // if (!entitiesLayout.getOkToClose()) {
+		// if (entitiesLayout != null) {
+		// if (entitiesLayout.checkForUnsavedChanges()) {
+		//
+		// BooleanCallback booleanCallback = new BooleanCallback() {
+		// @Override
+		// public void execute(Boolean value) {
+		// if (value != null && !value) {
+		// System.out.println("User canceled close");
+		// event.cancel();
+		// } else {
+		// System.out.println("User closing and not saving");
+		// // entitiesLayout.setOkToClose(true);
+		// // collapseRecord((ListGridRecord)
+		// // record);
+		//
+		// }
+		// }
+		// };
+		//
+		// entitiesLayout.warnUserOfUnsavedChanges(/*booleanCallback*/);
+		//
+		// // if (!entitiesLayout.getOkToClose()) {
+		// // event.cancel();
+		// // }
+		// System.out.println("exiting method");
+		// }
+		// }
+		// // }
+		// }
+		// }
+		// }
+		// });
+
+		// Expand/collapse the row on a double click.
+		addDoubleClickHandler(new DoubleClickHandler() {
+
+			@Override
+			public void onDoubleClick(DoubleClickEvent event) {
+
+				ListGridRecord record = getSelectedRecord();
+
+				if (isExpanded(record) != null && isExpanded(record)) {
+
+					// get the expansion component and see if any unsaved
+					// changes are pending
+					ValueSetEntitiesLayout entitiesLayout = getExpansionComponentById(record
+					        .getAttribute("_expansionComponentID"));
+					if (entitiesLayout != null) {
+						if (entitiesLayout.checkForUnsavedChanges()) {
+							entitiesLayout.warnUserOfUnsavedChanges();
+						} else {
+							collapseRecord(record);
+						}
+					}
+
+				} else {
+					expandRecord(record);
+				}
+			}
+		});
+
+	}
 	/**
 	 * Get the related datasource to show the inner grid in.
 	 */
@@ -187,11 +269,19 @@ public class ValueSetsListGrid extends BaseValueSetsListGrid {
 				public void onClick(ClickEvent event) {
 
 					String userName = "admin";
-					String valueSetId = record.getAttribute("valueSetName");
+					String valueSetId = record.getAttribute(ID_VALUE_SET_NAME);
 
-					VersionWindow versionWindow = new VersionWindow(valueSetId, userName);
+					Criteria criteria = new Criteria();
+					criteria.setAttribute(ID_VALUE_SET_NAME, record.getAttribute(ID_VALUE_SET_NAME));
+					criteria.setAttribute(ID_FORMAL_NAME, record.getAttribute(ID_FORMAL_NAME));
+					criteria.setAttribute(ID_URI, record.getAttribute(ID_URI));
+					criteria.setAttribute(ID_COMMENT, record.getAttribute(ID_COMMENT));
+					criteria.setAttribute("userName", userName);
+
+					VersionWindow versionWindow = new VersionWindow(criteria);
 					versionWindow.show();
 				}
+
 			});
 
 			recordCanvas.addMember(versionImg);
@@ -262,6 +352,8 @@ public class ValueSetsListGrid extends BaseValueSetsListGrid {
 	        String changeSetId) {
 
 		if (versionId != null) {
+
+			recordToUpdate.setAttribute(ID_CHANGE_SET_URI, changeSetId);
 			recordToUpdate.setAttribute(ID_URI, versionId);
 			recordToUpdate.setAttribute(ID_COMMENT, comment);
 			recordToUpdate.setAttribute(ID_CURRENT_VERSION, getVersion(versionId, comment));
@@ -281,21 +373,57 @@ public class ValueSetsListGrid extends BaseValueSetsListGrid {
 	private void updateExpansionComponent(ListGridRecord recordToUpdate) {
 
 		// if the updated record is expanded, then we need to update it.
-		System.out.println("Record expanded ==> " + isExpanded(recordToUpdate));
+		// System.out.println("Record expanded ==> " +
+		// isExpanded(recordToUpdate));
 
 		if (isExpanded(recordToUpdate) != null && isExpanded(recordToUpdate)) {
 
-			String expansionComponentID = recordToUpdate.getAttribute("_expansionComponentID");
-			if (expansionComponentID != null) {
-				Canvas expansionComponent = Canvas.getById(expansionComponentID);
-				if (expansionComponent instanceof ValueSetEntitiesLayout) {
+			ValueSetEntitiesLayout entitiesLayout = getExpansionComponentById(recordToUpdate
+			        .getAttribute("_expansionComponentID"));
 
-					// refresh
-					ValueSetEntitiesLayout entitiesLayout = (ValueSetEntitiesLayout) expansionComponent;
-					System.out.println("Got the expansion component... ready to refresh");
-				}
+			// String expansionComponentID =
+			// recordToUpdate.getAttribute("_expansionComponentID");
+			// if (expansionComponentID != null) {
+			// Canvas expansionComponent = Canvas.getById(expansionComponentID);
+			// if (expansionComponent instanceof ValueSetEntitiesLayout) {
+			//
+			// // refresh
+			// ValueSetEntitiesLayout entitiesLayout = (ValueSetEntitiesLayout)
+			// expansionComponent;
+			// Criteria criteria =
+			// entitiesLayout.getCriteriaFromValueSetRecord(recordToUpdate);
+			// entitiesLayout.updateEntitiesListGrid(criteria);
+			// }
+			// }
+
+			if (entitiesLayout != null) {
+				// refresh
+				Criteria criteria = entitiesLayout.getCriteriaFromValueSetRecord(recordToUpdate);
+				entitiesLayout.updateEntitiesListGrid(criteria);
 			}
 		}
+	}
+
+	/**
+	 * Get the expansionComponent based on an id. This id was set when creating
+	 * the expansion component.
+	 * 
+	 * @param expansionComponentID
+	 * @return
+	 */
+	private ValueSetEntitiesLayout getExpansionComponentById(String expansionComponentID) {
+
+		ValueSetEntitiesLayout entitiesLayout = null;
+
+		if (expansionComponentID != null) {
+			Canvas expansionComponent = Canvas.getById(expansionComponentID);
+			if (expansionComponent instanceof ValueSetEntitiesLayout) {
+
+				// refresh
+				entitiesLayout = (ValueSetEntitiesLayout) expansionComponent;
+			}
+		}
+		return entitiesLayout;
 	}
 
 	private ImgButton createImage(String imgName, String prompt) {

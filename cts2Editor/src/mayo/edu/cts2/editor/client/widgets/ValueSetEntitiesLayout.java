@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import mayo.edu.cts2.editor.client.Cts2Editor;
+import mayo.edu.cts2.editor.client.datasource.ValueSetItemXmlDS;
 import mayo.edu.cts2.editor.client.events.AddRecordsEvent;
 import mayo.edu.cts2.editor.client.events.AddRecordsEventHandler;
 import mayo.edu.cts2.editor.client.widgets.search.SearchListGrid;
@@ -39,10 +40,11 @@ public class ValueSetEntitiesLayout extends VLayout {
 
 	private final ListGridRecord i_valueSetRecord;
 
-	private final boolean i_additionsMade = false;
+	private boolean i_additionsMade = false;
 	private boolean i_removalsMade = false;
 	private final ValueSetItemsListGrid i_valueSetItemsListGrid;
 	private SearchWindow i_searchWindow;
+	private final ListGrid i_parentGrid;
 
 	private final IButton i_addButton;
 	private final IButton i_deleteButton;
@@ -50,15 +52,16 @@ public class ValueSetEntitiesLayout extends VLayout {
 	private final IButton i_saveAsButton;
 	private final IButton i_closeButton;
 
+	// private boolean i_okToClose = false;
+
 	public ValueSetEntitiesLayout(final ListGridRecord record, DataSource childDatasource, final ListGrid parentGrid) {
 		super();
 
 		setPadding(5);
 
+		i_parentGrid = parentGrid;
 		i_valueSetRecord = record;
-		String oid = i_valueSetRecord.getAttribute("valueSetName");
-		Criteria criteria = new Criteria();
-		criteria.setAttribute("oid", oid);
+		Criteria criteria = getCriteriaFromValueSetRecord(i_valueSetRecord);
 
 		Label titleLabel = getTitleLabel();
 		addMember(titleLabel);
@@ -79,7 +82,7 @@ public class ValueSetEntitiesLayout extends VLayout {
 		i_addButton.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
-				String message = "Search for entities.  Select the entities by checking the checkbox.";
+				String message = "Search for entities.  Select the entities by checking the checkbox.  Start typing in the search field to retrieve search results.";
 				i_searchWindow = new SearchWindow(new SearchValueSetItemsListGrid(), message);
 				i_searchWindow.setInitialFocus();
 				i_searchWindow.show();
@@ -103,7 +106,6 @@ public class ValueSetEntitiesLayout extends VLayout {
 			@Override
 			public void onClick(ClickEvent event) {
 				i_valueSetItemsListGrid.saveAllEdits();
-
 			}
 		});
 
@@ -112,34 +114,14 @@ public class ValueSetEntitiesLayout extends VLayout {
 			@Override
 			public void onClick(ClickEvent event) {
 
-				if (i_additionsMade || i_removalsMade) {
-
-					String message = "Changes to the value set have been made.  Closing will discard your current changes for this value set.\n\nDo you want to discard your changes?";
-					String title = "Changes Made";
-					SC.ask(title, message, new BooleanCallback() {
-
-						@Override
-						public void execute(Boolean value) {
-							if (value != null && value.booleanValue()) {
-
-								// collapse the parent ListGrid
-								parentGrid.collapseRecord(i_valueSetRecord);
-
-								// User chose to discard changes
-								// remove their Datasource so it will recreated
-								// fresh next time.
-								String datasourceId = i_valueSetItemsListGrid.getDataSource().getID();
-								// ValueSetItemXmlDS.removeInstance(datasourceId);
-
-							}
-
-						}
-					});
+				if (checkForUnsavedChanges()) {
+					warnUserOfUnsavedChanges();
 
 				} else {
 					// collapse the parent ListGrid
-					parentGrid.collapseRecord(record);
+					i_parentGrid.collapseRecord(record);
 				}
+				// i_parentGrid.collapseRecord(record);
 			}
 		});
 
@@ -212,6 +194,42 @@ public class ValueSetEntitiesLayout extends VLayout {
 	}
 
 	/**
+	 * Determine if there are any unsaved changes.
+	 * 
+	 * @return
+	 */
+	public boolean checkForUnsavedChanges() {
+		return i_additionsMade || i_removalsMade;
+	}
+
+	/**
+	 * Confirm with the user if they want to discard their changes.
+	 */
+	public void warnUserOfUnsavedChanges(/* BooleanCallback booleanCallback */) {
+
+		String message = "Changes to the value set have been made.  Closing will discard your current changes for this value set.\n\nDo you want to discard your changes?";
+		String title = "Changes Made";
+		SC.ask(title, message, new BooleanCallback() {
+
+			@Override
+			public void execute(Boolean value) {
+				if (value != null && value.booleanValue()) {
+
+					// collapse the parent ListGrid
+					i_parentGrid.collapseRecord(i_valueSetRecord);
+
+					// User chose to discard changes // remove their Datasource
+					// so it
+					// will recreated // fresh next time.
+					// String datasourceId =
+					// i_valueSetItemsListGrid.getDataSource().getID();
+					// ValueSetItemXmlDS.removeInstance(datasourceId);
+				}
+			}
+		});
+
+	}
+	/**
 	 * Create a label for the entites list grid.
 	 * 
 	 * @return
@@ -248,6 +266,11 @@ public class ValueSetEntitiesLayout extends VLayout {
 							addValueSetRecord(records[i]);
 						}
 					}
+
+					// enable these buttons.
+					i_saveButton.setDisabled(false);
+					i_saveAsButton.setDisabled(false);
+					i_additionsMade = true;
 				}
 			}
 		});
@@ -329,4 +352,53 @@ public class ValueSetEntitiesLayout extends VLayout {
 
 		return entries;
 	}
+
+	/**
+	 * Get the attributes from the value set record and put them in a Criteria.
+	 * 
+	 * @param record
+	 * @return
+	 */
+	public Criteria getCriteriaFromValueSetRecord(ListGridRecord record) {
+		// get the attributes of this value set
+		String oid = record.getAttribute(BaseValueSetsListGrid.ID_VALUE_SET_NAME);
+		String changeSetUri = record.getAttribute(BaseValueSetsListGrid.ID_CHANGE_SET_URI);
+		String version = record.getAttribute(BaseValueSetsListGrid.ID_URI);
+
+		// update the criteria that will be used to fetch the entities.
+		Criteria criteria = new Criteria();
+		criteria.setAttribute("oid", oid);
+		criteria.setAttribute("changeSetUri", changeSetUri);
+		criteria.setAttribute("version", version);
+
+		return criteria;
+	}
+
+	/**
+	 * Update the Value Set Entities List grid with a different Value Set
+	 * version.
+	 * 
+	 * @param criteria
+	 */
+	public void updateEntitiesListGrid(Criteria criteria) {
+
+		String oid = criteria.getAttribute("oid");
+		String changeSetUri = criteria.getAttribute("changeSetUri");
+		String version = criteria.getAttribute("version");
+
+		ValueSetItemXmlDS ds = (ValueSetItemXmlDS) i_valueSetItemsListGrid.getDataSource();
+		ds.setShouldGetData(true);
+
+		i_valueSetItemsListGrid.fetchData(criteria);
+
+	}
+
+	// public void setOkToClose(boolean okToClose) {
+	// i_okToClose = okToClose;
+	// }
+	//
+	// public boolean getOkToClose() {
+	// return i_okToClose;
+	// }
+
 }

@@ -34,7 +34,7 @@ public class ValueSetItemXmlDS extends BaseValueSetItemXmlDS {
 
 	private static final HashMap<String, ValueSetItemXmlDS> i_instances = new HashMap<String, ValueSetItemXmlDS>();
 
-	private boolean i_getDataCalled = false;
+	private boolean i_shouldGetData = true;
 
 	private final ArrayList<Record> i_recordsToDelete;
 
@@ -91,15 +91,25 @@ public class ValueSetItemXmlDS extends BaseValueSetItemXmlDS {
 	@Override
 	public void fetchData(Criteria criteria, final DSCallback callback) {
 
-		if (!i_getDataCalled) {
+		// Check flag. Only get data when we explicitly ask for it. Ignore other
+		// system generated requests to get data.
+		if (i_shouldGetData) {
+
+			setCacheData(new Record[0]);
+
+			String oid = criteria.getAttribute("oid");
+			String changeSetUri = criteria.getAttribute("changeSetUri");
+			String version = criteria.getAttribute("version");
+
 			Cts2EditorServiceAsync service = GWT.create(Cts2EditorService.class);
-			service.getResolvedValueSet(criteria.getAttribute("oid"), new AsyncCallback<String>() {
+			service.getResolvedValueSet(oid, version, changeSetUri, new AsyncCallback<String>() {
 
 				@Override
 				public void onSuccess(String result) {
 
-					// set this to true so we don't retrieve the data again.
-					i_getDataCalled = true;
+					// set this to false so we don't retrieve the data again,
+					// unless we explicitly ask for it.
+					i_shouldGetData = false;
 
 					Object results = XMLTools.selectNodes(result, RECORD_X_PATH, i_nsMap);
 					Record[] fetchRecords = recordsFromXML(results);
@@ -180,6 +190,15 @@ public class ValueSetItemXmlDS extends BaseValueSetItemXmlDS {
 	}
 
 	private void saveAs() {
-		System.out.println("SAVE AS called");
+		// System.out.println("SAVE AS called");
+	}
+
+	/**
+	 * Set a flag to allow the fetch to happen.
+	 * 
+	 * @param getData
+	 */
+	public void setShouldGetData(boolean getData) {
+		i_shouldGetData = getData;
 	}
 }

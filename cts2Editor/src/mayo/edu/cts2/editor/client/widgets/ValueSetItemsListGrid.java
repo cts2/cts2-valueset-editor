@@ -1,5 +1,7 @@
 package mayo.edu.cts2.editor.client.widgets;
 
+import mayo.edu.cts2.editor.client.datasource.ValueSetItemXmlDS;
+
 import com.smartgwt.client.data.Criteria;
 import com.smartgwt.client.data.DSCallback;
 import com.smartgwt.client.data.DSRequest;
@@ -186,6 +188,12 @@ public class ValueSetItemsListGrid extends ListGrid {
 	@Override
 	public void fetchData(Criteria criteria) {
 
+		setData(new ListGridRecord[0]);
+
+		// all the datasource to get data.
+		ValueSetItemXmlDS ds = (ValueSetItemXmlDS) getDataSource();
+		ds.setShouldGetData(true);
+
 		getDataSource().fetchData(criteria, new DSCallback() {
 
 			@Override
@@ -230,7 +238,7 @@ public class ValueSetItemsListGrid extends ListGrid {
 	@Override
 	public boolean saveAllEdits() {
 
-		System.out.println("saveAllEdits called...");
+		// System.out.println("saveAllEdits called...");
 
 		return super.saveAllEdits();
 	}

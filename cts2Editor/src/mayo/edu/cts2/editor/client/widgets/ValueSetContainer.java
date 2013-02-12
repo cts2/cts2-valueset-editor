@@ -119,6 +119,7 @@ public class ValueSetContainer extends VLayout {
 							addValueSetRecord(records[i]);
 						}
 					}
+
 				}
 			}
 		});
