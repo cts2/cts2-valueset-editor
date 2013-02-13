@@ -29,7 +29,7 @@ public class Cts2Editor implements EntryPoint {
 	// Event Bus to capture global events and act upon them.
 	public static EventBus EVENT_BUS = GWT.create(SimpleEventBus.class);
 
-	private static final boolean s_standAlone = true;
+	private static final boolean s_standAlone = false;
 	private static final boolean s_readOnly = true;
 
 	/**
@@ -52,6 +52,7 @@ public class Cts2Editor implements EntryPoint {
 		oids.add("2.16.840.1.113883.1.11.1");
 		oids.add("2.16.840.1.114222.4.11.837");
 		oids.add("2.16.840.1.113883.3.221.5");
+		oids.add("2.16.840.1.113883.3.464.0001.37");
 		// oids.add("2.16.840.1.113883.3.464.0003.1021");
 		// oids.add("2.16.840.1.113883.3.464.0003.1017");
 		// oids.add("2.16.840.1.113883.3.464.0001.231");
@@ -91,16 +92,23 @@ public class Cts2Editor implements EntryPoint {
 		// Set the busy indicator to show while executing the
 		// phenotype.
 
+		// TODO: put status window back in. When deployed with another app, the
+		// window doesn't go away.
+
 		// Need to send in the overall layout so the whole
 		// screen is greyed out.
-		i_busyIndicator = new ModalWindow(i_valueSetsLayout, 40, "#dedede");
-		i_busyIndicator.setLoadingIcon("loading_circle.gif");
-		i_busyIndicator.show("Retrieving ValueSets...", true);
+		// i_busyIndicator = new ModalWindow(i_valueSetsLayout, 40, "#dedede");
+		// i_busyIndicator.setLoadingIcon("loading_circle.gif");
+		// i_busyIndicator.show("Retrieving Value Sets...", true);
 
 		service.getValueSets(oids, new AsyncCallback<String>() {
 
 			@Override
 			public void onSuccess(String valueSets) {
+
+				// hide the progress panel.
+				// i_busyIndicator.hide();
+
 				/*
 				 * NOTE: valueSets is an xml string of
 				 * <ValueSetCatalogEntryMsg>s wrapped in the
@@ -121,16 +129,13 @@ public class Cts2Editor implements EntryPoint {
 				// put the value set list grid layout (container) into the
 				// main list grid container.
 				i_valueSetsLayout.addMember(valueSetContainer);
-
-				// hide the progress panel.
-				i_busyIndicator.hide();
 			}
 
 			@Override
 			public void onFailure(Throwable caught) {
 
 				// hide the progress panel.
-				i_busyIndicator.hide();
+				// i_busyIndicator.hide();
 
 				SC.say("Error retrieving ValueSets.\n" + caught.getMessage());
 			}

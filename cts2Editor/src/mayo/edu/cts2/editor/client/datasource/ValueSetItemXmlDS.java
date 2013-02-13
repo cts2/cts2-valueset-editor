@@ -7,6 +7,7 @@ import java.util.logging.Logger;
 
 import mayo.edu.cts2.editor.client.Cts2EditorService;
 import mayo.edu.cts2.editor.client.Cts2EditorServiceAsync;
+import mayo.edu.cts2.editor.client.utils.RandomString;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -33,6 +34,8 @@ public class ValueSetItemXmlDS extends BaseValueSetItemXmlDS {
 	private static final String X_PATH_DESIGNATION = "core:designation";
 
 	private static final HashMap<String, ValueSetItemXmlDS> i_instances = new HashMap<String, ValueSetItemXmlDS>();
+
+	private RandomString i_randomString;
 
 	private boolean i_shouldGetData = true;
 
@@ -71,8 +74,11 @@ public class ValueSetItemXmlDS extends BaseValueSetItemXmlDS {
 		// set the XPath
 		setRecordXPath(RECORD_X_PATH);
 
+		DataSourceTextField pkField = new DataSourceTextField("primaryKey", "primaryKey");
+		pkField.setPrimaryKey(true);
+
 		DataSourceTextField uriField = new DataSourceTextField("uri", "URI");
-		uriField.setPrimaryKey(true);
+		// uriField.setPrimaryKey(true);
 
 		DataSourceTextField nameSpaceField = new DataSourceTextField("nameSpace", "Code System Version");
 		nameSpaceField.setValueXPath(X_PATH_ENTRY_NAMESPACE);
@@ -83,7 +89,7 @@ public class ValueSetItemXmlDS extends BaseValueSetItemXmlDS {
 		DataSourceTextField designationField = new DataSourceTextField("designation", "Description");
 		designationField.setValueXPath(X_PATH_DESIGNATION);
 
-		setFields(uriField, nameSpaceField, nameField, designationField);
+		setFields(pkField, uriField, nameSpaceField, nameField, designationField);
 
 		setClientOnly(true);
 	}
@@ -119,7 +125,13 @@ public class ValueSetItemXmlDS extends BaseValueSetItemXmlDS {
 					if (fetchRecords != null) {
 						// add each record
 						for (Record record : fetchRecords) {
-							addData(record);
+
+							if (record != null) {
+								// generate our own primary key
+								record.setAttribute("primaryKey", nextPrimaryKey());
+
+								addData(record);
+							}
 						}
 					}
 
@@ -200,5 +212,12 @@ public class ValueSetItemXmlDS extends BaseValueSetItemXmlDS {
 	 */
 	public void setShouldGetData(boolean getData) {
 		i_shouldGetData = getData;
+	}
+
+	private String nextPrimaryKey() {
+		if (i_randomString == null) {
+			i_randomString = new RandomString(20);
+		}
+		return i_randomString.nextString();
 	}
 }
