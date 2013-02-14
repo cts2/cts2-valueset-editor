@@ -61,7 +61,7 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 
 	public static final String XPATH_VALUESETS_BASE = "/" + XML_ROOT;
 
-	private final int MAX_RECORDS = 100;
+	private final int MAX_RECORDS = Cts2EditorServiceProperties.getValueSetRestPageSize();
 
 	public Cts2EditorServiceImpl() {
 		super();
@@ -348,13 +348,13 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 		if (oid == null || username == null)
 			throw new IllegalArgumentException("Arguments can not be null.");
 
-		return getCts2Client().getUserDefinitions(getAuthorizationHeader(), oid, "creator", username, 100);
+		return getCts2Client().getUserDefinitions(getAuthorizationHeader(), oid, "creator", username, 5000);
 	}
 
 	/**
 	 * Returns the definitions for a list of value sets by a specific creator.
 	 * 
-	 * @param oid
+	 * @param oids
 	 *            list of ids that represent the value set
 	 * @param username
 	 *            id of the creator
@@ -370,7 +370,7 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 		String test = "";
 
 		for (String oid : oids) {
-			test = getCts2Client().getUserDefinitions(getAuthorizationHeader(), oid, "creator", username, 100);
+			test = getCts2Client().getUserDefinitions(getAuthorizationHeader(), oid, "creator", username, 5000);
 			System.out.print(test);
 		}
 

@@ -17,6 +17,7 @@ public class Cts2EditorServiceProperties {
 	private static String valueSetDefMaintUser;
 	private static String valueSetDefMaintPassword;
 	private static String valueSetDefMaintEntitiesUrl;
+	private static int valueSetRestPageSize = -1;
 	private static Logger logger = Logger.getLogger(Cts2EditorServiceProperties.class.getName());
 
 	protected Properties getStartupProperties() {
@@ -86,6 +87,21 @@ public class Cts2EditorServiceProperties {
 	public static String getValueSetDefinitionMaintenanceEntitiesUrl() {
 		synchronized (valueSetDefMaintLock) {
 			return valueSetDefMaintEntitiesUrl;
+		}
+	}
+
+	public static void setValueSetRestPageSize(int pageSize) {
+		synchronized (valueSetDefMaintLock) {
+			valueSetRestPageSize = pageSize;
+		}
+	}
+
+	public static int getValueSetRestPageSize() {
+		synchronized (valueSetDefMaintLock) {
+			if (valueSetRestPageSize == -1) {
+				valueSetRestPageSize = Integer.parseInt(new Cts2EditorServiceProperties().getStartupProperties().getProperty("cts2ValueSetRestPageSize"));
+			}
+			return valueSetRestPageSize;
 		}
 	}
 

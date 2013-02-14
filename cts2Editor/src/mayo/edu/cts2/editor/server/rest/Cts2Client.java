@@ -4,6 +4,7 @@ import org.jboss.resteasy.client.ClientResponse;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
@@ -23,13 +24,13 @@ public interface Cts2Client {
 	@Path("/valuesets")
 	@Produces(MediaType.APPLICATION_XML)
 	String getValueSets(@HeaderParam("Authorization") String auth,
-	                    @QueryParam("maxtoreturn") int maxRecordsToReturn);
+	                    @QueryParam("maxtoreturn") @DefaultValue("5000") int maxRecordsToReturn);
 
 	@GET
 	@Path("/valuesets")
 	@Produces(MediaType.APPLICATION_XML)
 	String getValueSets(@HeaderParam("Authorization") String auth,
-	                       @QueryParam("maxtoreturn") int maxRecordsToReturn,
+	                       @QueryParam("maxtoreturn") @DefaultValue("5000") int maxRecordsToReturn,
 	                       @QueryParam("matchvalue") String matchValue);
 
 	@GET
@@ -46,7 +47,7 @@ public interface Cts2Client {
 	@Produces(MediaType.APPLICATION_XML)
 	String getDefinitions(@HeaderParam("Authorization") String auth,
 	                      @PathParam("oid") String oid,
-	                      @QueryParam("maxtoreturn") int maxRecordsToReturn);
+	                      @QueryParam("maxtoreturn") @DefaultValue("5000") int maxRecordsToReturn);
 
 	@PUT
 	@Path("/valueset/{oid}/definition/{definitionId}")
@@ -69,7 +70,7 @@ public interface Cts2Client {
 	String getResolvedValueSet(@HeaderParam("Authorization") String auth,
 	                           @PathParam("oid") String oid,
 	                           @PathParam("version") String version,
-	                           @QueryParam("maxtoreturn") int maxRecordsToReturn);
+	                           @QueryParam("maxtoreturn") @DefaultValue("5000") int maxRecordsToReturn);
 
 	@GET
 	@Path("/valueset/{oid}/definition/{version}/resolution")
@@ -78,7 +79,7 @@ public interface Cts2Client {
 	                           @PathParam("oid") String oid,
 	                           @PathParam("version") String version,
 	                           @QueryParam("changesetcontext") String changeSetUri,
-	                           @QueryParam("maxtoreturn") int maxRecordsToReturn);
+	                           @QueryParam("maxtoreturn") @DefaultValue("5000") int maxRecordsToReturn);
 
 	@POST
 	@Path("/valuesetdefinition")
@@ -105,7 +106,7 @@ public interface Cts2Client {
 	                          @PathParam("oid")String oid,
 	                          @QueryParam("filtercomponent") String filter,
 	                          @QueryParam("matchvalue") String creator,
-	                          @QueryParam("maxtoreturn") int maxRecordsToReturn);
+	                          @QueryParam("maxtoreturn") @DefaultValue("5000") int maxRecordsToReturn);
 
 	@DELETE
 	@Path("/valueset/{oid}/definition/{valuesetdefid}")
@@ -149,5 +150,12 @@ public interface Cts2Client {
 	String updateChangeSet(@HeaderParam("Authorization") String auth,
 	                       @PathParam("uri") String changeSetUri,
 	                       String metadataRequest);
+
+	@GET
+	@Path("/changesets")
+	@Produces(MediaType.APPLICATION_XML)
+	String getChangeSetsByCreator(@HeaderParam("Authorization") String auth,
+	                              @QueryParam("matchvalue") String creator,
+	                              @QueryParam("filtercomponent") @DefaultValue("creator") String creatorFilter);
 
 }
