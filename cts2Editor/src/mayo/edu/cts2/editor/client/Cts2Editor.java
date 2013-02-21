@@ -80,7 +80,7 @@ public class Cts2Editor implements EntryPoint {
 		// get the value sets
 		getValueSets(oids);
 
-		getValueSetVersions(oids, "admin");
+		// getValueSetVersions(oids, "admin");
 
 		return i_valueSetsLayout;
 	}
