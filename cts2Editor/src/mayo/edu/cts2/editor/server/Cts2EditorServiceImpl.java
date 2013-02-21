@@ -556,7 +556,7 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 
 		if (changeSetUri != null) {
 			updateChangeSet(changeSetUri, definition.getSourceAndRole(0).getSource().getContent(), definition
-			        .getNote(0).getValue().toString());
+			        .getNote(0).getValue().getContent());
 
 			try {
 				if (saveAsToService(definition, changeSetUri)) {
