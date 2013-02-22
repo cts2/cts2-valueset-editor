@@ -371,7 +371,7 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 
 		for (String oid : oids) {
 			test = getCts2Client().getUserDefinitions(getAuthorizationHeader(), oid, "creator", username, 5000);
-			System.out.print(test);
+			// System.out.print(test);
 		}
 
 		return test;
@@ -643,7 +643,7 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 		return "Basic "
 		        // <<<<<<< HEAD
 		        // + Base64.encodeBytes((getCts2ValueSetRestUsername() + ":" +
-				// getCts2ValueSetRestPassword()).getBytes());
+		        // getCts2ValueSetRestPassword()).getBytes());
 		        // =======
 		        + Base64.encodeBytes((Cts2EditorServiceProperties.getCts2ValueSetRestUsername() + ":" + Cts2EditorServiceProperties
 		                .getCts2ValueSetRestPassword()).getBytes());

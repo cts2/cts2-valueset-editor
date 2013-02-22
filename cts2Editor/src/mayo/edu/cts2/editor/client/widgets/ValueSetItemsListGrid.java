@@ -210,7 +210,6 @@ public class ValueSetItemsListGrid extends ListGrid {
 	public void fetchRelatedData(Record record, DataSource dataSource) {
 		Criteria criteria = new Criteria();
 		String oid = record.getAttribute("valueSetName");
-
 		criteria.setAttribute("oid", oid);
 
 		dataSource.fetchData(criteria, new DSCallback() {

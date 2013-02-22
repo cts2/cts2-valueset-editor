@@ -27,6 +27,11 @@ public class ValueSetVersionsXmlDS extends DataSource {
 
 	private static final String RECORD_X_PATH = "/cts2:ValueSetDefinitionDirectory/cts2:entry";
 
+	private static final String NOTE_BEGIN = "<note>";
+	private static final String NOTE_END = "</note>";
+	private static final String CHANGE_SET_URI_BEGIN = "<changeSetUri>";
+	private static final String CHANGE_SET_URI_END = "</changeSetUri>";
+
 	private static ValueSetVersionsXmlDS instance = null;
 
 	protected final XmlNamespaces i_xmlNamespaces;
@@ -68,12 +73,17 @@ public class ValueSetVersionsXmlDS extends DataSource {
 		DataSourceTextField versionIdField = new DataSourceTextField("versionTag");
 		versionIdField.setPrimaryKey(true);
 
+		// This field currently holds <note> and <changeSetUri> tags. They are
+		// encoded for html. The internal tags will be parsed out later.
+		DataSourceTextField valuesField = new DataSourceTextField("values");
+		valuesField.setValueXPath("core:resourceSynopsis/core:value");
+
 		DataSourceTextField commentField = new DataSourceTextField("comment");
 		commentField.setValueXPath("core:resourceSynopsis/core:value");
 
-		// commentField.setValueXPath(X_PATH_COMPLETE);
+		DataSourceTextField changeSetUriField = new DataSourceTextField("changeSetUri");
 
-		setFields(hrefField, versionIdField, commentField);
+		setFields(hrefField, versionIdField, commentField, valuesField, changeSetUriField);
 
 		setClientOnly(true);
 	}
@@ -96,6 +106,8 @@ public class ValueSetVersionsXmlDS extends DataSource {
 			@Override
 			public void onSuccess(String result) {
 
+				// System.out.println(result);
+
 				// Add a default record for the first/initial version
 				ListGridRecord firstVersionRecord = new ListGridRecord();
 				firstVersionRecord.setAttribute("formalName", criteria.getAttribute(ValueSetsListGrid.ID_FORMAL_NAME));
@@ -104,8 +116,23 @@ public class ValueSetVersionsXmlDS extends DataSource {
 
 				Object results = XMLTools.selectNodes(result, RECORD_X_PATH, i_nsMap);
 				Record[] fetchRecords = recordsFromXML(results);
-				setCacheData(fetchRecords);
 
+				// get the value in "valuesField" and parse out the note and
+				// changeSetUri
+				// It will look like this:
+				//
+				// &lt;note&gt;User created
+				// 1&lt;/note&gt;&lt;changeSetUri&gt;e3aaae65-5d11-4357-93b2-49685e88d222&lt;/changeSetUri&gt;
+				for (Record record : fetchRecords) {
+					String valuesField = record.getAttribute("values");
+					String note = getEmbeddedData(valuesField, NOTE_BEGIN, NOTE_END);
+					String changeSetUri = getEmbeddedData(valuesField, CHANGE_SET_URI_BEGIN, CHANGE_SET_URI_END);
+
+					record.setAttribute("comment", note);
+					record.setAttribute("changeSetUri", changeSetUri);
+				}
+
+				setCacheData(fetchRecords);
 				addData(firstVersionRecord);
 
 				// use the callback to let the widget know we got the data...
@@ -124,6 +151,31 @@ public class ValueSetVersionsXmlDS extends DataSource {
 			}
 		});
 
+	}
+
+	/**
+	 * Get the data between the two tags.
+	 * 
+	 * @param valuesField
+	 * @param begin
+	 * @param end
+	 * @return
+	 */
+	private String getEmbeddedData(String valuesField, String begin, String end) {
+		String result = "";
+
+		if (valuesField != null && begin != null && end != null) {
+			try {
+
+				int beginIndex = valuesField.indexOf(begin) + begin.length();
+				int endIndex = valuesField.indexOf(end);
+
+				result = valuesField.substring(beginIndex, endIndex);
+			} catch (Exception e) {
+
+			}
+		}
+		return result;
 	}
 
 	/**

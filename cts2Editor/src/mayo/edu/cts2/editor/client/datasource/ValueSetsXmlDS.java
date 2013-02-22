@@ -2,6 +2,9 @@ package mayo.edu.cts2.editor.client.datasource;
 
 import java.util.logging.Logger;
 
+import mayo.edu.cts2.editor.client.debug.DebugPanel;
+import mayo.edu.cts2.editor.client.widgets.BaseValueSetsListGrid;
+
 import com.smartgwt.client.data.Record;
 import com.smartgwt.client.data.XMLTools;
 import com.smartgwt.client.data.fields.DataSourceTextField;
@@ -38,12 +41,13 @@ public class ValueSetsXmlDS extends BaseValueSetXmlDS {
 		// set the XPath
 		setRecordXPath(RECORD_X_PATH);
 
-		DataSourceTextField valueSetNameField = new DataSourceTextField("valueSetName", "Value Set Name");
+		DataSourceTextField valueSetNameField = new DataSourceTextField(BaseValueSetsListGrid.ID_VALUE_SET_NAME,
+		        "Value Set Name");
 		// valueSetNameField.setForeignKey("ValueSetsXmlDS.valueSetName");
 		valueSetNameField.setPrimaryKey(true);
 
 		// Set this as the primary key
-		DataSourceTextField aboutField = new DataSourceTextField("about", "About");
+		DataSourceTextField aboutField = new DataSourceTextField(BaseValueSetsListGrid.ID_ABOUT, "About");
 		aboutField.setHidden(true);
 		// aboutField.setPrimaryKey(true);
 		aboutField.setForeignKey("ValueSetsXmlDS.valueSetName");
@@ -68,6 +72,9 @@ public class ValueSetsXmlDS extends BaseValueSetXmlDS {
 	public void setData(String xmlData) {
 		Object results = XMLTools.selectNodes(xmlData, RECORD_X_PATH, i_nsMap);
 		Record[] fetchRecords = recordsFromXML(results);
+
+		DebugPanel.log(DebugPanel.DEBUG, fetchRecords.length + " Value Sets retrieved");
+
 		setTestData(fetchRecords);
 	}
 }

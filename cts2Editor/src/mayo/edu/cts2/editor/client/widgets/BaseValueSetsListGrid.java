@@ -19,6 +19,7 @@ public class BaseValueSetsListGrid extends ListGrid {
 	public static final String ID_URI = "uri";
 	public static final String ID_COMMENT = "comment";
 	public static final String ID_CHANGE_VERSION = "changeVersion";
+	public static final String ID_ABOUT = "about";
 
 	public static final String ID_ACTION = "action";
 	public static final String ID_HIDDEN_ACTION = "hiddenValue";

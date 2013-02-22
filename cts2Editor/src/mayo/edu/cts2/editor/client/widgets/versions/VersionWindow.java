@@ -148,12 +148,13 @@ public class VersionWindow extends Window {
 				String versionId = selected.getAttribute(VersionsListGrid.ID_VERSION);
 				String href = selected.getAttribute("href");
 				String comment = selected.getAttribute("comment");
+				String changeSetUri = selected.getAttribute("changeSetUri");
 
 				// *********** TEMP *************
 				// TODO - CME: changeSetUri is hard coded. Talk with Dale to
 				// determine how to get it.
 
-				String changeSetUri = "e3aaae65-5d11-4357-93b2-49685e88d222";
+				// String changeSetUri = "e3aaae65-5d11-4357-93b2-49685e88d222";
 
 				// System.out.println("Selected version = " + versionId);
 				// System.out.println("HREF = " + href);

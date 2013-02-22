@@ -7,6 +7,7 @@ import java.util.logging.Logger;
 
 import mayo.edu.cts2.editor.client.Cts2EditorService;
 import mayo.edu.cts2.editor.client.Cts2EditorServiceAsync;
+import mayo.edu.cts2.editor.client.debug.DebugPanel;
 import mayo.edu.cts2.editor.client.utils.RandomString;
 
 import com.google.gwt.core.client.GWT;
@@ -103,9 +104,9 @@ public class ValueSetItemXmlDS extends BaseValueSetItemXmlDS {
 
 			setCacheData(new Record[0]);
 
-			String oid = criteria.getAttribute("oid");
-			String changeSetUri = criteria.getAttribute("changeSetUri");
-			String version = criteria.getAttribute("version");
+			final String oid = criteria.getAttribute("oid");
+			final String changeSetUri = criteria.getAttribute("changeSetUri");
+			final String version = criteria.getAttribute("version");
 
 			Cts2EditorServiceAsync service = GWT.create(Cts2EditorService.class);
 			service.getResolvedValueSet(oid, version, changeSetUri, new AsyncCallback<String>() {
@@ -119,6 +120,8 @@ public class ValueSetItemXmlDS extends BaseValueSetItemXmlDS {
 
 					Object results = XMLTools.selectNodes(result, RECORD_X_PATH, i_nsMap);
 					Record[] fetchRecords = recordsFromXML(results);
+
+					DebugPanel.log(DebugPanel.DEBUG, fetchRecords.length + " Value sets Entries retrieved.");
 
 					// setTestData(fetchRecords);
 
@@ -142,6 +145,8 @@ public class ValueSetItemXmlDS extends BaseValueSetItemXmlDS {
 
 				@Override
 				public void onFailure(Throwable caught) {
+					DebugPanel.log(DebugPanel.DEBUG, "Failed to retrieve value sets entries for " + oid
+					        + " with changeSetUri of " + changeSetUri + " and version of " + version);
 					logger.log(Level.SEVERE, "Error retrieving Value Set Definition: " + caught);
 				}
 			});
@@ -195,8 +200,8 @@ public class ValueSetItemXmlDS extends BaseValueSetItemXmlDS {
 
 		for (Record record : records) {
 			i_recordsToDelete.add(record);
-
-			System.out.println("Record to remove : " + record.getAttribute("name"));
+			// System.out.println("Record to remove : " +
+			// record.getAttribute("name"));
 		}
 
 	}

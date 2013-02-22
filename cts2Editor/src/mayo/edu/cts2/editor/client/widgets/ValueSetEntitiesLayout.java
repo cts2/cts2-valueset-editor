@@ -4,14 +4,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 import mayo.edu.cts2.editor.client.Cts2Editor;
+import mayo.edu.cts2.editor.client.Cts2EditorService;
+import mayo.edu.cts2.editor.client.Cts2EditorServiceAsync;
 import mayo.edu.cts2.editor.client.datasource.ValueSetItemXmlDS;
+import mayo.edu.cts2.editor.client.debug.DebugPanel;
 import mayo.edu.cts2.editor.client.events.AddRecordsEvent;
 import mayo.edu.cts2.editor.client.events.AddRecordsEventHandler;
+import mayo.edu.cts2.editor.client.events.SaveAsEvent;
+import mayo.edu.cts2.editor.client.events.SaveAsEventHandler;
+import mayo.edu.cts2.editor.client.utils.ModalWindow;
 import mayo.edu.cts2.editor.client.widgets.search.SearchListGrid;
 import mayo.edu.cts2.editor.client.widgets.search.SearchValueSetItemsListGrid;
 import mayo.edu.cts2.editor.client.widgets.search.SearchWindow;
+import mayo.edu.cts2.editor.shared.CTS2Result;
+import mayo.edu.cts2.editor.shared.Definition;
 import mayo.edu.cts2.editor.shared.DefinitionEntry;
 
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.smartgwt.client.data.Criteria;
 import com.smartgwt.client.data.DataSource;
 import com.smartgwt.client.data.Record;
@@ -51,6 +61,8 @@ public class ValueSetEntitiesLayout extends VLayout {
 	private final IButton i_saveButton;
 	private final IButton i_saveAsButton;
 	private final IButton i_closeButton;
+
+	private ModalWindow i_busyIndicator;
 
 	// private boolean i_okToClose = false;
 
@@ -105,7 +117,7 @@ public class ValueSetEntitiesLayout extends VLayout {
 		i_saveAsButton.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
-				i_valueSetItemsListGrid.saveAllEdits();
+				getCommentsForNewVersion();
 			}
 		});
 
@@ -134,7 +146,7 @@ public class ValueSetEntitiesLayout extends VLayout {
 				i_removalsMade = true;
 
 				// enable these buttons.
-				i_saveButton.setDisabled(false);
+				i_saveButton.setDisabled(disableSave(i_valueSetRecord) || false);
 				i_saveAsButton.setDisabled(false);
 
 				ListGridRecord[] records = i_valueSetItemsListGrid.getSelectedRecords();
@@ -191,6 +203,28 @@ public class ValueSetEntitiesLayout extends VLayout {
 		});
 
 		createAddRecordEvent();
+		createSaveAsEvent();
+	}
+
+	/**
+	 * Determine if a user can save. They cannot save if the version is "1".
+	 * 
+	 * @param valueSetRecord
+	 * @return
+	 */
+	private boolean disableSave(ListGridRecord valueSetRecord) {
+		String version = valueSetRecord.getAttribute(BaseValueSetsListGrid.ID_URI);
+
+		return canSaveVersion(version);
+	}
+
+	/**
+	 * 
+	 * @param version
+	 * @return
+	 */
+	private boolean canSaveVersion(String version) {
+		return version == null || version.equals("1");
 	}
 
 	/**
@@ -257,6 +291,11 @@ public class ValueSetEntitiesLayout extends VLayout {
 				if (listGrid instanceof SearchValueSetItemsListGrid) {
 					SearchValueSetItemsListGrid searchValueSetItemsListGrid = (SearchValueSetItemsListGrid) listGrid;
 
+					DebugPanel.log(
+					        DebugPanel.DEBUG,
+					        "Adding value set entries for "
+					                + i_valueSetRecord.getAttribute(ValueSetsListGrid.ID_FORMAL_NAME));
+
 					Record[] records = searchValueSetItemsListGrid.getRecords();
 					for (int i = 0; i < records.length; i++) {
 
@@ -268,7 +307,7 @@ public class ValueSetEntitiesLayout extends VLayout {
 					}
 
 					// enable these buttons.
-					i_saveButton.setDisabled(false);
+					i_saveButton.setDisabled(disableSave(i_valueSetRecord) || false);
 					i_saveAsButton.setDisabled(false);
 					i_additionsMade = true;
 				}
@@ -295,6 +334,8 @@ public class ValueSetEntitiesLayout extends VLayout {
 		// + " --- designation = " + designation);
 
 		i_valueSetItemsListGrid.createNewRecord(href, code, codeSystemName, designation);
+		DebugPanel.log(DebugPanel.DEBUG, "Adding Value Set Entry with code = " + code + " codeSystemName = "
+		        + codeSystemName + " and designation = " + designation);
 	}
 
 	/**
@@ -305,21 +346,157 @@ public class ValueSetEntitiesLayout extends VLayout {
 	 */
 	private void saveValueSetEntities(ListGridRecord[] records) {
 
+		Definition definition = getDefinition(records, "");
+
+		Cts2EditorServiceAsync service = GWT.create(Cts2EditorService.class);
+
+		// Need to send in the overall layout so the whole
+		// screen is greyed out.
+		i_busyIndicator = new ModalWindow(i_parentGrid, 40, "#dedede");
+		i_busyIndicator.setLoadingIcon("loading_circle.gif");
+		i_busyIndicator.show("Saving Value Set...", true);
+
+		service.saveDefinition(definition, new AsyncCallback<CTS2Result>() {
+
+			@Override
+			public void onFailure(Throwable caught) {
+				i_busyIndicator.hide();
+				DebugPanel.log(DebugPanel.DEBUG, "Value set 'Save' failed. " + caught.getMessage());
+				SC.warn("Unable to save the Value Set");
+			}
+
+			@Override
+			public void onSuccess(CTS2Result result) {
+				i_busyIndicator.hide();
+
+				if (result.isError()) {
+					DebugPanel.log(DebugPanel.DEBUG, "Value set 'Save' failed. " + result.getMessage());
+					SC.warn("Unable to save the Value Set.\n\n" + result.getMessage());
+				} else {
+					DebugPanel.log(DebugPanel.DEBUG,
+					        "Value set 'Save' successful.  changeSetUri = " + result.getChangeSetUri());
+					SC.say("Value set has been saved.");
+
+					// Update the Value Set Listgrid with the new changeSetUri,
+					// version and comments.
+					String newChangeSetUri = result.getChangeSetUri();
+					String version = result.getValueSetVersion();
+					String oid = result.getValueSetOid();
+					String definitionId = result.getValueSetDefinitionId();
+
+					// System.out.println("newChangeSetUri = " +
+					// newChangeSetUri);
+
+				}
+			}
+		});
+
+	}
+
+	private void getCommentsForNewVersion() {
+
+		String comment = i_valueSetRecord.getAttribute(BaseValueSetsListGrid.ID_COMMENT);
+		String version = i_valueSetRecord.getAttribute(BaseValueSetsListGrid.ID_URI);
+		String creator = Cts2Editor.getUserName();
+
+		if (version == null || version.equals("1")) {
+			comment = "< " + ValueSetsListGrid.DEFAULT_VERSION_COMMENT + " >";
+		}
+
+		SaveAsWindow saveAsWindow = new SaveAsWindow(version, comment, creator);
+		saveAsWindow.show();
+	}
+
+	/**
+	 * Take changes to the value set entries and call SaveAs.
+	 * 
+	 * @param definition
+	 */
+	private void saveAsValueSetEntities(Definition definition) {
+
+		Cts2EditorServiceAsync service = GWT.create(Cts2EditorService.class);
+
+		i_busyIndicator = new ModalWindow(i_parentGrid, 40, "#dedede");
+		i_busyIndicator.setLoadingIcon("loading_circle.gif");
+		i_busyIndicator.show("Creating New Value Set Version...", true);
+
+		service.saveDefinitionAs(definition, new AsyncCallback<CTS2Result>() {
+
+			@Override
+			public void onSuccess(CTS2Result result) {
+
+				i_busyIndicator.hide();
+
+				if (result.isError()) {
+					DebugPanel.log(DebugPanel.DEBUG, "Value set 'Save As' failed. " + result.getMessage());
+					SC.warn("Unable to save the Value Set.\n\n" + result.getMessage());
+				} else {
+					DebugPanel.log(DebugPanel.DEBUG,
+					        "Value set 'Save As' successful.  changeSetUri = " + result.getChangeSetUri());
+					SC.say("Value set has been saved.");
+				}
+			}
+
+			@Override
+			public void onFailure(Throwable caught) {
+				i_busyIndicator.hide();
+				DebugPanel.log(DebugPanel.ERROR, "Value set 'Save As' failed. " + caught.getMessage());
+				SC.warn("Unable to save the Value Set");
+			}
+		});
+	}
+
+	/**
+	 * Listen for when a user selects to "save as" a value set.
+	 */
+	private void createSaveAsEvent() {
+
+		Cts2Editor.EVENT_BUS.addHandler(SaveAsEvent.TYPE, new SaveAsEventHandler() {
+
+			@Override
+			public void onSaveAs(SaveAsEvent event) {
+				String comment = event.getComment();
+
+				ListGridRecord[] records = i_valueSetItemsListGrid.getRecords();
+				Definition definition = getDefinition(records, comment);
+
+				saveAsValueSetEntities(definition);
+			}
+		});
+	}
+
+	/**
+	 * Create and populate a Definition based on the ListGridRecord[] passed in.
+	 * 
+	 * @param records
+	 * @return
+	 */
+	private Definition getDefinition(ListGridRecord[] records, String comment) {
+
 		List<DefinitionEntry> entries = getDefinitionEntries(records);
+		Definition definition = new Definition();
+		definition.setEntries(entries);
 
-		// Definition definition = new Definition();
-		// definition.setAbout(about);
-		// definition.setChangeSetUri(changeSetUri);
-		// definition.setCreator(creator);
-		// definition.setEntries(entries);
-		// definition.setFormalName(formalName);
-		// definition.setNote(note);
-		// definition.setResourceSynopsis(resourceSynopsis);
-		// definition.setValueSetOid(valueSetOid);
-		// definition.setVersion(version);
+		// String name =
+		// i_valueSetRecord.getAttribute(BaseValueSetsListGrid.ID_VALUE_SET_NAME);
+		String changeSetUri = i_valueSetRecord.getAttribute(BaseValueSetsListGrid.ID_CHANGE_SET_URI);
+		String formalName = i_valueSetRecord.getAttribute(BaseValueSetsListGrid.ID_FORMAL_NAME);
+		// String comment =
+		// i_valueSetRecord.getAttribute(BaseValueSetsListGrid.ID_COMMENT);
+		String about = i_valueSetRecord.getAttribute(BaseValueSetsListGrid.ID_ABOUT);
+		String version = i_valueSetRecord.getAttribute(BaseValueSetsListGrid.ID_URI);
+		String creator = Cts2Editor.getUserName();
+		String oid = i_valueSetRecord.getAttribute(BaseValueSetsListGrid.ID_VALUE_SET_NAME);
 
-		// create a
+		definition.setChangeSetUri(changeSetUri);
+		definition.setFormalName(formalName);
+		definition.setNote(comment);
+		definition.setAbout(about);
+		definition.setCreator(creator);
+		definition.setVersion(version);
+		definition.setValueSetOid(oid);
 
+		return definition;
 	}
 
 	/**
@@ -335,19 +512,23 @@ public class ValueSetEntitiesLayout extends VLayout {
 
 		for (ListGridRecord record : records) {
 
-			String uri = record.getAttribute(ValueSetItemsListGrid.ID_URI);
-			String name = record.getAttribute(ValueSetItemsListGrid.ID_NAME);
-			String nameSpace = record.getAttribute(ValueSetItemsListGrid.ID_NAME_SPACE);
-			String designation = record.getAttribute(ValueSetItemsListGrid.ID_DESIGNATION);
+			String action = record.getAttribute(ValueSetItemsListGrid.ID_HIDDEN_ACTION);
 
-			DefinitionEntry definitionEntry = new DefinitionEntry();
-			// DefinitionEntry definitionEntry = new DefinitionEntry(uri, );
+			// Don't add if the user selected to delete this value set entry
+			if (action == null || !action.equals(ValueSetItemsListGrid.ACTION_DELETE)) {
 
-			// definitionEntry.setHref(href);
-			definitionEntry.setName(name);
-			definitionEntry.setNamespace(nameSpace);
-			definitionEntry.setUri(uri);
-			entries.add(definitionEntry);
+				String uri = record.getAttribute(ValueSetItemsListGrid.ID_URI);
+				String name = record.getAttribute(ValueSetItemsListGrid.ID_NAME);
+				String nameSpace = record.getAttribute(ValueSetItemsListGrid.ID_NAME_SPACE);
+
+				DefinitionEntry definitionEntry = new DefinitionEntry();
+
+				definitionEntry.setName(name);
+				definitionEntry.setNamespace(nameSpace);
+				definitionEntry.setUri(uri);
+
+				entries.add(definitionEntry);
+			}
 		}
 
 		return entries;
@@ -385,6 +566,9 @@ public class ValueSetEntitiesLayout extends VLayout {
 		String oid = criteria.getAttribute("oid");
 		String changeSetUri = criteria.getAttribute("changeSetUri");
 		String version = criteria.getAttribute("version");
+
+		i_saveButton.setDisabled(true);
+		i_saveAsButton.setDisabled(true);
 
 		ValueSetItemXmlDS ds = (ValueSetItemXmlDS) i_valueSetItemsListGrid.getDataSource();
 		ds.setShouldGetData(true);

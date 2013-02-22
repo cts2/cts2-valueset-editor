@@ -1,5 +1,6 @@
 package mayo.edu.cts2.editor.client.widgets;
 
+import mayo.edu.cts2.editor.client.Cts2Editor;
 import mayo.edu.cts2.editor.client.datasource.ValueSetItemXmlDS;
 import mayo.edu.cts2.editor.client.datasource.ValueSetsXmlDS;
 import mayo.edu.cts2.editor.client.widgets.versions.VersionWindow;
@@ -26,7 +27,7 @@ import com.smartgwt.client.widgets.layout.VLayout;
 
 public class ValueSetsListGrid extends BaseValueSetsListGrid {
 
-	private static final String DEFAULT_VERSION_COMMENT = "Initial Version";
+	public static final String DEFAULT_VERSION_COMMENT = "Initial Version";
 
 	private final ValueSetsXmlDS i_valueSetsXmlDS;
 	private String i_xmlData;
@@ -268,7 +269,7 @@ public class ValueSetsListGrid extends BaseValueSetsListGrid {
 				@Override
 				public void onClick(ClickEvent event) {
 
-					String userName = "admin";
+					String userName = Cts2Editor.getUserName();
 					String valueSetId = record.getAttribute(ID_VALUE_SET_NAME);
 
 					Criteria criteria = new Criteria();
@@ -297,6 +298,8 @@ public class ValueSetsListGrid extends BaseValueSetsListGrid {
 	 * @param searchText
 	 */
 	public void populateData(String xmlData) {
+
+		// System.out.println(xmlData);
 
 		i_xmlData = xmlData;
 		i_valueSetsXmlDS.setData(i_xmlData);

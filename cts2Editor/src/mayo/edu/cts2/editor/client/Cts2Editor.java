@@ -3,6 +3,7 @@ package mayo.edu.cts2.editor.client;
 import java.util.ArrayList;
 import java.util.List;
 
+import mayo.edu.cts2.editor.client.debug.DebugPanel;
 import mayo.edu.cts2.editor.client.utils.ModalWindow;
 import mayo.edu.cts2.editor.client.widgets.ValueSetContainer;
 import mayo.edu.cts2.editor.client.widgets.ValueSetsLayout;
@@ -25,12 +26,16 @@ public class Cts2Editor implements EntryPoint {
 	private ModalWindow i_busyIndicator;
 
 	private ValueSetsLayout i_valueSetsLayout;
+	private DebugPanel i_debugPanel;
 
 	// Event Bus to capture global events and act upon them.
 	public static EventBus EVENT_BUS = GWT.create(SimpleEventBus.class);
 
-	private static final boolean s_standAlone = false;
-	private static final boolean s_readOnly = true;
+	private static final boolean s_standAlone = true;
+	private static final boolean s_readOnly = false;
+	private static final boolean s_debug = true;
+
+	private static String i_userName;
 
 	/**
 	 * This is the entry point method.
@@ -59,6 +64,9 @@ public class Cts2Editor implements EntryPoint {
 
 		// create and add to the root only if we are in stand alone mode.
 		if (s_standAlone) {
+
+			setUser("admin");
+
 			// Draw the Layout - main layout
 			RootLayoutPanel.get().add(getMainLayout(oids));
 		}
@@ -75,14 +83,33 @@ public class Cts2Editor implements EntryPoint {
 	 */
 	public VLayout getMainLayout(List<String> oids) {
 
-		i_valueSetsLayout = new ValueSetsLayout();
+		VLayout mainLayout = new VLayout();
+		mainLayout.setWidth100();
+		mainLayout.setHeight100();
 
+		i_debugPanel = new DebugPanel();
+
+		i_valueSetsLayout = new ValueSetsLayout();
 		// get the value sets
 		getValueSets(oids);
-
 		// getValueSetVersions(oids, "admin");
 
-		return i_valueSetsLayout;
+		mainLayout.addMember(i_valueSetsLayout);
+
+		// Only add if in debug mode
+		if (s_debug) {
+			mainLayout.addMember(i_debugPanel);
+		}
+
+		return mainLayout;
+	}
+
+	public static void setUser(String user) {
+		i_userName = user;
+	}
+
+	public static String getUserName() {
+		return i_userName;
 	}
 
 	private void getValueSets(List<String> oids) {
@@ -97,9 +124,9 @@ public class Cts2Editor implements EntryPoint {
 
 		// Need to send in the overall layout so the whole
 		// screen is greyed out.
-		// i_busyIndicator = new ModalWindow(i_valueSetsLayout, 40, "#dedede");
-		// i_busyIndicator.setLoadingIcon("loading_circle.gif");
-		// i_busyIndicator.show("Retrieving Value Sets...", true);
+		i_busyIndicator = new ModalWindow(i_valueSetsLayout, 40, "#dedede");
+		i_busyIndicator.setLoadingIcon("loading_circle.gif");
+		i_busyIndicator.show("Retrieving Value Sets...", true);
 
 		service.getValueSets(oids, new AsyncCallback<String>() {
 
@@ -107,7 +134,7 @@ public class Cts2Editor implements EntryPoint {
 			public void onSuccess(String valueSets) {
 
 				// hide the progress panel.
-				// i_busyIndicator.hide();
+				i_busyIndicator.hide();
 
 				/*
 				 * NOTE: valueSets is an xml string of
@@ -116,6 +143,21 @@ public class Cts2Editor implements EntryPoint {
 				 * Cts2EditorServiceImpl.XPATH_VALUESETS_BASE
 				 */
 
+				displayData(valueSets);
+			}
+
+			@Override
+			public void onFailure(Throwable caught) {
+
+				DebugPanel.log(DebugPanel.ERROR, "Failed to retrieve value sets. " + caught.getMessage());
+
+				// hide the progress panel.
+				i_busyIndicator.hide();
+				displayData(null);
+				SC.say("Error retrieving Value Sets.\n" + caught.getMessage());
+			}
+
+			private void displayData(String valueSets) {
 				// clear out the existing value sets ListGrid
 				i_valueSetsLayout.removeAll();
 
@@ -129,15 +171,6 @@ public class Cts2Editor implements EntryPoint {
 				// put the value set list grid layout (container) into the
 				// main list grid container.
 				i_valueSetsLayout.addMember(valueSetContainer);
-			}
-
-			@Override
-			public void onFailure(Throwable caught) {
-
-				// hide the progress panel.
-				// i_busyIndicator.hide();
-
-				SC.say("Error retrieving ValueSets.\n" + caught.getMessage());
 			}
 		});
 
