@@ -8,7 +8,7 @@ public class CTS2Result implements Serializable {
 	String message;
 	String changeSetUri;
 	String valueSetOid;
-	String valueSetDefinitionId;
+	String valueSetDefinitionUri;
 	String valueSetVersion;
 
 	public boolean isError() {
@@ -43,12 +43,12 @@ public class CTS2Result implements Serializable {
 		this.valueSetOid = valueSetOid;
 	}
 
-	public String getValueSetDefinitionId() {
-		return valueSetDefinitionId;
+	public String getValueSetDefinitionUri() {
+		return valueSetDefinitionUri;
 	}
 
-	public void setValueSetDefinitionId(String valueSetDefinitionId) {
-		this.valueSetDefinitionId = valueSetDefinitionId;
+	public void setValueSetDefinitionUri(String valueSetDefinitionUri) {
+		this.valueSetDefinitionUri = valueSetDefinitionUri;
 	}
 
 	public String getValueSetVersion() {
@@ -65,7 +65,7 @@ public class CTS2Result implements Serializable {
 		sb.append(" message: " + message);
 		sb.append(" changeSetUri: " + changeSetUri);
 		sb.append(" valueSetOid: " + valueSetOid);
-		sb.append(" valueSetDefinitionId: " + valueSetDefinitionId);
+		sb.append(" valueSetDefinitionUri: " + valueSetDefinitionUri);
 		sb.append(" valueSetVersion: " + valueSetVersion);
 		return sb.toString();
 	}

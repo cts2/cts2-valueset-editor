@@ -9,6 +9,7 @@ public class Definition implements Serializable {
 	private String valueSetOid;
 	private String version;
 	private String changeSetUri;
+	private String documentUri;
 	private String about;
 	private String formalName;
 	private String resourceSynopsis;
@@ -70,6 +71,14 @@ public class Definition implements Serializable {
 
 	public void setChangeSetUri(String changeSetUri) {
 		this.changeSetUri = changeSetUri;
+	}
+
+	public String getDocumentUri() {
+		return documentUri;
+	}
+
+	public void setDocumentUri(String documentUri) {
+		this.documentUri = documentUri;
 	}
 
 	public String getNote() {
