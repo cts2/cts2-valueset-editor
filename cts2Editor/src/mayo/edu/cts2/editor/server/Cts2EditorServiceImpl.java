@@ -11,6 +11,7 @@ import java.util.logging.Logger;
 
 import javax.xml.transform.stream.StreamSource;
 
+import edu.mayo.cts2.framework.model.valuesetdefinition.ValueSetDefinitionEntry;
 import mayo.edu.cts2.editor.client.Cts2EditorService;
 import mayo.edu.cts2.editor.server.rest.Cts2Client;
 import mayo.edu.cts2.editor.server.rest.EntityClient;
@@ -513,6 +514,9 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 			entity.setNamespace(definitionEntry.getNamespace());
 			entity.setUri(definitionEntry.getUri());
 			entity.setHref(definitionEntry.getHref());
+			/* TODO: Need to set the description in the service, waiting for the updated spec:
+			 * https://github.com/cts2/cts2-specification/issues/143 */
+//			entity.setDesignation(definitionEntry.getDescription());
 			entityList.addReferencedEntity(entity);
 		}
 
@@ -525,7 +529,7 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 		String changeSetUri = createChangeSet();
 		if (changeSetUri != null) {
 			updateChangeSet(changeSetUri, definition.getSourceAndRole(0).getSource().getContent(), definition
-			        .getNote(0).getValue().toString());
+			        .getNote(0).getValue().getContent());
 			try {
 				if (saveToService(definition, changeSetUri)) {
 					result.setChangeSetUri(changeSetUri);

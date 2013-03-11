@@ -8,19 +8,22 @@ public class DefinitionEntry implements Serializable {
 	String href;
 	String namespace;
 	String name;
+	String description;
 
 	public DefinitionEntry() {
 		this.uri = "";
 		this.href = "";
 		this.namespace = "";
 		this.name = "";
+		this.description = "";
 	}
 
-	public DefinitionEntry(String uri, String href, String namespace, String name) {
+	public DefinitionEntry(String uri, String href, String namespace, String name, String description) {
 		this.uri = uri;
 		this.href = href;
 		this.namespace = namespace;
 		this.name = name;
+		this.description = description;
 	}
 
 	public String getUri() {
@@ -53,6 +56,14 @@ public class DefinitionEntry implements Serializable {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
 	}
 
 	@Override
