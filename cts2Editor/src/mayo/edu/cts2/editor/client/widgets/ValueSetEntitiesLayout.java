@@ -12,6 +12,7 @@ import mayo.edu.cts2.editor.client.events.AddRecordsEvent;
 import mayo.edu.cts2.editor.client.events.AddRecordsEventHandler;
 import mayo.edu.cts2.editor.client.events.SaveAsEvent;
 import mayo.edu.cts2.editor.client.events.SaveAsEventHandler;
+import mayo.edu.cts2.editor.client.events.UpdateValueSetVersionEvent;
 import mayo.edu.cts2.editor.client.utils.ModalWindow;
 import mayo.edu.cts2.editor.client.widgets.search.SearchListGrid;
 import mayo.edu.cts2.editor.client.widgets.search.SearchValueSetItemsListGrid;
@@ -214,7 +215,6 @@ public class ValueSetEntitiesLayout extends VLayout {
 	 */
 	private boolean disableSave(ListGridRecord valueSetRecord) {
 		String version = valueSetRecord.getAttribute(BaseValueSetsListGrid.ID_URI);
-
 		return canSaveVersion(version);
 	}
 
@@ -234,6 +234,14 @@ public class ValueSetEntitiesLayout extends VLayout {
 	 */
 	public boolean checkForUnsavedChanges() {
 		return i_additionsMade || i_removalsMade;
+	}
+
+	/**
+	 * Clear the flags that indicate there was a change made.
+	 */
+	public void clearChangeFlags() {
+		i_additionsMade = false;
+		i_removalsMade = false;
 	}
 
 	/**
@@ -329,10 +337,6 @@ public class ValueSetEntitiesLayout extends VLayout {
 		// this will be used as the PK
 		String href = record.getAttribute(SearchValueSetItemsListGrid.ID_HREF);
 
-		// System.out.println("href = " + href + " code = " + code +
-		// " codeSystemName = " + codeSystemName
-		// + " --- designation = " + designation);
-
 		i_valueSetItemsListGrid.createNewRecord(href, code, codeSystemName, designation);
 		DebugPanel.log(DebugPanel.DEBUG, "Adding Value Set Entry with code = " + code + " codeSystemName = "
 		        + codeSystemName + " and designation = " + designation);
@@ -373,19 +377,28 @@ public class ValueSetEntitiesLayout extends VLayout {
 					DebugPanel.log(DebugPanel.DEBUG, "Value set 'Save' failed. " + result.getMessage());
 					SC.warn("Unable to save the Value Set.\n\n" + result.getMessage());
 				} else {
-					DebugPanel.log(DebugPanel.DEBUG,
-					        "Value set 'Save' successful.  changeSetUri = " + result.getChangeSetUri());
-					SC.say("Value set has been saved.");
+
+					clearChangeFlags();
 
 					// Update the Value Set Listgrid with the new changeSetUri,
 					// version and comments.
 					String newChangeSetUri = result.getChangeSetUri();
-					String version = result.getValueSetVersion();
+					String versionId = result.getValueSetVersion();
+					String valueSetId = result.getValueSetOid();
 					String oid = result.getValueSetOid();
-					String definitionId = result.getValueSetDefinitionId();
+					String documentUri = result.getDocumentUri();
 
-					// System.out.println("newChangeSetUri = " +
-					// newChangeSetUri);
+					String comment = i_valueSetRecord.getAttribute(BaseValueSetsListGrid.ID_COMMENT);
+
+					// let others know that a record needs to be updated with a
+					// new version.
+					Cts2Editor.EVENT_BUS.fireEvent(new UpdateValueSetVersionEvent(valueSetId, newChangeSetUri,
+					        versionId, comment, documentUri));
+
+					DebugPanel.log(DebugPanel.DEBUG,
+					        "Value set 'Save' successful. new changeSetUri = " + result.getChangeSetUri()
+					                + " new definition URI = " + newChangeSetUri);
+					SC.say("Value set has been saved.");
 
 				}
 			}
@@ -411,8 +424,9 @@ public class ValueSetEntitiesLayout extends VLayout {
 	 * Take changes to the value set entries and call SaveAs.
 	 * 
 	 * @param definition
+	 * @param comment
 	 */
-	private void saveAsValueSetEntities(Definition definition) {
+	private void saveAsValueSetEntities(Definition definition, final String newComment) {
 
 		Cts2EditorServiceAsync service = GWT.create(Cts2EditorService.class);
 
@@ -434,6 +448,19 @@ public class ValueSetEntitiesLayout extends VLayout {
 					DebugPanel.log(DebugPanel.DEBUG,
 					        "Value set 'Save As' successful.  changeSetUri = " + result.getChangeSetUri());
 					SC.say("Value set has been saved.");
+
+					clearChangeFlags();
+
+					// Update the Value Set Record that was just saved.
+					String valueSetId = result.getValueSetOid();
+					String changeSetUri = result.getChangeSetUri();
+					String versionId = result.getValueSetVersion();
+					String documentUri = result.getDocumentUri();
+
+					// let others know that a record needs to be updated with a
+					// new version.
+					Cts2Editor.EVENT_BUS.fireEvent(new UpdateValueSetVersionEvent(valueSetId, changeSetUri, versionId,
+					        newComment, documentUri));
 				}
 			}
 
@@ -460,7 +487,7 @@ public class ValueSetEntitiesLayout extends VLayout {
 				ListGridRecord[] records = i_valueSetItemsListGrid.getRecords();
 				Definition definition = getDefinition(records, comment);
 
-				saveAsValueSetEntities(definition);
+				saveAsValueSetEntities(definition, comment);
 			}
 		});
 	}
@@ -487,6 +514,7 @@ public class ValueSetEntitiesLayout extends VLayout {
 		String version = i_valueSetRecord.getAttribute(BaseValueSetsListGrid.ID_URI);
 		String creator = Cts2Editor.getUserName();
 		String oid = i_valueSetRecord.getAttribute(BaseValueSetsListGrid.ID_VALUE_SET_NAME);
+		String documentUri = i_valueSetRecord.getAttribute(BaseValueSetsListGrid.ID_DOCUMENT_URI);
 
 		definition.setChangeSetUri(changeSetUri);
 		definition.setFormalName(formalName);
@@ -495,6 +523,7 @@ public class ValueSetEntitiesLayout extends VLayout {
 		definition.setCreator(creator);
 		definition.setVersion(version);
 		definition.setValueSetOid(oid);
+		definition.setDocumentUri(documentUri);
 
 		return definition;
 	}
@@ -545,12 +574,14 @@ public class ValueSetEntitiesLayout extends VLayout {
 		String oid = record.getAttribute(BaseValueSetsListGrid.ID_VALUE_SET_NAME);
 		String changeSetUri = record.getAttribute(BaseValueSetsListGrid.ID_CHANGE_SET_URI);
 		String version = record.getAttribute(BaseValueSetsListGrid.ID_URI);
+		String documentUri = record.getAttribute(BaseValueSetsListGrid.ID_DOCUMENT_URI);
 
 		// update the criteria that will be used to fetch the entities.
 		Criteria criteria = new Criteria();
 		criteria.setAttribute("oid", oid);
 		criteria.setAttribute("changeSetUri", changeSetUri);
 		criteria.setAttribute("version", version);
+		criteria.setAttribute("documentURI", documentUri);
 
 		return criteria;
 	}
@@ -566,6 +597,13 @@ public class ValueSetEntitiesLayout extends VLayout {
 		String oid = criteria.getAttribute("oid");
 		String changeSetUri = criteria.getAttribute("changeSetUri");
 		String version = criteria.getAttribute("version");
+		String documentUri = criteria.getAttribute("documentURI");
+
+		// update the stored record.
+		i_valueSetRecord.setAttribute(BaseValueSetsListGrid.ID_URI, version);
+		i_valueSetRecord.setAttribute(BaseValueSetsListGrid.ID_VALUE_SET_NAME, oid);
+		i_valueSetRecord.setAttribute(BaseValueSetsListGrid.ID_CHANGE_SET_URI, changeSetUri);
+		i_valueSetRecord.setAttribute(BaseValueSetsListGrid.ID_DOCUMENT_URI, documentUri);
 
 		i_saveButton.setDisabled(true);
 		i_saveAsButton.setDisabled(true);

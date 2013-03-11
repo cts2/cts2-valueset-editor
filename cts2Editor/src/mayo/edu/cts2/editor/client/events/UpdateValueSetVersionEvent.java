@@ -10,14 +10,17 @@ public class UpdateValueSetVersionEvent extends GwtEvent<UpdateValueSetVersionEv
 	private final String i_changeSetUri;
 	private final String i_versionId;
 	private final String i_comment;
+	private final String i_docuemntUri;
 
-	public UpdateValueSetVersionEvent(String valueSetId, String changeSetUri, String versionId, String comment) {
+	public UpdateValueSetVersionEvent(String valueSetId, String changeSetUri, String versionId, String comment,
+	        String docuemntUri) {
 		super();
 
 		i_valueSetId = valueSetId;
 		i_changeSetUri = changeSetUri;
 		i_versionId = versionId;
 		i_comment = comment;
+		i_docuemntUri = docuemntUri;
 	}
 
 	@Override
@@ -45,4 +48,9 @@ public class UpdateValueSetVersionEvent extends GwtEvent<UpdateValueSetVersionEv
 	public String getComment() {
 		return i_comment;
 	}
+
+	public String getDocumentUri() {
+		return i_docuemntUri;
+	}
+
 }

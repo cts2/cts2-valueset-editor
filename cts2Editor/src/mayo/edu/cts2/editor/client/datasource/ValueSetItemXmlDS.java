@@ -107,6 +107,7 @@ public class ValueSetItemXmlDS extends BaseValueSetItemXmlDS {
 			final String oid = criteria.getAttribute("oid");
 			final String changeSetUri = criteria.getAttribute("changeSetUri");
 			final String version = criteria.getAttribute("version");
+			final String documentUri = criteria.getAttribute("documentUri");
 
 			Cts2EditorServiceAsync service = GWT.create(Cts2EditorService.class);
 			service.getResolvedValueSet(oid, version, changeSetUri, new AsyncCallback<String>() {
@@ -145,7 +146,7 @@ public class ValueSetItemXmlDS extends BaseValueSetItemXmlDS {
 
 				@Override
 				public void onFailure(Throwable caught) {
-					DebugPanel.log(DebugPanel.DEBUG, "Failed to retrieve value sets entries for " + oid
+					DebugPanel.log(DebugPanel.ERROR, "Failed to retrieve value sets entries for " + oid
 					        + " with changeSetUri of " + changeSetUri + " and version of " + version);
 					logger.log(Level.SEVERE, "Error retrieving Value Set Definition: " + caught);
 				}
@@ -170,8 +171,6 @@ public class ValueSetItemXmlDS extends BaseValueSetItemXmlDS {
 				}
 					break;
 				case FETCH : {
-					// System.out.println(request.getDataAsString());
-
 					// executeFetch(request);
 				}
 					break;
@@ -196,18 +195,10 @@ public class ValueSetItemXmlDS extends BaseValueSetItemXmlDS {
 		Record[] records = response.getData();
 
 		// Add the records to a "remove" list. The records will not
-		// be removed from the server until the user does a save
-
+		// be removed from the server until the user does a save.
 		for (Record record : records) {
 			i_recordsToDelete.add(record);
-			// System.out.println("Record to remove : " +
-			// record.getAttribute("name"));
 		}
-
-	}
-
-	private void saveAs() {
-		// System.out.println("SAVE AS called");
 	}
 
 	/**
@@ -219,7 +210,7 @@ public class ValueSetItemXmlDS extends BaseValueSetItemXmlDS {
 		i_shouldGetData = getData;
 	}
 
-	private String nextPrimaryKey() {
+	public String nextPrimaryKey() {
 		if (i_randomString == null) {
 			i_randomString = new RandomString(20);
 		}

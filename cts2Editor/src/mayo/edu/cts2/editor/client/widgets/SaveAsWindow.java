@@ -78,7 +78,6 @@ public class SaveAsWindow extends Window {
 		i_mainLayout.addMember(getButtons());
 
 		addItem(i_mainLayout);
-
 	}
 
 	private VLayout createDisplayLabel(String message) {
@@ -187,9 +186,10 @@ public class SaveAsWindow extends Window {
 
 			@Override
 			public void onClick(ClickEvent event) {
-
 				// let others know that the saveAs button was pressed.
 				Cts2Editor.EVENT_BUS.fireEvent(new SaveAsEvent(getCommentText()));
+
+				i_saveButton.setDisabled(true);
 
 				// close the window
 				destroy();

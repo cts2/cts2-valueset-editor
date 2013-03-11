@@ -139,12 +139,14 @@ public class ValueSetContainer extends VLayout {
 				String valueSetId = event.getValueSetId();
 				String versionId = event.getVersionId();
 				String changeSetId = event.getChangeSetUri();
+				String documentUri = event.getDocumentUri();
 
 				// find the record to update and update it.
 				ListGridRecord recordToUpdate = findRecord(valueSetId);
 
 				if (recordToUpdate != null) {
-					i_valueSetsListGrid.updateRecord(recordToUpdate, valueSetId, versionId, comment, changeSetId);
+					i_valueSetsListGrid.updateRecord(recordToUpdate, valueSetId, versionId, comment, changeSetId,
+					        documentUri);
 				}
 			}
 		});
@@ -177,7 +179,8 @@ public class ValueSetContainer extends VLayout {
 
 		String formalName = record.getAttribute(SearchValueSetsListGrid.ID_FORMAL_NAME);
 		String vsIdentifier = record.getAttribute(SearchValueSetsListGrid.ID_VALUE_SET_NAME);
+		String description = record.getAttribute(SearchValueSetsListGrid.ID_DESCRIPTION);
 
-		i_valueSetsListGrid.createNewRecord(formalName, vsIdentifier);
+		i_valueSetsListGrid.createNewRecord(formalName, vsIdentifier, description);
 	}
 }

@@ -16,6 +16,7 @@ public class BaseValueSetsListGrid extends ListGrid {
 	public static final String ID_DESCRIPTION = "value";
 	public static final String ID_CURRENT_VERSION = "displayVersion";
 	public static final String ID_CHANGE_SET_URI = "changeSetUri";
+	public static final String ID_DOCUMENT_URI = "documentURI";
 	public static final String ID_URI = "uri";
 	public static final String ID_COMMENT = "comment";
 	public static final String ID_CHANGE_VERSION = "changeVersion";

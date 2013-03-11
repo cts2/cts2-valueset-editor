@@ -330,12 +330,14 @@ public class ValueSetsListGrid extends BaseValueSetsListGrid {
 	 * 
 	 * @param formalName
 	 * @param vsIdentifier
+	 * @param description
 	 */
-	public void createNewRecord(String formalName, String vsIdentifier) {
+	public void createNewRecord(String formalName, String vsIdentifier, String description) {
 
 		ListGridRecord newRecord = new ListGridRecord();
 		newRecord.setAttribute(ID_FORMAL_NAME, formalName);
 		newRecord.setAttribute(ID_VALUE_SET_NAME, vsIdentifier);
+		newRecord.setAttribute(ID_DESCRIPTION, description);
 
 		// add a hidden attribute to indicate it was added.
 		newRecord.setAttribute(ID_HIDDEN_ACTION, ACTION_ADD);
@@ -352,11 +354,12 @@ public class ValueSetsListGrid extends BaseValueSetsListGrid {
 	 * @param changeSetId
 	 */
 	public void updateRecord(ListGridRecord recordToUpdate, String vsIdentifier, String versionId, String comment,
-	        String changeSetId) {
+	        String changeSetId, String documentUri) {
 
 		if (versionId != null) {
 
 			recordToUpdate.setAttribute(ID_CHANGE_SET_URI, changeSetId);
+			recordToUpdate.setAttribute(ID_DOCUMENT_URI, documentUri);
 			recordToUpdate.setAttribute(ID_URI, versionId);
 			recordToUpdate.setAttribute(ID_COMMENT, comment);
 			recordToUpdate.setAttribute(ID_CURRENT_VERSION, getVersion(versionId, comment));

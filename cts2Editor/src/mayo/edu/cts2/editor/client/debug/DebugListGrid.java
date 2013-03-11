@@ -22,7 +22,10 @@ public class DebugListGrid extends ListGrid {
 		setHeight100();
 
 		ListGridField dateField = new ListGridField(ID_DATE, "Date");
+		dateField.setWidth("15%");
+
 		ListGridField severityLevelField = new ListGridField(ID_SEVERITY, "Severity");
+		severityLevelField.setWidth("15%");
 
 		LinkedHashMap<String, String> logValuesMap = new LinkedHashMap<String, String>();
 		logValuesMap.put("0", "DEBUG");
@@ -32,6 +35,7 @@ public class DebugListGrid extends ListGrid {
 		severityLevelField.setValueMap(logValuesMap);
 
 		ListGridField logField = new ListGridField(ID_LOG, "Log");
+		logField.setWidth("*");
 
 		setFields(dateField, severityLevelField, logField);
 

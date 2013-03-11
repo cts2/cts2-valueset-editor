@@ -33,7 +33,7 @@ public class Cts2Editor implements EntryPoint {
 
 	private static final boolean s_standAlone = true;
 	private static final boolean s_readOnly = false;
-	private static final boolean s_debug = true;
+	private static final boolean s_debug = false;
 
 	private static String i_userName;
 
@@ -192,9 +192,6 @@ public class Cts2Editor implements EntryPoint {
 
 			@Override
 			public void onSuccess(String valueSets) {
-
-				// System.out.println("get VS Versions...");
-
 				// hide the progress panel.
 				i_busyIndicator.hide();
 			}

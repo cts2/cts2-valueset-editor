@@ -431,15 +431,9 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 		metadata.setUpdatedState(state);
 
 		Cts2RestClient restClient = Cts2RestClient.instance();
-		// <<<<<<< HEAD
-		// restClient.postCts2Resource(getCts2ValueSetRestUrl() + "/changeset/"
-		// + uri, getCts2ValueSetRestUsername(),
-		// getCts2ValueSetRestPassword(), metadata);
-		// =======
 		restClient.postCts2Resource(Cts2EditorServiceProperties.getValueSetDefinitionMaintenanceUrl() + "/changeset/"
 		        + uri, Cts2EditorServiceProperties.getCts2ValueSetRestUsername(),
 		        Cts2EditorServiceProperties.getCts2ValueSetRestPassword(), metadata);
-		// >>>>>>> refs/remotes/choose_remote_name/master
 	}
 
 	/**
@@ -467,7 +461,8 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 		ValueSetDefinition vsd = new ValueSetDefinition();
 
 		vsd.setDefinedValueSet(new ValueSetReference(definition.getValueSetOid()));
-		vsd.setDocumentURI(UUID.randomUUID().toString());
+		vsd.setDocumentURI(definition.getDocumentUri() == null || definition.getDocumentUri().trim().equals("") ? UUID
+		        .randomUUID().toString() : definition.getDocumentUri());
 		vsd.setAbout(definition.getValueSetOid());
 
 		VersionTagReference[] references = new VersionTagReference[]{new VersionTagReference(definition.getVersion())};
@@ -535,7 +530,7 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 				if (saveToService(definition, changeSetUri)) {
 					result.setChangeSetUri(changeSetUri);
 					result.setValueSetOid(definition.getDefinedValueSet().getContent());
-					result.setValueSetDefinitionId(definition.getDocumentURI());
+					result.setDocumentUri(definition.getDocumentURI());
 					result.setValueSetVersion(definition.getVersionTag(0).getContent());
 				}
 			} catch (Exception e) {
@@ -556,13 +551,13 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 
 		if (changeSetUri != null) {
 			updateChangeSet(changeSetUri, definition.getSourceAndRole(0).getSource().getContent(), definition
-			        .getNote(0).getValue().toString());
+			        .getNote(0).getValue().getContent());
 
 			try {
 				if (saveAsToService(definition, changeSetUri)) {
 					result.setChangeSetUri(changeSetUri);
 					result.setValueSetOid(definition.getDefinedValueSet().getContent());
-					result.setValueSetDefinitionId(definition.getDocumentURI());
+					result.setDocumentUri(definition.getDocumentURI());
 					result.setValueSetVersion(definition.getVersionTag(0).getContent());
 				} else {
 					result.setError(true);
@@ -586,40 +581,21 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 		 * /valueset/{oid}/definition/{version}?changesetcontext={changeSetUri}
 		 */
 		Cts2RestClient restClient = Cts2RestClient.instance();
-		// <<<<<<< HEAD
-		// String url = getCts2ValueSetRestUrl() + "/valueset/" +
-		// definition.getDefinedValueSet().getContent()
-		// + "/definition/" +
-		// definition.getVersionTag(definition.getVersionTag().length -
-		// 1).getContent() + "?"
-		// + URIHelperInterface.PARAM_CHANGESETCONTEXT + "=" + changeSetUri;
-		// restClient.putCts2Resource(url, getCts2ValueSetRestUsername(),
-		// getCts2ValueSetRestPassword(), definition);
-		// =======
 		String url = Cts2EditorServiceProperties.getValueSetDefinitionMaintenanceUrl() + "/valueset/"
 		        + definition.getDefinedValueSet().getContent() + "/definition/"
 		        + definition.getVersionTag(definition.getVersionTag().length - 1).getContent() + "?"
 		        + URIHelperInterface.PARAM_CHANGESETCONTEXT + "=" + changeSetUri;
 		restClient.putCts2Resource(url, Cts2EditorServiceProperties.getCts2ValueSetRestUsername(),
 		        Cts2EditorServiceProperties.getCts2ValueSetRestPassword(), definition);
-		// >>>>>>> refs/remotes/choose_remote_name/master
 		return true;
 	}
 
 	private boolean saveAsToService(ValueSetDefinition definition, String changeSetUri) throws Exception {
 		Cts2RestClient restClient = Cts2RestClient.instance();
-		// <<<<<<< HEAD
-		// URI uri = restClient.postCts2Resource(getCts2ValueSetRestUrl() +
-		// URIHelperInterface.PATH_VALUESETDEFINITION
-		// + "?" + URIHelperInterface.PARAM_CHANGESETCONTEXT + "=" +
-		// changeSetUri, getCts2ValueSetRestUsername(),
-		// getCts2ValueSetRestPassword(), definition);
-		// =======
 		URI uri = restClient.postCts2Resource(Cts2EditorServiceProperties.getValueSetDefinitionMaintenanceUrl()
 		        + URIHelperInterface.PATH_VALUESETDEFINITION + "?" + URIHelperInterface.PARAM_CHANGESETCONTEXT + "="
 		        + changeSetUri, Cts2EditorServiceProperties.getCts2ValueSetRestUsername(),
 		        Cts2EditorServiceProperties.getCts2ValueSetRestPassword(), definition);
-		// >>>>>>> refs/remotes/choose_remote_name/master
 		return uri != null;
 	}
 
@@ -641,13 +617,8 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 
 	private String getAuthorizationHeader() {
 		return "Basic "
-		        // <<<<<<< HEAD
-		        // + Base64.encodeBytes((getCts2ValueSetRestUsername() + ":" +
-		        // getCts2ValueSetRestPassword()).getBytes());
-		        // =======
 		        + Base64.encodeBytes((Cts2EditorServiceProperties.getCts2ValueSetRestUsername() + ":" + Cts2EditorServiceProperties
 		                .getCts2ValueSetRestPassword()).getBytes());
-		// >>>>>>> refs/remotes/choose_remote_name/master
 	}
 
 	private Cts2Client getCts2Client() {

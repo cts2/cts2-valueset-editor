@@ -70,6 +70,9 @@ public class ValueSetVersionsXmlDS extends DataSource {
 		DataSourceTextField formalNameField = new DataSourceTextField("formalName");
 		formalNameField.setValueXPath("@formalName");
 
+		DataSourceTextField documentUriField = new DataSourceTextField("documentURI");
+		formalNameField.setValueXPath("@documentURI");
+
 		DataSourceTextField versionIdField = new DataSourceTextField("versionTag");
 		versionIdField.setPrimaryKey(true);
 
@@ -83,7 +86,7 @@ public class ValueSetVersionsXmlDS extends DataSource {
 
 		DataSourceTextField changeSetUriField = new DataSourceTextField("changeSetUri");
 
-		setFields(hrefField, versionIdField, commentField, valuesField, changeSetUriField);
+		setFields(hrefField, versionIdField, commentField, valuesField, changeSetUriField, documentUriField);
 
 		setClientOnly(true);
 	}
@@ -106,7 +109,7 @@ public class ValueSetVersionsXmlDS extends DataSource {
 			@Override
 			public void onSuccess(String result) {
 
-				// System.out.println(result);
+				// System.out.print(result);
 
 				// Add a default record for the first/initial version
 				ListGridRecord firstVersionRecord = new ListGridRecord();

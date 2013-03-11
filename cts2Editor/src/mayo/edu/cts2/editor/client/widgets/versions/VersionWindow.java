@@ -149,16 +149,7 @@ public class VersionWindow extends Window {
 				String href = selected.getAttribute("href");
 				String comment = selected.getAttribute("comment");
 				String changeSetUri = selected.getAttribute("changeSetUri");
-
-				// *********** TEMP *************
-				// TODO - CME: changeSetUri is hard coded. Talk with Dale to
-				// determine how to get it.
-
-				// String changeSetUri = "e3aaae65-5d11-4357-93b2-49685e88d222";
-
-				// System.out.println("Selected version = " + versionId);
-				// System.out.println("HREF = " + href);
-				// System.out.println("comment = " + comment);
+				String documentUri = selected.getAttribute("documentURI");
 
 				String valueSetId = i_criteria.getAttribute(ValueSetsListGrid.ID_VALUE_SET_NAME);
 
@@ -171,7 +162,7 @@ public class VersionWindow extends Window {
 				// let others know that a record needs to be updated with a new
 				// version.
 				Cts2Editor.EVENT_BUS.fireEvent(new UpdateValueSetVersionEvent(valueSetId, changeSetUri, versionId,
-				        comment));
+				        comment, documentUri));
 
 				// close the window
 				destroy();

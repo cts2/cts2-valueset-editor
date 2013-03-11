@@ -29,6 +29,7 @@ public class ValueSetItemsListGrid extends ListGrid {
 	public static final String ACTION_DELETE = "MARKED TO DELETE";
 	public static final String ACTION_ADD = "MARKED TO ADD";
 
+	public static final String ID_PK = "primaryKey";
 	public static final String ID_URI = "uri";
 	public static final String ID_NAME_SPACE = "nameSpace";
 	public static final String ID_NAME = "name";
@@ -194,7 +195,8 @@ public class ValueSetItemsListGrid extends ListGrid {
 		ValueSetItemXmlDS ds = (ValueSetItemXmlDS) getDataSource();
 		ds.setShouldGetData(true);
 
-		getDataSource().fetchData(criteria, new DSCallback() {
+		ds.fetchData(criteria, new DSCallback() {
+			// getDataSource().fetchData(criteria, new DSCallback() {
 
 			@Override
 			public void execute(DSResponse response, Object rawData, DSRequest request) {
@@ -236,9 +238,6 @@ public class ValueSetItemsListGrid extends ListGrid {
 
 	@Override
 	public boolean saveAllEdits() {
-
-		// System.out.println("saveAllEdits called...");
-
 		return super.saveAllEdits();
 	}
 
@@ -261,6 +260,7 @@ public class ValueSetItemsListGrid extends ListGrid {
 		newRecord.setAttribute(ID_NAME, code);
 		newRecord.setAttribute(ID_NAME_SPACE, codeSystemName);
 		newRecord.setAttribute(ID_DESIGNATION, designation);
+		newRecord.setAttribute(ID_PK, ((ValueSetItemXmlDS) getDataSource()).nextPrimaryKey());
 
 		// add a hidden attribute to indicate it was added.
 		newRecord.setAttribute(ID_HIDDEN_ACTION, ACTION_ADD);
