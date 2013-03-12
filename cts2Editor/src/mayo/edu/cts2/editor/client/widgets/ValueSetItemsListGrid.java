@@ -51,9 +51,14 @@ public class ValueSetItemsListGrid extends ListGrid {
 		setShowAllColumns(true);
 		setWrapCells(false);
 
+		// hover attributes
+		setShowHover(true);
+		setShowHoverComponents(true);
 		setCanHover(true);
-		setHoverWidth(100);
+		setHoverMoveWithMouse(true);
+		setHoverWidth(200);
 		setHoverWrap(false);
+
 		setSelectionType(SelectionStyle.MULTIPLE);
 
 		setShowRecordComponents(true);

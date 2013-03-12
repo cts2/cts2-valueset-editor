@@ -40,6 +40,14 @@ public class VersionsListGrid extends ListGrid {
 		setDataSource(i_valueSetVersionsXmlDS);
 		setEmptyMessage(EMPTY_MESSAGE);
 
+		// hover attributes
+		setShowHover(true);
+		setShowHoverComponents(true);
+		setCanHover(true);
+		setHoverMoveWithMouse(true);
+		setHoverWidth(200);
+		setHoverWrap(false);
+
 		ListGridField formalNameField = new ListGridField(ID_FORMAL_NAME, TITLE_FORMAL_NAME);
 		formalNameField.setWidth("40%");
 		formalNameField.setWrap(false);

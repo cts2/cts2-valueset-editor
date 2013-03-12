@@ -44,6 +44,14 @@ public class ValueSetsListGrid extends BaseValueSetsListGrid {
 		setDataSource(i_valueSetsXmlDS);
 		setEmptyMessage(EMPTY_MESSAGE);
 
+		// hover attributes
+		setShowHover(true);
+		setShowHoverComponents(true);
+		setCanHover(true);
+		setHoverMoveWithMouse(true);
+		setHoverWidth(200);
+		setHoverWrap(false);
+
 		setShowRecordComponents(true);
 		setShowRecordComponentsByCell(true);
 
@@ -365,7 +373,6 @@ public class ValueSetsListGrid extends BaseValueSetsListGrid {
 			recordToUpdate.setAttribute(ID_CURRENT_VERSION, getVersion(versionId, comment));
 		}
 
-		// TODO CME: update the changeSetId
 		updateData(recordToUpdate);
 		updateExpansionComponent(recordToUpdate);
 	}
