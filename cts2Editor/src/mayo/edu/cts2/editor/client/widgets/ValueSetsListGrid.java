@@ -45,9 +45,9 @@ public class ValueSetsListGrid extends BaseValueSetsListGrid {
 		setEmptyMessage(EMPTY_MESSAGE);
 
 		// hover attributes
-		setShowHover(true);
-		setShowHoverComponents(true);
-		setCanHover(true);
+		// setCanHover(true);
+		// setShowHover(true);
+		// setShowHoverComponents(true);
 		setHoverMoveWithMouse(true);
 		setHoverWidth(200);
 		setHoverWrap(false);

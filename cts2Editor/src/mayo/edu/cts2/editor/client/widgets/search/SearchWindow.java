@@ -148,12 +148,15 @@ public class SearchWindow extends Window {
 		i_searchForm.setWidth(250);
 		i_searchForm.setHeight100();
 		i_searchForm.setAlign(Alignment.LEFT);
+		i_searchForm.setAutoFocus(true);
 
 		i_searchTextItem = new TextItem();
 		i_searchTextItem.setTitle("Search");
 		i_searchTextItem.setWidth(200);
 		i_searchTextItem.setHint(SEARCH_HINT);
 		i_searchTextItem.setShowHintInField(true);
+		i_searchTextItem.setCanFocus(true);
+		i_searchTextItem.setSelectOnFocus(true);
 
 		i_searchTextItem.addKeyUpHandler(new KeyUpHandler() {
 
@@ -337,6 +340,7 @@ public class SearchWindow extends Window {
 	}
 
 	public void setInitialFocus() {
+		i_searchForm.focusInItem(i_searchTextItem);
 		i_searchForm.focus();
 	}
 

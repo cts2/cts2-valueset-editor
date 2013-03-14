@@ -41,20 +41,20 @@ public class VersionsListGrid extends ListGrid {
 		setEmptyMessage(EMPTY_MESSAGE);
 
 		// hover attributes
+		setCanHover(true);
 		setShowHover(true);
 		setShowHoverComponents(true);
-		setCanHover(true);
 		setHoverMoveWithMouse(true);
 		setHoverWidth(200);
 		setHoverWrap(false);
 
 		ListGridField formalNameField = new ListGridField(ID_FORMAL_NAME, TITLE_FORMAL_NAME);
-		formalNameField.setWidth("40%");
+		formalNameField.setWidth("25%");
 		formalNameField.setWrap(false);
 		formalNameField.setShowHover(true);
 
 		ListGridField versionField = new ListGridField(ID_VERSION, TITLE_VERSION);
-		versionField.setWidth(80);
+		versionField.setWidth("40%");
 		versionField.setWrap(false);
 		versionField.setShowHover(true);
 

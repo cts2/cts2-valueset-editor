@@ -176,6 +176,7 @@ public class ValueSetEntitiesLayout extends VLayout {
 
 				// refresh the icons in Action column
 				i_valueSetItemsListGrid.invalidateRecordComponents();
+				i_deleteButton.setDisabled(true);
 			}
 		});
 
