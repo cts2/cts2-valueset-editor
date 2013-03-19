@@ -534,8 +534,13 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 				if (saveToService(definition, changeSetUri)) {
 					result.setChangeSetUri(changeSetUri);
 					result.setValueSetOid(definition.getDefinedValueSet().getContent());
-					result.setDocumentUri(definition.getDocumentURI());
 					result.setValueSetVersion(definition.getVersionTag(0).getContent());
+
+					String doc = getCts2Client().getDefinition(getAuthorizationHeader(), result.getValueSetOid(), result.getValueSetVersion(), result.getChangeSetUri());
+					String start = "documentURI=\"";
+					int startIdx = doc.indexOf(start) + start.length();
+					doc = doc.substring(startIdx, startIdx + 37);
+					result.setDocumentUri(doc);
 				}
 			} catch (Exception e) {
 				logger.log(Level.WARNING, "Unable to persist the value set definition.", e);
@@ -595,6 +600,10 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 	}
 
 	private boolean saveAsToService(ValueSetDefinition definition, String changeSetUri) throws Exception {
+		/*
+		 * POST
+		 * /valuesetdefinition?changesetcontext={changeSetUri}
+		 */
 		Cts2RestClient restClient = Cts2RestClient.instance();
 		URI uri = restClient.postCts2Resource(Cts2EditorServiceProperties.getValueSetDefinitionMaintenanceUrl()
 		        + URIHelperInterface.PATH_VALUESETDEFINITION + "?" + URIHelperInterface.PARAM_CHANGESETCONTEXT + "="
