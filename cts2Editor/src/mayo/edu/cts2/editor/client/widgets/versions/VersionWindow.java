@@ -25,7 +25,7 @@ public class VersionWindow extends Window {
 	private static final String BACKGROUND_COLOR = "#ECECEC";
 	private static final String TITLE = "Value Set Versions";
 
-	private static final String MESSASE = "Select a value set version.";
+	private static final String MESSASE = "Select a value set version to work with.";
 
 	private static final int WIDTH = 650;
 	private static final int HEIGHT = 400;

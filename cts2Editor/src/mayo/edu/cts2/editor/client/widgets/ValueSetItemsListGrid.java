@@ -9,6 +9,7 @@ import com.smartgwt.client.data.DSResponse;
 import com.smartgwt.client.data.DataSource;
 import com.smartgwt.client.data.Record;
 import com.smartgwt.client.types.Alignment;
+import com.smartgwt.client.types.DragAppearance;
 import com.smartgwt.client.types.SelectionStyle;
 import com.smartgwt.client.widgets.Canvas;
 import com.smartgwt.client.widgets.ImgButton;
@@ -51,9 +52,14 @@ public class ValueSetItemsListGrid extends ListGrid {
 		setShowAllColumns(true);
 		setWrapCells(false);
 
+		// hover attributes
 		setCanHover(true);
-		setHoverWidth(100);
+		setShowHover(true);
+		setShowHoverComponents(true);
+		setHoverMoveWithMouse(true);
+		setHoverWidth(200);
 		setHoverWrap(false);
+
 		setSelectionType(SelectionStyle.MULTIPLE);
 
 		setShowRecordComponents(true);
@@ -89,6 +95,10 @@ public class ValueSetItemsListGrid extends ListGrid {
 
 		setFields(nameField, nameSpaceField, designationField, actionField);
 		setAutoFetchData(true);
+
+		setCanDragResize(true);
+		setDragAppearance(DragAppearance.TARGET);
+
 	}
 
 	@Override

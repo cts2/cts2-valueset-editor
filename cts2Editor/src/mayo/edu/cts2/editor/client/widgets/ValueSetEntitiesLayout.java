@@ -41,13 +41,18 @@ import com.smartgwt.client.widgets.layout.HLayout;
 import com.smartgwt.client.widgets.layout.VLayout;
 
 /**
- * VLayout to contain the ListGrid of entities and the buttons that action on
- * it.
+ * VLayout to contain the ListGrid of entities and the buttons that act on it.
  * 
  */
 public class ValueSetEntitiesLayout extends VLayout {
 
 	private static final String TITLE_ENTITIES = "Entities";
+
+	private static final String HINT_ADD = "Add one or more value set entries";
+	private static final String HINT_DELETE = "Delete one or more value set entries";
+	private static final String HINT_SAVE_AS = "Save the value set as a new branch";
+	private static final String HINT_SAVE = "Save the value set on the current branch";
+	private static final String HINT_CLOSE = "Close the value set entries list";
 
 	private final ListGridRecord i_valueSetRecord;
 
@@ -92,6 +97,8 @@ public class ValueSetEntitiesLayout extends VLayout {
 
 		i_addButton = new IButton("Add...");
 		i_addButton.setTop(250);
+		i_addButton.setShowHover(true);
+		i_addButton.setPrompt(HINT_ADD);
 		i_addButton.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
@@ -104,17 +111,23 @@ public class ValueSetEntitiesLayout extends VLayout {
 
 		i_saveButton = new IButton("Save");
 		i_saveButton.setTop(250);
+		i_saveButton.setShowHover(true);
+		i_saveButton.setPrompt(HINT_SAVE);
 		i_saveButton.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
 				// i_valueSetItemsListGrid.saveAllEdits();
 				ListGridRecord[] records = i_valueSetItemsListGrid.getRecords();
-				saveValueSetEntities(records);
+				String comment = i_valueSetRecord.getAttribute(BaseValueSetsListGrid.ID_COMMENT);
+
+				saveValueSetEntities(records, comment);
 			}
 		});
 
 		i_saveAsButton = new IButton("Save As...");
 		i_saveAsButton.setTop(250);
+		i_saveAsButton.setPrompt(HINT_SAVE_AS);
+		i_saveAsButton.setShowHover(true);
 		i_saveAsButton.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
@@ -123,6 +136,8 @@ public class ValueSetEntitiesLayout extends VLayout {
 		});
 
 		i_closeButton = new IButton("Close");
+		i_closeButton.setShowHover(true);
+		i_closeButton.setPrompt(HINT_CLOSE);
 		i_closeButton.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
@@ -140,6 +155,8 @@ public class ValueSetEntitiesLayout extends VLayout {
 
 		i_deleteButton = new IButton("Delete Row(s)");
 		i_deleteButton.setTop(250);
+		i_deleteButton.setShowHover(true);
+		i_deleteButton.setPrompt(HINT_DELETE);
 		i_deleteButton.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
@@ -159,6 +176,7 @@ public class ValueSetEntitiesLayout extends VLayout {
 
 				// refresh the icons in Action column
 				i_valueSetItemsListGrid.invalidateRecordComponents();
+				i_deleteButton.setDisabled(true);
 			}
 		});
 
@@ -348,9 +366,9 @@ public class ValueSetEntitiesLayout extends VLayout {
 	 * 
 	 * @param records
 	 */
-	private void saveValueSetEntities(ListGridRecord[] records) {
+	private void saveValueSetEntities(ListGridRecord[] records, final String comment) {
 
-		Definition definition = getDefinition(records, "");
+		Definition definition = getDefinition(records, comment);
 
 		Cts2EditorServiceAsync service = GWT.create(Cts2EditorService.class);
 
@@ -387,8 +405,6 @@ public class ValueSetEntitiesLayout extends VLayout {
 					String valueSetId = result.getValueSetOid();
 					String oid = result.getValueSetOid();
 					String documentUri = result.getDocumentUri();
-
-					String comment = i_valueSetRecord.getAttribute(BaseValueSetsListGrid.ID_COMMENT);
 
 					// let others know that a record needs to be updated with a
 					// new version.
