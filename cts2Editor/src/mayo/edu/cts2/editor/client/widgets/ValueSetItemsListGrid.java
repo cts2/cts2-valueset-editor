@@ -98,20 +98,19 @@ public class ValueSetItemsListGrid extends ListGrid {
 
 		setCanDragResize(true);
 		setDragAppearance(DragAppearance.TARGET);
-
 	}
 
 	@Override
 	/**
 	 * Update the Action field
 	 */
-	protected Canvas createRecordComponent(final ListGridRecord record, Integer colNum) {
+	protected Canvas createRecordComponent(final ListGridRecord record, final Integer colNum) {
 
 		String fieldName = this.getFieldName(colNum);
 
 		if (fieldName.equals(ID_ACTION) && record.getAttribute(ID_HIDDEN_ACTION) != null) {
 
-			// if this is a row marked for delete, then shwo the "undo delete"
+			// if this is a row marked for delete, then show the "undo delete"
 			// option
 			if (record.getAttribute(ID_HIDDEN_ACTION).equals(ACTION_DELETE)) {
 
@@ -120,7 +119,6 @@ public class ValueSetItemsListGrid extends ListGrid {
 				recordCanvas.setAlign(Alignment.LEFT);
 				ImgButton undoImg = createImage("undo.png", "Undo Delete");
 
-				// undoImg.setID("delete");
 				undoImg.addClickHandler(new ClickHandler() {
 
 					@Override
@@ -174,7 +172,6 @@ public class ValueSetItemsListGrid extends ListGrid {
 
 		return super.createRecordComponent(record, colNum);
 	}
-
 	// @Override
 	// protected String getCellCSSText(ListGridRecord record, int rowNum, int
 	// colNum) {
