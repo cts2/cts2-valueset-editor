@@ -85,6 +85,7 @@ public class ValueSetEntitiesLayout extends VLayout {
 		addMember(titleLabel);
 
 		i_valueSetItemsListGrid = new ValueSetItemsListGrid();
+		i_valueSetItemsListGrid.setHeight(500);
 
 		i_valueSetItemsListGrid.setDataSource(childDatasource);
 		i_valueSetItemsListGrid.fetchData(criteria);
@@ -440,7 +441,7 @@ public class ValueSetEntitiesLayout extends VLayout {
 	 * Take changes to the value set entries and call SaveAs.
 	 * 
 	 * @param definition
-	 * @param comment
+	 * @param newComment
 	 */
 	private void saveAsValueSetEntities(Definition definition, final String newComment) {
 
