@@ -1,5 +1,6 @@
 package mayo.edu.cts2.editor.client;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import mayo.edu.cts2.editor.shared.CTS2Result;
@@ -31,7 +32,7 @@ public interface Cts2EditorServiceAsync {
 
 	void updateChangeSet(String uri, String creator, String instructions, AsyncCallback<Void> async);
 
-	void getMatchingEntities(String matchValue, AsyncCallback<String> async);
+	void getMatchingEntities(String codeSystem, String codeSystemVersion, String matchValue, AsyncCallback<String> async);
 
 	void saveDefinitionAs(Definition definition, AsyncCallback<CTS2Result> async);
 
@@ -44,4 +45,8 @@ public interface Cts2EditorServiceAsync {
 	void getDefinition(String oid, String version, String changeSetUri, AsyncCallback<String> async);
 
 	void isFinal(Definition definition, AsyncCallback<Boolean> async);
+
+	void getCodeSystems(AsyncCallback<String[]> async);
+
+	void getCodeSystemVersions(String codeSystem, AsyncCallback<String[]> async);
 }

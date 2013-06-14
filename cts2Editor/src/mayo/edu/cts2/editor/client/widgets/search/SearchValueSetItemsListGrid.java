@@ -3,8 +3,14 @@ package mayo.edu.cts2.editor.client.widgets.search;
 import java.util.ArrayList;
 import java.util.Map;
 
+import com.smartgwt.client.widgets.grid.events.ChangedEvent;
+import com.smartgwt.client.widgets.grid.events.ChangedHandler;
 import mayo.edu.cts2.editor.client.Cts2Editor;
 import mayo.edu.cts2.editor.client.datasource.ValueSetItemSearchXmlDS;
+import mayo.edu.cts2.editor.client.events.AddEntityDeselectedEvent;
+import mayo.edu.cts2.editor.client.events.AddEntitySelectedEvent;
+import mayo.edu.cts2.editor.client.events.SelectedEntityRemovedEvent;
+import mayo.edu.cts2.editor.client.events.SelectedEntityRemovedEventHandler;
 import mayo.edu.cts2.editor.client.events.ValueSetItemsReceivedEvent;
 import mayo.edu.cts2.editor.client.events.ValueSetsReceivedEvent;
 
@@ -24,21 +30,20 @@ import com.smartgwt.client.widgets.grid.ListGridField;
 import com.smartgwt.client.widgets.grid.ListGridRecord;
 import com.smartgwt.client.widgets.viewer.DetailViewer;
 import com.smartgwt.client.widgets.viewer.DetailViewerField;
+import mayo.edu.cts2.editor.client.widgets.BaseValueSetsListGrid;
 
 /**
  * ListGrid for displaying search results for a entities.
  */
-public class SearchValueSetItemsListGrid extends SearchListGrid {
+public class SearchValueSetItemsListGrid extends BaseValueSetsListGrid {
 
 	private static final String EMPTY_MESSAGE = "No entities to display.";
 	private static final String ERROR_MESSAGE = "Entity service unavailable.";
 
-	public static final String ID_HREF = "href";
-	public static final String ID_NAME_SPACE = "nameSpace";
+	public static final String ID_CODE_SYSTEM = "namespace";
 	public static final String ID_NAME = "name";
 	public static final String ID_DESIGNATION = "designation";
 
-	public static final String TITLE_NAME_SPACE = "Code System Name";
 	public static final String TITLE_NAME = "Code";
 	public static final String TITLE_DESIGNATION = "Description";
 
@@ -62,21 +67,21 @@ public class SearchValueSetItemsListGrid extends SearchListGrid {
 		addField.setShowHover(false);
 		addField.setDefaultValue(false);
 		addField.setCanEdit(true);
-
-		ListGridField nameSpaceField = new ListGridField(ID_NAME_SPACE, TITLE_NAME_SPACE);
-		nameSpaceField.setWrap(false);
-		nameSpaceField.setWidth("25%");
-		nameSpaceField.setShowHover(false);
-		nameSpaceField.setCanEdit(false);
-
-		nameSpaceField.setCellFormatter(new CellFormatter() {
-
+		addField.addChangedHandler(new ChangedHandler() {
 			@Override
-			public String format(Object value, ListGridRecord record, int rowNum, int colNum) {
-				if (value != null) {
-					return addCellHighlights(value.toString());
+			public void onChanged(ChangedEvent changedEvent) {
+				if ((Boolean)changedEvent.getValue()) {
+					ListGridRecord selected = getSelectedRecord();
+					String uri = selected.getAttribute("uri");
+					String code = selected.getAttribute("name");
+					String description = selected.getAttribute("designation");
+					String codeSystem = selected.getAttribute("namespace");
+					String codeSystemVersion = selected.getAttribute("codeSystemVersion");
+					Cts2Editor.EVENT_BUS.fireEvent(new AddEntitySelectedEvent(uri, code, description, codeSystem, codeSystemVersion));
 				} else {
-					return null;
+					ListGridRecord selected = getSelectedRecord();
+					String href = selected.getAttribute("uri");
+					Cts2Editor.EVENT_BUS.fireEvent(new AddEntityDeselectedEvent(href));
 				}
 			}
 		});
@@ -116,7 +121,7 @@ public class SearchValueSetItemsListGrid extends SearchListGrid {
 			}
 		});
 
-		setFields(addField, nameField, nameSpaceField, designationField);
+		setFields(addField, nameField, designationField);
 
 		setSelectOnEdit(true);
 		setSelectionAppearance(SelectionAppearance.ROW_STYLE);
@@ -136,6 +141,8 @@ public class SearchValueSetItemsListGrid extends SearchListGrid {
 		SortSpecifier[] sortspec = new SortSpecifier[1];
 		sortspec[0] = new SortSpecifier(ID_NAME, SortDirection.ASCENDING);
 		setInitialSort(sortspec);
+
+//		addEventHandlers();
 	}
 
 	public ListGridRecord[] getRecordsToAdd() {
@@ -178,53 +185,9 @@ public class SearchValueSetItemsListGrid extends SearchListGrid {
 	}
 
 	/**
-	 * Call the search to get the matching data.
-	 * 
-	 * @param searchText
-	 */
-	public void getData(String serviceName, String searchText, Map<String, String> filters) {
-		/*
-		 * if (!Cts2Viewer.s_showAll &&
-		 * Authentication.getInstance().getCredentials(serviceName) == null ||
-		 * serviceName.equals(Cts2Panel.SELECT_SERVER_MSG)) { // set to empty.
-		 * don't do a search. setData(new ListGridRecord[0]); redraw();
-		 * 
-		 * // let others know that the data has been retrieved.
-		 * Cts2Viewer.EVENT_BUS.fireEvent(new ValueSetsReceivedEvent()); }
-		 * 
-		 * else { i_searchString = searchText;
-		 * 
-		 * Criteria criteria = new Criteria();
-		 * criteria.addCriteria("searchText", searchText);
-		 * criteria.addCriteria("serviceName", serviceName);
-		 * 
-		 * for (String filterComponent : filters.keySet()) {
-		 * criteria.addCriteria(filterComponent, filters.get(filterComponent));
-		 * }
-		 * 
-		 * i_valueSetsXmlDS.fetchData(criteria, new DSCallback() {
-		 * 
-		 * @Override public void execute(DSResponse response, Object rawData,
-		 * DSRequest request) {
-		 * 
-		 * if ((response != null) && (response.getAttribute("reason") != null))
-		 * { setEmptyMessage("<b><font color=\"red\">" + ERROR_MESSAGE +
-		 * "</font></b>"); } else { setEmptyMessage(EMPTY_MESSAGE); }
-		 * 
-		 * setData(new ListGridRecord[0]); fetchData();
-		 * 
-		 * redraw(); // let others know that the data has been retrieved.
-		 * Cts2Viewer.EVENT_BUS.fireEvent(new ValueSetsReceivedEvent()); } }); }
-		 */
-
-		// let others know that the data has been retrieved.
-		Cts2Editor.EVENT_BUS.fireEvent(new ValueSetsReceivedEvent());
-	}
-
-	/**
 	 * Highlight any of the text that matches the searchString.
 	 * 
-	 * @param value
+	 * @param cellText
 	 * @return
 	 */
 	private String addCellHighlights(String cellText) {
@@ -247,12 +210,13 @@ public class SearchValueSetItemsListGrid extends SearchListGrid {
 		return cellText;
 	}
 
-	@Override
-	public void getData(String searchText) {
+	public void getData(String codeSystem, String codeSystemVersion, String searchText) {
 		i_searchString = searchText;
 
 		Criteria criteria = new Criteria();
 		criteria.addCriteria("searchText", searchText);
+		criteria.addCriteria("codeSystem", codeSystem);
+		criteria.addCriteria("codeSystemVersion", codeSystemVersion);
 
 		i_valueSetItemSearchXmlDS.fetchData(criteria, new DSCallback() {
 
@@ -276,12 +240,33 @@ public class SearchValueSetItemsListGrid extends SearchListGrid {
 		});
 	}
 
-	@Override
 	public void clearData() {
 		i_valueSetItemSearchXmlDS.setTestData(new Record[0]);
 		setData(new ListGridRecord[0]);
 		fetchData();
 
+		redraw();
+	}
+
+	private void addEventHandlers() {
+		Cts2Editor.EVENT_BUS.addHandler(SelectedEntityRemovedEvent.TYPE, new SelectedEntityRemovedEventHandler() {
+			@Override
+			public void onEntityRemoved(SelectedEntityRemovedEvent event) {
+				String uri = event.getUri();
+				Record[] records = getRecords();
+				for (int i = 0; i < records.length; i++) {
+					if (records[i].getAttribute("uri").equals(uri)) {
+						records[i].setAttribute("add", false);
+						refreshRow(i);
+						break;
+					}
+				}
+			}
+		});
+	}
+
+	private void refresh() {
+		fetchData();
 		redraw();
 	}
 

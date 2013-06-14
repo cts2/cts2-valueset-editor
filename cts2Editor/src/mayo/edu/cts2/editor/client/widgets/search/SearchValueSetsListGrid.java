@@ -22,11 +22,31 @@ import com.smartgwt.client.widgets.grid.ListGridField;
 import com.smartgwt.client.widgets.grid.ListGridRecord;
 import com.smartgwt.client.widgets.viewer.DetailViewer;
 import com.smartgwt.client.widgets.viewer.DetailViewerField;
+import mayo.edu.cts2.editor.client.widgets.BaseValueSetsListGrid;
 
 /**
  * ListGrid for displaying search results for a value sets.
  */
-public class SearchValueSetsListGrid extends SearchListGrid {
+public class SearchValueSetsListGrid extends BaseValueSetsListGrid {
+
+	public static final String ID_ADD = "add";
+	public static final String TITLE_ADD = "Add";
+
+	/**
+	 * Determine if there are any rows that are selected for add
+	 *
+	 * @return
+	 */
+	public boolean hasAddRecords() {
+		boolean checkedRow = false;
+
+		Record[] records = getRecords();
+		for (int i = 0; !checkedRow && i < records.length; i++) {
+			checkedRow = records[i].getAttributeAsBoolean(ID_ADD);
+		}
+
+		return checkedRow;
+	}
 
 	private final ValueSetsSearchXmlDS i_valueSetsSearchXmlDS;
 	private String i_searchString;
@@ -169,7 +189,6 @@ public class SearchValueSetsListGrid extends SearchListGrid {
 	 * 
 	 * @param searchText
 	 */
-	@Override
 	public void getData(String searchText) {
 
 		i_searchString = searchText;
@@ -233,7 +252,6 @@ public class SearchValueSetsListGrid extends SearchListGrid {
 		 */
 	}
 
-	@Override
 	public void clearData() {
 
 		i_valueSetsSearchXmlDS.setTestData(new Record[0]);
@@ -246,7 +264,7 @@ public class SearchValueSetsListGrid extends SearchListGrid {
 	/**
 	 * Highlight any of the text that matches the searchString.
 	 * 
-	 * @param value
+	 * @param cellText
 	 * @return
 	 */
 	private String addCellHighlights(String cellText) {

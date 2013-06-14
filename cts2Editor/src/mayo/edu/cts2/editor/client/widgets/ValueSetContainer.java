@@ -5,7 +5,6 @@ import mayo.edu.cts2.editor.client.events.AddRecordsEvent;
 import mayo.edu.cts2.editor.client.events.AddRecordsEventHandler;
 import mayo.edu.cts2.editor.client.events.UpdateValueSetVersionEvent;
 import mayo.edu.cts2.editor.client.events.UpdateValueSetVersionEventHandler;
-import mayo.edu.cts2.editor.client.widgets.search.SearchListGrid;
 import mayo.edu.cts2.editor.client.widgets.search.SearchValueSetsListGrid;
 import mayo.edu.cts2.editor.client.widgets.search.SearchWindow;
 
@@ -70,8 +69,7 @@ public class ValueSetContainer extends VLayout {
 
 			@Override
 			public void onClick(ClickEvent event) {
-				String message = "Search for value sets.  Select the value sets by checking the checkbox and then click Add to add them.";
-				i_searchWindow = new SearchWindow(new SearchValueSetsListGrid(), message);
+				i_searchWindow = new SearchWindow();
 				i_searchWindow.setInitialFocus();
 				i_searchWindow.show();
 			}
@@ -106,21 +104,17 @@ public class ValueSetContainer extends VLayout {
 					return;
 				}
 
-				SearchListGrid listGrid = i_searchWindow.getSearchListGrid();
-				if (listGrid instanceof SearchValueSetsListGrid) {
-					SearchValueSetsListGrid searchValueSetsListGrid = (SearchValueSetsListGrid) listGrid;
+					SearchValueSetsListGrid searchValueSetsListGrid = i_searchWindow.getSearchListGrid();
 
 					Record[] records = searchValueSetsListGrid.getRecords();
 					for (int i = 0; i < records.length; i++) {
 
 						// if the checkbox is checked, then we need to add this
 						// record
-						if (records[i].getAttributeAsBoolean(SearchListGrid.ID_ADD)) {
+						if (records[i].getAttributeAsBoolean(SearchValueSetsListGrid.ID_ADD)) {
 							addValueSetRecord(records[i]);
 						}
 					}
-
-				}
 			}
 		});
 

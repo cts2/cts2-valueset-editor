@@ -1,5 +1,6 @@
 package mayo.edu.cts2.editor.client;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import mayo.edu.cts2.editor.shared.CTS2Result;
@@ -33,7 +34,7 @@ public interface Cts2EditorService extends RemoteService {
 
 	void updateChangeSet(String uri, String creator, String instructions) throws IllegalArgumentException;
 
-	String getMatchingEntities(String matchValue) throws IllegalArgumentException;
+	String getMatchingEntities(String codeSystem, String codeSystemVersion, String matchValue);
 
 	CTS2Result saveDefinition(Definition definition) throws IllegalArgumentException;
 
@@ -46,5 +47,9 @@ public interface Cts2EditorService extends RemoteService {
 	String getDefinition(String oid, String version, String changeSetUri) throws IllegalArgumentException;
 
 	boolean isFinal(Definition definition) throws IllegalArgumentException;
+
+	String[] getCodeSystems();
+
+	String[] getCodeSystemVersions(String codeSystem) throws IllegalArgumentException;
 
 }

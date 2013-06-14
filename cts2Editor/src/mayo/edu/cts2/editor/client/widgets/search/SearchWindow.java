@@ -1,11 +1,8 @@
 package mayo.edu.cts2.editor.client.widgets.search;
 
 import mayo.edu.cts2.editor.client.Cts2Editor;
-import mayo.edu.cts2.editor.client.datasource.ValueSetItemSearchXmlDS;
 import mayo.edu.cts2.editor.client.datasource.ValueSetsSearchXmlDS;
 import mayo.edu.cts2.editor.client.events.AddRecordsEvent;
-import mayo.edu.cts2.editor.client.events.ValueSetItemsReceivedEvent;
-import mayo.edu.cts2.editor.client.events.ValueSetItemsReceivedEventHandler;
 import mayo.edu.cts2.editor.client.events.ValueSetsReceivedEvent;
 import mayo.edu.cts2.editor.client.events.ValueSetsReceivedEventHandler;
 
@@ -21,7 +18,6 @@ import com.smartgwt.client.widgets.events.ClickHandler;
 import com.smartgwt.client.widgets.events.CloseClickEvent;
 import com.smartgwt.client.widgets.events.CloseClickHandler;
 import com.smartgwt.client.widgets.form.DynamicForm;
-import com.smartgwt.client.widgets.form.fields.ButtonItem;
 import com.smartgwt.client.widgets.form.fields.TextItem;
 import com.smartgwt.client.widgets.form.fields.events.KeyUpEvent;
 import com.smartgwt.client.widgets.form.fields.events.KeyUpHandler;
@@ -36,9 +32,6 @@ public class SearchWindow extends Window {
 	private static final String TITLE = "Search";
 	private static final String ROWS_RETRIEVED_TITLE = "Rows Matching Criteria:";
 
-	private static final int WIDTH = 850;
-	private static final int HEIGHT = 600;
-
 	private static final String CLEAR_BUTTON_TITLE = "Clear";
 	private static final String SEARCH_HINT = "Enter Search Text";
 
@@ -49,23 +42,21 @@ public class SearchWindow extends Window {
 	private String i_previousText = "";
 	private Label i_rowsRetrievedLabel;
 
-	protected ButtonItem i_searchButton;
-
 	protected Label i_label;
 	protected Button i_addButton;
 	protected Button i_cancelButton;
 
-	SearchListGrid i_searchListGrid;
+	SearchValueSetsListGrid i_searchListGrid;
 
-	public SearchWindow(SearchListGrid listGrid, String message) {
+	public SearchWindow() {
 		super();
 
-		i_searchListGrid = listGrid;
+		i_searchListGrid = new SearchValueSetsListGrid();
 
 		VLayout layout = new VLayout(5);
 
-		setWidth(WIDTH);
-		setHeight(HEIGHT);
+		setWidth100();
+		setHeight100();
 		setMargin(20);
 
 		setTitle(TITLE);
@@ -83,17 +74,17 @@ public class SearchWindow extends Window {
 			}
 		});
 
-		layout.addMember(createDisplayLabel(message));
+		layout.addMember(createDisplayLabel());
 		layout.addMember(createSearchPanel());
 		layout.addMember(getButtons());
 
 		addItem(layout);
 
 		createValueSetsReceivedEvent();
-		createValueSetItemsReceivedEvent();
 	}
 
-	private VLayout createDisplayLabel(String message) {
+	private VLayout createDisplayLabel() {
+		String message = "Search for value sets.  Select the value sets by checking the checkbox and then click Add to add them.";
 		i_label = new Label("<b>" + message + "<b>");
 		i_label.setWidth100();
 		i_label.setHeight(30);
@@ -125,7 +116,7 @@ public class SearchWindow extends Window {
 		searchLayout.addMember(createSearchLayout());
 		searchLayout.addMember(i_searchListGrid);
 
-		i_searchListGrid.getField(SearchListGrid.ID_ADD).addCellSavedHandler(new CellSavedHandler() {
+		i_searchListGrid.getField(SearchValueSetsListGrid.ID_ADD).addCellSavedHandler(new CellSavedHandler() {
 			@Override
 			public void onCellSaved(CellSavedEvent event) {
 
@@ -281,7 +272,7 @@ public class SearchWindow extends Window {
 		return isValid;
 	}
 
-	public SearchListGrid getSearchListGrid() {
+	public SearchValueSetsListGrid getSearchListGrid() {
 		return i_searchListGrid;
 	}
 
@@ -299,19 +290,6 @@ public class SearchWindow extends Window {
 		});
 	}
 
-	/**
-	 * Listen for the event that Value Sets Items were retrieved.
-	 */
-	private void createValueSetItemsReceivedEvent() {
-		Cts2Editor.EVENT_BUS.addHandler(ValueSetItemsReceivedEvent.TYPE, new ValueSetItemsReceivedEventHandler() {
-
-			@Override
-			public void onValueSetItemssReceived(ValueSetItemsReceivedEvent event) {
-				DataClass[] dc = ValueSetItemSearchXmlDS.getInstance().getTestData();
-				updateRowsRetrieved(dc);
-			}
-		});
-	}
 
 	/**
 	 * Update the rows retrieved label based on the search results.

@@ -4,5 +4,5 @@ import com.google.gwt.event.shared.EventHandler;
 
 public interface ValueSetItemsReceivedEventHandler extends EventHandler {
 
-	void onValueSetItemssReceived(ValueSetItemsReceivedEvent event);
+	void onValueSetItemsReceived(ValueSetItemsReceivedEvent event);
 }
