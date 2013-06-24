@@ -64,18 +64,35 @@ public class EntitySearchWindow extends Window {
 	private PickerIcon searchPicker;
 	private SearchValueSetItemsListGrid searchListGrid;
 	private SelectedEntitiesListGrid selectedEntitiesListGrid;
+	private String entityUrl;
 
 	public EntitySearchWindow() {
 		this(new Record[0]);
 	}
 
-	public EntitySearchWindow(List<DefinitionEntry> entries) {
+	public EntitySearchWindow(String entityUrl) {
 		this(new Record[0]);
+	}
+
+	public EntitySearchWindow(List<DefinitionEntry> entries) {
+		this(entries, null);
+	}
+
+	public EntitySearchWindow(List<DefinitionEntry> entries, String entityUrl) {
+		this(new Record[0], entityUrl);
 		this.setSelectedEntities(entries);
 	}
 
 	public EntitySearchWindow(Record[] entries) {
+		this(entries, null);
+	}
+
+	public EntitySearchWindow(Record[] entries, String entityUrl) {
 		super();
+
+		if (entityUrl != null && !entityUrl.trim().isEmpty()) {
+			this.entityUrl = entityUrl;
+		}
 
 		searchListGrid = new SearchValueSetItemsListGrid();
 
@@ -273,6 +290,16 @@ public class EntitySearchWindow extends Window {
 		codeSystemVersionCb.setAttribute("browserSpellCheck", false);
 
 		final Cts2EditorServiceAsync service = GWT.create(Cts2EditorService.class);
+		if (entityUrl != null) {
+			service.addServiceProperty("EntityUrl", entityUrl, new AsyncCallback<Void>() {
+				@Override
+				public void onFailure(Throwable caught) { }
+
+				@Override
+				public void onSuccess(Void result) { }
+			});
+		}
+
 		service.getCodeSystems(new AsyncCallback<String[]>() {
 
 			@Override

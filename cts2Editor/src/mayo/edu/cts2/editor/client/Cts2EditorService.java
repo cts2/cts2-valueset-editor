@@ -1,19 +1,24 @@
 package mayo.edu.cts2.editor.client;
 
-import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import mayo.edu.cts2.editor.shared.CTS2Result;
 import mayo.edu.cts2.editor.shared.Definition;
 
 import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
+import mayo.edu.cts2.editor.shared.MetadataResult;
 
 /**
  * The client side stub for the RPC service.
  */
 @RemoteServiceRelativePath("cts2Editor")
 public interface Cts2EditorService extends RemoteService {
+	void setServiceProperties(Map<String, String> serviceProperties) throws IllegalArgumentException;
+
+	void addServiceProperty(String property, String value) throws IllegalArgumentException;
+
 	String getValueSet(String oid) throws IllegalArgumentException;
 
 	String getValueSets(List<String> oids) throws IllegalArgumentException;
@@ -51,5 +56,9 @@ public interface Cts2EditorService extends RemoteService {
 	String[] getCodeSystems();
 
 	String[] getCodeSystemVersions(String codeSystem) throws IllegalArgumentException;
+
+	CTS2Result createValueSet(Definition definition) throws IllegalArgumentException;
+
+	MetadataResult checkNewValueSetMetadata(String valueSetName, String valueSetUri, String definitionName, String definitionVersion) throws IllegalArgumentException;
 
 }

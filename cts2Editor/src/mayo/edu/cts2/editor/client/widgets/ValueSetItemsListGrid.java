@@ -97,9 +97,11 @@ public class ValueSetItemsListGrid extends ListGrid {
 
 		ListGridField actionField = new ListGridField(ID_ACTION, TITLE_ACTION);
 		actionField.setWrap(false);
-		actionField.setWidth("*");
+		actionField.setWidth("126px");
 		actionField.setCanEdit(false);
 		actionField.setAttribute(ID_HIDDEN_ACTION, ACTION_NONE);
+		if (Cts2Editor.getReadOnly())
+			actionField.setHidden(true);
 
 		setFields(nameField, designationField, nameSpaceField, actionField, codeSystemVersion);
 		setAutoFetchData(true);

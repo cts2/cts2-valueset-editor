@@ -94,16 +94,18 @@ public class ValueSetsListGrid extends BaseValueSetsListGrid {
 		});
 
 		ListGridField versionsChangeField = new ListGridField(ID_CHANGE_VERSION, TITLE_CHANGE_VERSION);
-		versionsChangeField.setWidth("20%");
+		versionsChangeField.setWidth("64px");
 		versionsChangeField.setWrap(false);
 		versionsChangeField.setShowHover(true);
 		versionsChangeField.setCanEdit(false);
 
 		ListGridField actionField = new ListGridField(ID_ACTION, TITLE_ACTION);
 		actionField.setWrap(false);
-		actionField.setWidth("*");
+		actionField.setWidth("126px");
 		actionField.setCanEdit(false);
 		actionField.setAttribute(ID_HIDDEN_ACTION, ACTION_NONE);
+		if (Cts2Editor.getReadOnly())
+			actionField.setHidden(true);
 
 		setFields(formalNameField, resourceNamefField, currentVersionField, versionsChangeField, actionField);
 

@@ -22,7 +22,7 @@ public class SelectedEntitiesListGrid extends ListGrid {
 
 	public SelectedEntitiesListGrid() {
 		super();
-		selectedEntitiesXmlDS = new SelectedEntitiesXmlDS("selectedEntitiesListGridSelectedEntitiesXmlDS");
+		selectedEntitiesXmlDS = new SelectedEntitiesXmlDS();
 
 
 		setWidth100();

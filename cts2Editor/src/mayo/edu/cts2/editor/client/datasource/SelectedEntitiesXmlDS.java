@@ -7,7 +7,7 @@ public class SelectedEntitiesXmlDS extends BaseValueSetItemSearchXmlDS {
 
 
 	public SelectedEntitiesXmlDS() {
-		this(new RandomString(20).nextString());
+		this("selectedEntititesXmlDS"+ new RandomString(20).nextString());
 	}
 
 	public SelectedEntitiesXmlDS(String id) {

@@ -7,7 +7,9 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -21,6 +23,8 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
+import edu.mayo.cts2.framework.model.core.EntryDescription;
+import edu.mayo.cts2.framework.model.valueset.ValueSetCatalogEntry;
 import mayo.edu.cts2.editor.client.Cts2EditorService;
 import mayo.edu.cts2.editor.server.rest.Cts2Client;
 import mayo.edu.cts2.editor.server.rest.EntityClient;
@@ -28,7 +32,9 @@ import mayo.edu.cts2.editor.shared.CTS2Result;
 import mayo.edu.cts2.editor.shared.Definition;
 import mayo.edu.cts2.editor.shared.DefinitionEntry;
 
+import mayo.edu.cts2.editor.shared.MetadataResult;
 import org.jboss.resteasy.client.ClientResponse;
+import org.jboss.resteasy.client.ClientResponseFailure;
 import org.jboss.resteasy.client.ProxyFactory;
 import org.jboss.resteasy.util.Base64;
 
@@ -74,11 +80,36 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 	private static final String XML_ROOT_START = "<" + XML_ROOT + ">\n";
 	private static final String XML_ROOT_END = "</" + XML_ROOT + ">\n";
 	private static Logger logger = Logger.getLogger(Cts2EditorServiceImpl.class.getName());
+	private Map<String, String> serviceProperties = new HashMap<String, String>();
 
 	private final int MAX_RECORDS = Cts2EditorServiceProperties.getValueSetRestPageSize();
 
 	public Cts2EditorServiceImpl() {
 		super();
+	}
+
+	/**
+	 * Valid properties:
+	 * MaintenanceUrl = url to the CTS2 value set definition maintenance service
+	 * MaintenanceUsername = username for the CTS2 value set definition maintenance service
+	 * MaintenancePassword = password for the CTS2 value set definition maintenance service
+	 * EntityUrl = url to the CTS2 entity service
+	 *
+	 * @param serviceProperties map containing the properties
+	 * @throws IllegalArgumentException
+	 */
+	@Override
+	public void setServiceProperties(Map<String, String> serviceProperties) throws IllegalArgumentException {
+		if (serviceProperties == null)
+			throw new IllegalArgumentException();
+		this.serviceProperties = serviceProperties;
+	}
+
+	@Override
+	public void addServiceProperty(String property, String value) throws IllegalArgumentException {
+		if (property == null && value == null)
+			throw new IllegalArgumentException();
+		this.serviceProperties.put(property, value);
 	}
 
 	/**
@@ -554,13 +585,98 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 		return list.toArray(new String[list.size()]);
 	}
 
+	@Override
+	public CTS2Result createValueSet(Definition definition) throws IllegalArgumentException {
+		/* todo create vs and definition and pass to rest like saveAs
+		    createChangeSet
+			createValueSet(definition, changeSet)
+			createChangeSet 2
+			createValueSetDefinition(definition, changeSet)
+		*/
+		CTS2Result result = new CTS2Result();
+		try {
+			String changeSetUri = createChangeSet();
+			ValueSetCatalogEntry valueSet = new ValueSetCatalogEntry();
+			valueSet.setValueSetName(definition.getValueSetOid());
+			valueSet.setFormalName(definition.getFormalName());
+			valueSet.setAbout(definition.getValueSetUri());
+
+			SourceAndRoleReference snrr = new SourceAndRoleReference();
+			snrr.setRole(new RoleReference("Author"));
+			snrr.setSource(new SourceReference(definition.getCreator()));
+			valueSet.addSourceAndRole(snrr);
+
+			Cts2RestClient restClient = Cts2RestClient.instance();
+			String url = Cts2EditorServiceProperties.getValueSetDefinitionMaintenanceUrl() + "/valueset?changesetcontext=" + changeSetUri;
+			URI uri = restClient.postCts2Resource(url,
+			  Cts2EditorServiceProperties.getCts2ValueSetRestUsername(),
+			  Cts2EditorServiceProperties.getCts2ValueSetRestPassword(),
+			  valueSet);
+			if (uri == null) {
+				result.setError(true);
+				result.setMessage("The value set could not be created.");
+			}
+
+			if (definition.getName() != null && !definition.getName().trim().isEmpty()
+			  && definition.getVersion() != null && !definition.getVersion().trim().isEmpty()
+			  && definition.getEntries().size() > 0) {
+				saveDefinitionAs(definition);
+			}
+
+		} catch (Exception e) {
+			result.setError(true);
+			result.setMessage("An error occurred when attempting to create the value set.");
+		} finally {
+			return result;
+		}
+	}
+
+	@Override
+	public MetadataResult checkNewValueSetMetadata(String valueSetName, String valueSetUri, String definitionName, String definitionVersion) throws IllegalArgumentException {
+		if (valueSetName == null || valueSetUri == null || definitionName == null || definitionVersion == null)
+			throw new IllegalArgumentException();
+		MetadataResult result = new MetadataResult();
+
+		try {
+			String xml = getCts2Client().getValueSet(getAuthorizationHeader(), valueSetName);
+
+			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder db = dbFactory.newDocumentBuilder();
+			Document document = db.parse(new InputSource(new ByteArrayInputStream(xml.getBytes("UTF-8"))));
+			XPath xPath = XPathFactory.newInstance().newXPath();
+			String n = xPath.evaluate("/ValueSetCatalogEntryMsg", document);
+			result.setExistingValueSetName(n != null);
+		} catch (Exception e) {
+			if (e instanceof ClientResponseFailure) {
+				/* 404 is expected if the value set does not exist */
+				if (((ClientResponseFailure) e).getResponse().getStatus() != 404) {
+					result.setError(true);
+					result.addMessage("An unexpected response was received while validating the new value set name.");
+				}
+			} else {
+				result.setError(true);
+				result.addMessage("An error occurred while validating the new value set name. " + e.getMessage());
+			}
+		} finally {
+			return result;
+		}
+
+	}
+
 	private ValueSetDefinition toValueSetDefinition(Definition definition) {
 		ValueSetDefinition vsd = new ValueSetDefinition();
-
-		vsd.setDefinedValueSet(new ValueSetReference(definition.getValueSetOid()));
+		ValueSetReference valueSetReference = new ValueSetReference(definition.getValueSetOid());
+		valueSetReference.setUri(definition.getValueSetUri());
+		vsd.setDefinedValueSet(valueSetReference);
 		vsd.setDocumentURI(definition.getDocumentUri() == null || definition.getDocumentUri().trim().equals("") ? UUID
-		        .randomUUID().toString() : definition.getDocumentUri());
-		vsd.setAbout(definition.getValueSetOid());
+		  .randomUUID().toString() : definition.getDocumentUri());
+		vsd.setAbout(definition.getAbout());
+		vsd.setFormalName(definition.getFormalName());
+
+
+		EntryDescription desc = new EntryDescription();
+		desc.setValue(ModelUtils.toTsAnyType(definition.getResourceSynopsis()));
+		vsd.setResourceSynopsis(desc);
 
 		VersionTagReference[] references = new VersionTagReference[]{new VersionTagReference(definition.getVersion())};
 		vsd.setVersionTag(references);
@@ -613,6 +729,7 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 			/* TODO: Need to set the description in the service, waiting for the updated spec:
 			 * https://github.com/cts2/cts2-specification/issues/143 */
 //			entity.setDesignation(definitionEntry.getDescription());
+//			entity.setNamespaceVersion(definitionEntry.getCodeSystemVersion());
 			entityList.addReferencedEntity(entity);
 		}
 
@@ -725,18 +842,35 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 	}
 
 	private String getAuthorizationHeader() {
-		return "Basic "
-		        + Base64.encodeBytes((Cts2EditorServiceProperties.getCts2ValueSetRestUsername() + ":" + Cts2EditorServiceProperties
-		                .getCts2ValueSetRestPassword()).getBytes());
+		if (serviceProperties.containsKey("MaintenanceUsername") && serviceProperties.containsKey("MaintenancePassword")) {
+			return "Basic "
+			  + Base64.encodeBytes((serviceProperties.get("MaintenanceUsername")
+			  + ":" + serviceProperties.get("MaintenancePassword")).getBytes());
+		} else {
+			return "Basic "
+		      + Base64.encodeBytes((Cts2EditorServiceProperties.getCts2ValueSetRestUsername()
+			  + ":" + Cts2EditorServiceProperties.getCts2ValueSetRestPassword()).getBytes());
+		}
 	}
 
 	private Cts2Client getCts2Client() {
-		return ProxyFactory.create(Cts2Client.class, Cts2EditorServiceProperties.getValueSetDefinitionMaintenanceUrl());
+		if (serviceProperties.containsKey("MaintenanceUrl")) {
+			return ProxyFactory.create(Cts2Client.class,
+			  serviceProperties.get("MaintenanceUrl"));
+		} else {
+			return ProxyFactory.create(Cts2Client.class,
+			  Cts2EditorServiceProperties.getValueSetDefinitionMaintenanceUrl());
+		}
 	}
 
 	private EntityClient getEntityClient() {
-		return ProxyFactory.create(EntityClient.class,
-		        Cts2EditorServiceProperties.getValueSetDefinitionMaintenanceEntitiesUrl());
+		if (serviceProperties.containsKey("EntityUrl")) {
+			return ProxyFactory.create(EntityClient.class,
+			  serviceProperties.get("EntityUrl"));
+		} else {
+			return ProxyFactory.create(EntityClient.class,
+			  Cts2EditorServiceProperties.getValueSetDefinitionMaintenanceEntitiesUrl());
+		}
 	}
 
 }

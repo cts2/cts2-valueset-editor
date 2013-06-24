@@ -41,7 +41,7 @@ public class TestUtils {
 	}
 
 	public static String marshalValueSetDefinition(ValueSetDefinition definition) {
-		DelegatingMarshaller marshaller = new DelegatingMarshaller();
+		DelegatingMarshaller marshaller = new DelegatingMarshaller(true);
 		StringWriter writer = new StringWriter();
 		try {
 			marshaller.marshal(definition, new StreamResult(writer));

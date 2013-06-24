@@ -49,8 +49,8 @@ public class ValueSetEntitiesLayout extends VLayout {
 	private final ListGridRecord i_valueSetRecord;
 	private final ListGrid i_parentGrid;
 	private final ValueSetItemsListGrid i_valueSetItemsListGrid;
-	private final IButton i_addButton;
-	private final IButton i_deleteButton;
+	private final IButton i_editButton;
+//	private final IButton i_deleteButton;
 	private final IButton i_saveButton;
 	private final IButton i_saveAsButton;
 	private final IButton i_closeButton;
@@ -84,11 +84,11 @@ public class ValueSetEntitiesLayout extends VLayout {
 		buttonLayout.setMargin(5);
 		buttonLayout.setAlign(Alignment.CENTER);
 
-		i_addButton = new IButton("Edit...");
-		i_addButton.setTop(250);
-		i_addButton.setShowHover(true);
-		i_addButton.setPrompt("Add one or more value set entries");
-		i_addButton.addClickHandler(new ClickHandler() {
+		i_editButton = new IButton("Edit...");
+		i_editButton.setTop(250);
+		i_editButton.setShowHover(true);
+		i_editButton.setPrompt("Add one or more value set entries");
+		i_editButton.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
 				i_searchWindow = new EntitySearchWindow(i_valueSetItemsListGrid.getRecords());
@@ -149,41 +149,41 @@ public class ValueSetEntitiesLayout extends VLayout {
 			}
 		});
 
-		i_deleteButton = new IButton("Delete Row(s)");
-		i_deleteButton.setTop(250);
-		i_deleteButton.setShowHover(true);
-		i_deleteButton.setPrompt("Delete one or more value set entries");
-		i_deleteButton.addClickHandler(new ClickHandler() {
-			@Override
-			public void onClick(ClickEvent event) {
-
-				i_removalsMade = true;
-
-				// enable these buttons.
-				i_saveButton.setDisabled(disableSave(i_valueSetRecord) || false);
-				i_saveAsButton.setDisabled(false);
-
-				ListGridRecord[] records = i_valueSetItemsListGrid.getSelectedRecords();
-				for (ListGridRecord selectedRecord : records) {
-					selectedRecord.setAttribute(ValueSetItemsListGrid.ID_HIDDEN_ACTION,
-					        ValueSetItemsListGrid.ACTION_DELETE);
-					i_valueSetItemsListGrid.updateData(selectedRecord);
-				}
-
-				// refresh the icons in Action column
-				i_valueSetItemsListGrid.invalidateRecordComponents();
-				i_deleteButton.setDisabled(true);
-			}
-		});
-
-		// default these buttons to disabled.
-		i_deleteButton.setDisabled(true);
+//		i_deleteButton = new IButton("Delete Row(s)");
+//		i_deleteButton.setTop(250);
+//		i_deleteButton.setShowHover(true);
+//		i_deleteButton.setPrompt("Delete one or more value set entries");
+//		i_deleteButton.addClickHandler(new ClickHandler() {
+//			@Override
+//			public void onClick(ClickEvent event) {
+//
+//				i_removalsMade = true;
+//
+//				// enable these buttons.
+//				i_saveButton.setDisabled(disableSave(i_valueSetRecord) || false);
+//				i_saveAsButton.setDisabled(false);
+//
+//				ListGridRecord[] records = i_valueSetItemsListGrid.getSelectedRecords();
+//				for (ListGridRecord selectedRecord : records) {
+//					selectedRecord.setAttribute(ValueSetItemsListGrid.ID_HIDDEN_ACTION,
+//					        ValueSetItemsListGrid.ACTION_DELETE);
+//					i_valueSetItemsListGrid.updateData(selectedRecord);
+//				}
+//
+//				// refresh the icons in Action column
+//				i_valueSetItemsListGrid.invalidateRecordComponents();
+//				i_deleteButton.setDisabled(true);
+//			}
+//		});
+//
+//		// default these buttons to disabled.
+//		i_deleteButton.setDisabled(true);
 		i_saveButton.setDisabled(true);
 		i_saveAsButton.setDisabled(true);
 
 		// add the buttons to the layout
-		buttonLayout.addMember(i_addButton);
-		buttonLayout.addMember(i_deleteButton);
+		buttonLayout.addMember(i_editButton);
+//		buttonLayout.addMember(i_deleteButton);
 		buttonLayout.addMember(i_saveButton);
 		buttonLayout.addMember(i_saveAsButton);
 		buttonLayout.addMember(i_closeButton);
@@ -194,28 +194,28 @@ public class ValueSetEntitiesLayout extends VLayout {
 		}
 
 		// listen for selection changes to update the buttons
-		i_valueSetItemsListGrid.addSelectionUpdatedHandler(new SelectionUpdatedHandler() {
-
-			@Override
-			public void onSelectionUpdated(SelectionUpdatedEvent event) {
-				ListGridRecord[] records = i_valueSetItemsListGrid.getSelectedRecords();
-
-				boolean disableDelete = false;
-				String hiddenAction;
-
-				for (Record record : records) {
-
-					hiddenAction = record.getAttribute(ValueSetItemsListGrid.ID_HIDDEN_ACTION);
-					if (hiddenAction != null
-					        && (hiddenAction.equals(ValueSetItemsListGrid.ACTION_ADD) || hiddenAction
-					                .equals(ValueSetItemsListGrid.ACTION_DELETE))) {
-						disableDelete = true;
-						break;
-					}
-				}
-				i_deleteButton.setDisabled(disableDelete);
-			}
-		});
+//		i_valueSetItemsListGrid.addSelectionUpdatedHandler(new SelectionUpdatedHandler() {
+//
+//			@Override
+//			public void onSelectionUpdated(SelectionUpdatedEvent event) {
+//				ListGridRecord[] records = i_valueSetItemsListGrid.getSelectedRecords();
+//
+//				boolean disableDelete = false;
+//				String hiddenAction;
+//
+//				for (Record record : records) {
+//
+//					hiddenAction = record.getAttribute(ValueSetItemsListGrid.ID_HIDDEN_ACTION);
+//					if (hiddenAction != null
+//					        && (hiddenAction.equals(ValueSetItemsListGrid.ACTION_ADD) || hiddenAction
+//					                .equals(ValueSetItemsListGrid.ACTION_DELETE))) {
+//						disableDelete = true;
+//						break;
+//					}
+//				}
+//				i_deleteButton.setDisabled(disableDelete);
+//			}
+//		});
 
 		createAddRecordEvent();
 		createSaveAsEvent();

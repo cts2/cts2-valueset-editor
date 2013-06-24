@@ -1,8 +1,11 @@
 package mayo.edu.cts2.editor.client.widgets;
 
+import com.smartgwt.client.util.SC;
 import mayo.edu.cts2.editor.client.Cts2Editor;
 import mayo.edu.cts2.editor.client.events.AddRecordsEvent;
 import mayo.edu.cts2.editor.client.events.AddRecordsEventHandler;
+import mayo.edu.cts2.editor.client.events.NewValueSetCreatedEvent;
+import mayo.edu.cts2.editor.client.events.NewValueSetCreatedEventHandler;
 import mayo.edu.cts2.editor.client.events.UpdateValueSetVersionEvent;
 import mayo.edu.cts2.editor.client.events.UpdateValueSetVersionEventHandler;
 import mayo.edu.cts2.editor.client.widgets.search.SearchValueSetsListGrid;
@@ -27,7 +30,7 @@ public class ValueSetContainer extends VLayout {
 	private static final String TITLE = "<em style=\"font-size:1.2em;font-weight:bold; margin-left:5px\">Value Sets</em>";
 
 	private static final int BUTTON_LAYOUT_HEIGHT = 25;
-	private static final String BUTTON_ADD_TITLE = "Add...";
+	private static final String BUTTON_ADD_TITLE = "Add Existing...";
 
 	private final Label i_title;
 	private final ValueSetsListGrid i_valueSetsListGrid;
@@ -52,8 +55,7 @@ public class ValueSetContainer extends VLayout {
 			addMember(buttonLayout);
 		}
 
-		createAddRecordEvent();
-		createUpdateRecordEvent();
+		createEventHandlers();
 	}
 
 	private HLayout createButtonLayout() {
@@ -75,7 +77,18 @@ public class ValueSetContainer extends VLayout {
 			}
 		});
 
+		IButton createButton = new IButton("Create New...");
+		createButton.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent event) {
+				CreateValueSetWindow metadataWindow = new CreateValueSetWindow();
+				metadataWindow.show();
+				metadataWindow.setInitialFocus();
+			}
+		});
+
 		layout.addMember(i_addButton);
+		layout.addMember(createButton);
 
 		return layout;
 	}
@@ -91,6 +104,12 @@ public class ValueSetContainer extends VLayout {
 		titleLabel.setHeight(TITLE_HEIGHT);
 
 		return titleLabel;
+	}
+
+	private void createEventHandlers() {
+		createAddRecordEvent();
+		createUpdateRecordEvent();
+		createNewValueSetEvent();
 	}
 
 	private void createAddRecordEvent() {
@@ -142,6 +161,21 @@ public class ValueSetContainer extends VLayout {
 					i_valueSetsListGrid.updateRecord(recordToUpdate, valueSetId, versionId, comment, changeSetId,
 					        documentUri);
 				}
+			}
+		});
+	}
+
+	private void createNewValueSetEvent() {
+		Cts2Editor.EVENT_BUS.addHandler(NewValueSetCreatedEvent.TYPE, new NewValueSetCreatedEventHandler() {
+			@Override
+			public void onNewValueSetCreated(NewValueSetCreatedEvent event) {
+				/* TODO: Deal with new value set. */
+				SC.say("New Value Set created:<br/>VS:<br/>Name: " + event.getDefinition().getValueSetOid()
+				+ "<br/>Uri: " + event.getDefinition().getValueSetUri()
+				+ "<br/>DefName: " + event.getDefinition().getName()
+				+ "<br/>DefVersion: " + event.getDefinition().getVersion()
+				+ "<br/>Entities: " + event.getDefinition().getEntries().size());
+			i_valueSetsListGrid.createNewRecord(event.getDefinition().getName(), event.getDefinition().getValueSetOid(), "");
 			}
 		});
 	}
