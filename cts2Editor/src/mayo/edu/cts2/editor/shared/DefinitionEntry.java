@@ -9,6 +9,7 @@ public class DefinitionEntry implements Serializable {
 	String namespace;
 	String name;
 	String description;
+	String codeSystemVersion;
 
 	public DefinitionEntry() {
 		this.uri = "";
@@ -16,14 +17,16 @@ public class DefinitionEntry implements Serializable {
 		this.namespace = "";
 		this.name = "";
 		this.description = "";
+		this.codeSystemVersion = "";
 	}
 
-	public DefinitionEntry(String uri, String href, String namespace, String name, String description) {
+	public DefinitionEntry(String uri, String href, String namespace, String name, String description, String codeSystemVersion) {
 		this.uri = uri;
 		this.href = href;
 		this.namespace = namespace;
 		this.name = name;
 		this.description = description;
+		this.codeSystemVersion = codeSystemVersion;
 	}
 
 	public String getUri() {
@@ -66,6 +69,14 @@ public class DefinitionEntry implements Serializable {
 		this.description = description;
 	}
 
+	public String getCodeSystemVersion() {
+		return codeSystemVersion;
+	}
+
+	public void setCodeSystemVersion(String codeSystemVersion) {
+		this.codeSystemVersion = codeSystemVersion;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (o instanceof DefinitionEntry) {
@@ -73,7 +84,8 @@ public class DefinitionEntry implements Serializable {
 			return  /* this.getUri().equals(that.getUri()) &&
 			  this.getHref().equals(that.getHref()) && */
 			  this.getNamespace().equals(that.getNamespace()) &&
-			  this.getName().equals(that.getName());
+			  this.getName().equals(that.getName()) &&
+			  this.getCodeSystemVersion().equals(that.getCodeSystemVersion());
 		}
 		else {
 			return false;

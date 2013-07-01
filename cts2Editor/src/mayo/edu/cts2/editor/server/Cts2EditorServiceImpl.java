@@ -1,17 +1,30 @@
 package mayo.edu.cts2.editor.server;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.stream.StreamSource;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
-import edu.mayo.cts2.framework.model.valuesetdefinition.ValueSetDefinitionEntry;
+import edu.mayo.cts2.framework.model.core.EntryDescription;
+import edu.mayo.cts2.framework.model.valueset.ValueSetCatalogEntry;
 import mayo.edu.cts2.editor.client.Cts2EditorService;
 import mayo.edu.cts2.editor.server.rest.Cts2Client;
 import mayo.edu.cts2.editor.server.rest.EntityClient;
@@ -19,7 +32,9 @@ import mayo.edu.cts2.editor.shared.CTS2Result;
 import mayo.edu.cts2.editor.shared.Definition;
 import mayo.edu.cts2.editor.shared.DefinitionEntry;
 
+import mayo.edu.cts2.editor.shared.MetadataResult;
 import org.jboss.resteasy.client.ClientResponse;
+import org.jboss.resteasy.client.ClientResponseFailure;
 import org.jboss.resteasy.client.ProxyFactory;
 import org.jboss.resteasy.util.Base64;
 
@@ -47,6 +62,12 @@ import edu.mayo.cts2.framework.model.util.ModelUtils;
 import edu.mayo.cts2.framework.model.valuesetdefinition.SpecificEntityList;
 import edu.mayo.cts2.framework.model.valuesetdefinition.ValueSetDefinition;
 import edu.mayo.cts2.framework.model.valuesetdefinition.ValueSetDefinitionMsg;
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 /**
  * The server side implementation of the RPC service.
@@ -59,13 +80,36 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 	private static final String XML_ROOT_START = "<" + XML_ROOT + ">\n";
 	private static final String XML_ROOT_END = "</" + XML_ROOT + ">\n";
 	private static Logger logger = Logger.getLogger(Cts2EditorServiceImpl.class.getName());
-
-	public static final String XPATH_VALUESETS_BASE = "/" + XML_ROOT;
+	private Map<String, String> serviceProperties = new HashMap<String, String>();
 
 	private final int MAX_RECORDS = Cts2EditorServiceProperties.getValueSetRestPageSize();
 
 	public Cts2EditorServiceImpl() {
 		super();
+	}
+
+	/**
+	 * Valid properties:
+	 * MaintenanceUrl = url to the CTS2 value set definition maintenance service
+	 * MaintenanceUsername = username for the CTS2 value set definition maintenance service
+	 * MaintenancePassword = password for the CTS2 value set definition maintenance service
+	 * EntityUrl = url to the CTS2 entity service
+	 *
+	 * @param serviceProperties map containing the properties
+	 * @throws IllegalArgumentException
+	 */
+	@Override
+	public void setServiceProperties(Map<String, String> serviceProperties) throws IllegalArgumentException {
+		if (serviceProperties == null)
+			throw new IllegalArgumentException();
+		this.serviceProperties = serviceProperties;
+	}
+
+	@Override
+	public void addServiceProperty(String property, String value) throws IllegalArgumentException {
+		if (property == null && value == null)
+			throw new IllegalArgumentException();
+		this.serviceProperties.put(property, value);
 	}
 
 	/**
@@ -155,29 +199,12 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 	}
 
 	/**
-	 * <<<<<<< HEAD Returns the entities for the current version of the value
-	 * set
-	 * 
-	 * @param oid
-	 *            id of the value set to fetch the current version for =======
-	 *            Returns the entities for the value set. If version is
-	 *            <code>null</code> returns the entities for the current
-	 *            version. If the changeSetUri is <code>null</code> returns the
-	 *            enitites with no change set applied.
-	 * 
-	 * @param oid
-	 *            id of the value set to fetch
-	 * @param version
-	 *            of the value set definition
-	 * @param changeSetUri
-	 *            id of the change set to apply >>>>>>>
-	 *            refs/remotes/choose_remote_name/master
-	 * @return the entities for the current version <<<<<<< HEAD
-	 * @throws IllegalArgumentException
-	 *             if any argument is <code>null</code> =======
-	 * @throws IllegalArgumentException
-	 *             if oid argument is <code>null</code> >>>>>>>
-	 *             refs/remotes/choose_remote_name/master
+	 * Returns the entities for the current version of the value
+	 * @param oid id of the value set to fetch the current version for
+	 * @param version of the value set definition
+	 * @param changeSetUri id of the change set to apply
+	 * @return Returns the entities for the value set. If version is <code>null</code> returns the entities for the current version. If the changeSetUri is <code>null</code> returns the enitites with no change set applied.
+	 * @throws IllegalArgumentException if any argument is <code>null</code>
 	 */
 	@Override
 	public String getResolvedValueSet(String oid, String version, String changeSetUri) throws IllegalArgumentException {
@@ -214,7 +241,7 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 	/**
 	 * Returns value sets matching the match value criteria
 	 * 
-	 * @param matchValue
+	 * @param matchValue the value to search for
 	 * @return value sets matching the match value criteria
 	 * @throws IllegalArgumentException
 	 *             if any argument is <code>null</code>
@@ -278,17 +305,19 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 	/**
 	 * Returns the xml representation of the matching entities
 	 * 
-	 * @param matchValue
+	 * @param codeSystem code system to search
+	 * @param codeSystemVersion code system version to search
+	 * @param matchValue the value to find
 	 * @return the xml representation of the matching entities
 	 * @throws IllegalArgumentException
 	 *             if any argument is <code>null</code>
 	 */
 	@Override
-	public String getMatchingEntities(String matchValue) throws IllegalArgumentException {
+	public String getMatchingEntities(String codeSystem, String codeSystemVersion, String matchValue) throws IllegalArgumentException {
 		if (matchValue == null) {
 			throw new IllegalArgumentException("Argument can not be null.");
 		}
-		return getEntityClient().getMatchingEntities(getAuthorizationHeader(), MAX_RECORDS, matchValue);
+		return getEntityClient().getMatchingEntities(getAuthorizationHeader(), codeSystem, codeSystemVersion, matchValue, MAX_RECORDS);
 	}
 
 	/**
@@ -329,8 +358,7 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 
 		/* Set new random version */
 		definition.setVersion(UUID.randomUUID().toString());
-		CTS2Result result = saveValueSetAs(toValueSetDefinition(definition));
-		return result;
+		return saveValueSetAs(toValueSetDefinition(definition));
 	}
 
 	/**
@@ -441,7 +469,7 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 	 * Returns <code>true</code> if the definition version is marked FINAL.
 	 * Returns <code>false</code> if the definition version is not marked FINAL.
 	 * 
-	 * @param definition
+	 * @param definition to determine state of
 	 * @return <code>true</code> if the definition version is marked FINAL,
 	 *         <code>false</code> if the definition version is not marked FINAL
 	 * @throws IllegalArgumentException
@@ -458,13 +486,197 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 		return vsDefinition.getState() == FinalizableState.FINAL;
 	}
 
+	@Override
+	public String[] getCodeSystems() {
+		ArrayList<String> list = new ArrayList<String>();
+		list.add("CPT");
+		list.add("SNOMEDCT");
+		list.add("ICD09");
+		list.add("ICD10");
+		list.add("ICD10CM");
+		list.add("ICD10PCS");
+		list.add("ICD9CM");
+		list.add("LOINC");
+		list.add("RXNORM");
+		list.add("NDFRT");
+		/* TODO: Re-enable the actual service */
+//		String codeSystemsXml = getEntityClient().getCodeSystems(getAuthorizationHeader(), 1000);
+//		try {
+//			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+//			DocumentBuilder db = dbFactory.newDocumentBuilder();
+//			Document document = db.parse(new InputSource(new ByteArrayInputStream(codeSystemsXml.getBytes("UTF-8"))));
+//			XPath xPath = XPathFactory.newInstance().newXPath();
+//			NodeList entries = (NodeList) xPath.evaluate("/CodeSystemCatalogEntryDirectory/entry", document, XPathConstants.NODESET);
+//			for (int i = 0; i< entries.getLength(); i++) {
+//				Node entry = entries.item(i);
+//				if (entry.getNodeType() == Node.ELEMENT_NODE) {
+//					String codeSystem = entry.getAttributes().getNamedItem("resourceName").getTextContent();
+//					if (codeSystem != null && !codeSystem.isEmpty() && !list.contains(codeSystem)) {
+//						list.add(codeSystem.toString());
+//					}
+//				}
+//			}
+//		} catch (ParserConfigurationException e) {
+//			logger.log(Level.WARNING, "Unable to parse the returned xml.", e);
+//
+//		} catch (SAXException e) {
+//			logger.log(Level.WARNING, "Unable to parse the returned xml.", e);
+//
+//		} catch (IOException e) {
+//			logger.log(Level.WARNING, "Unable to parse the returned xml.", e);
+//
+//		}
+//		catch (XPathExpressionException e) {
+//			logger.log(Level.WARNING, "Unable to parse the returned xml.", e);
+//
+//		}
+		Collections.sort(list);
+		return list.toArray(new String[list.size()]);
+	}
+
+
+
+	@Override
+	public String[] getCodeSystemVersions(String codeSystem) throws IllegalArgumentException {
+		String codeSystemVersionsXml = getEntityClient().getCodeSystemVersions(getAuthorizationHeader(), codeSystem, 1000);
+		ArrayList<String> list = new ArrayList<String>();
+		try {
+			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder db = dbFactory.newDocumentBuilder();
+			Document document = db.parse(new InputSource(new ByteArrayInputStream(codeSystemVersionsXml.getBytes("UTF-8"))));
+			XPath xPath = XPathFactory.newInstance().newXPath();
+			NodeList entries = (NodeList) xPath.evaluate("/CodeSystemVersionCatalogEntryDirectory/entry", document, XPathConstants.NODESET);
+			for (int i = 0; i< entries.getLength(); i++) {
+				Node entry = entries.item(i);
+				if (entry.getNodeType() == Node.ELEMENT_NODE) {
+					NamedNodeMap attributes = entry.getAttributes();
+					String version = attributes.getNamedItem("codeSystemVersionName").getTextContent();
+					if (version != null && !version.isEmpty() && !list.contains(version)) {
+						list.add(version);
+//						NodeList properties = entry.getChildNodes();
+//						for (int j = 0; j < properties.getLength(); j++) {
+//							Node property = properties.item(j);
+//							if (property.getNodeName().equals("core:officialResourceVersionId")) {
+//								String officialResourceId = property.getTextContent();
+//								if (officialResourceId != null && !officialResourceId.isEmpty()) {
+//									list.add(version);
+//									break;
+//								}
+//							}
+//						}
+					}
+				}
+			}
+		} catch (ParserConfigurationException e) {
+			logger.log(Level.WARNING, "Unable to parse the returned xml.", e);
+
+		} catch (SAXException e) {
+			logger.log(Level.WARNING, "Unable to parse the returned xml.", e);
+
+		} catch (IOException e) {
+			logger.log(Level.WARNING, "Unable to parse the returned xml.", e);
+
+		}
+		catch (XPathExpressionException e) {
+			logger.log(Level.WARNING, "Unable to parse the returned xml.", e);
+
+		}
+		Collections.sort(list);
+		return list.toArray(new String[list.size()]);
+	}
+
+	@Override
+	public CTS2Result createValueSet(Definition definition) throws IllegalArgumentException {
+		/* todo create vs and definition and pass to rest like saveAs
+		    createChangeSet
+			createValueSet(definition, changeSet)
+			createChangeSet 2
+			createValueSetDefinition(definition, changeSet)
+		*/
+		CTS2Result result = new CTS2Result();
+		try {
+			String changeSetUri = createChangeSet();
+			ValueSetCatalogEntry valueSet = new ValueSetCatalogEntry();
+			valueSet.setValueSetName(definition.getValueSetOid());
+			valueSet.setFormalName(definition.getFormalName());
+			valueSet.setAbout(definition.getValueSetUri());
+
+			SourceAndRoleReference snrr = new SourceAndRoleReference();
+			snrr.setRole(new RoleReference("Author"));
+			snrr.setSource(new SourceReference(definition.getCreator()));
+			valueSet.addSourceAndRole(snrr);
+
+			Cts2RestClient restClient = Cts2RestClient.instance();
+			String url = Cts2EditorServiceProperties.getValueSetDefinitionMaintenanceUrl() + "/valueset?changesetcontext=" + changeSetUri;
+			URI uri = restClient.postCts2Resource(url,
+			  Cts2EditorServiceProperties.getCts2ValueSetRestUsername(),
+			  Cts2EditorServiceProperties.getCts2ValueSetRestPassword(),
+			  valueSet);
+			if (uri == null) {
+				result.setError(true);
+				result.setMessage("The value set could not be created.");
+			}
+
+			if (definition.getName() != null && !definition.getName().trim().isEmpty()
+			  && definition.getVersion() != null && !definition.getVersion().trim().isEmpty()
+			  && definition.getEntries().size() > 0) {
+				saveDefinitionAs(definition);
+			}
+
+		} catch (Exception e) {
+			result.setError(true);
+			result.setMessage("An error occurred when attempting to create the value set.");
+		} finally {
+			return result;
+		}
+	}
+
+	@Override
+	public MetadataResult checkNewValueSetMetadata(String valueSetName, String valueSetUri, String definitionName, String definitionVersion) throws IllegalArgumentException {
+		if (valueSetName == null || valueSetUri == null || definitionName == null || definitionVersion == null)
+			throw new IllegalArgumentException();
+		MetadataResult result = new MetadataResult();
+
+		try {
+			String xml = getCts2Client().getValueSet(getAuthorizationHeader(), valueSetName);
+
+			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder db = dbFactory.newDocumentBuilder();
+			Document document = db.parse(new InputSource(new ByteArrayInputStream(xml.getBytes("UTF-8"))));
+			XPath xPath = XPathFactory.newInstance().newXPath();
+			String n = xPath.evaluate("/ValueSetCatalogEntryMsg", document);
+			result.setExistingValueSetName(n != null);
+		} catch (Exception e) {
+			if (e instanceof ClientResponseFailure) {
+				/* 404 is expected if the value set does not exist */
+				if (((ClientResponseFailure) e).getResponse().getStatus() != 404) {
+					result.setError(true);
+					result.addMessage("An unexpected response was received while validating the new value set name.");
+				}
+			} else {
+				result.setError(true);
+				result.addMessage("An error occurred while validating the new value set name. " + e.getMessage());
+			}
+		} finally {
+			return result;
+		}
+
+	}
+
 	private ValueSetDefinition toValueSetDefinition(Definition definition) {
 		ValueSetDefinition vsd = new ValueSetDefinition();
-
-		vsd.setDefinedValueSet(new ValueSetReference(definition.getValueSetOid()));
+		ValueSetReference valueSetReference = new ValueSetReference(definition.getValueSetOid());
+		valueSetReference.setUri(definition.getValueSetUri());
+		vsd.setDefinedValueSet(valueSetReference);
 		vsd.setDocumentURI(definition.getDocumentUri() == null || definition.getDocumentUri().trim().equals("") ? UUID
-		        .randomUUID().toString() : definition.getDocumentUri());
-		vsd.setAbout(definition.getValueSetOid());
+		  .randomUUID().toString() : definition.getDocumentUri());
+		vsd.setAbout(definition.getAbout());
+		vsd.setFormalName(definition.getFormalName());
+
+
+		EntryDescription desc = new EntryDescription();
+		desc.setValue(ModelUtils.toTsAnyType(definition.getResourceSynopsis()));
+		vsd.setResourceSynopsis(desc);
 
 		VersionTagReference[] references = new VersionTagReference[]{new VersionTagReference(definition.getVersion())};
 		vsd.setVersionTag(references);
@@ -517,6 +729,7 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 			/* TODO: Need to set the description in the service, waiting for the updated spec:
 			 * https://github.com/cts2/cts2-specification/issues/143 */
 //			entity.setDesignation(definitionEntry.getDescription());
+//			entity.setNamespaceVersion(definitionEntry.getCodeSystemVersion());
 			entityList.addReferencedEntity(entity);
 		}
 
@@ -629,18 +842,35 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 	}
 
 	private String getAuthorizationHeader() {
-		return "Basic "
-		        + Base64.encodeBytes((Cts2EditorServiceProperties.getCts2ValueSetRestUsername() + ":" + Cts2EditorServiceProperties
-		                .getCts2ValueSetRestPassword()).getBytes());
+		if (serviceProperties.containsKey("MaintenanceUsername") && serviceProperties.containsKey("MaintenancePassword")) {
+			return "Basic "
+			  + Base64.encodeBytes((serviceProperties.get("MaintenanceUsername")
+			  + ":" + serviceProperties.get("MaintenancePassword")).getBytes());
+		} else {
+			return "Basic "
+		      + Base64.encodeBytes((Cts2EditorServiceProperties.getCts2ValueSetRestUsername()
+			  + ":" + Cts2EditorServiceProperties.getCts2ValueSetRestPassword()).getBytes());
+		}
 	}
 
 	private Cts2Client getCts2Client() {
-		return ProxyFactory.create(Cts2Client.class, Cts2EditorServiceProperties.getValueSetDefinitionMaintenanceUrl());
+		if (serviceProperties.containsKey("MaintenanceUrl")) {
+			return ProxyFactory.create(Cts2Client.class,
+			  serviceProperties.get("MaintenanceUrl"));
+		} else {
+			return ProxyFactory.create(Cts2Client.class,
+			  Cts2EditorServiceProperties.getValueSetDefinitionMaintenanceUrl());
+		}
 	}
 
 	private EntityClient getEntityClient() {
-		return ProxyFactory.create(EntityClient.class,
-		        Cts2EditorServiceProperties.getValueSetDefinitionMaintenanceEntitiesUrl());
+		if (serviceProperties.containsKey("EntityUrl")) {
+			return ProxyFactory.create(EntityClient.class,
+			  serviceProperties.get("EntityUrl"));
+		} else {
+			return ProxyFactory.create(EntityClient.class,
+			  Cts2EditorServiceProperties.getValueSetDefinitionMaintenanceEntitiesUrl());
+		}
 	}
 
 }

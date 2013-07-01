@@ -1,11 +1,13 @@
 package mayo.edu.cts2.editor.client;
 
 import java.util.List;
+import java.util.Map;
 
 import mayo.edu.cts2.editor.shared.CTS2Result;
 import mayo.edu.cts2.editor.shared.Definition;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import mayo.edu.cts2.editor.shared.MetadataResult;
 
 /**
  * The async counterpart of <code>Cts2EditorService</code>.
@@ -31,7 +33,7 @@ public interface Cts2EditorServiceAsync {
 
 	void updateChangeSet(String uri, String creator, String instructions, AsyncCallback<Void> async);
 
-	void getMatchingEntities(String matchValue, AsyncCallback<String> async);
+	void getMatchingEntities(String codeSystem, String codeSystemVersion, String matchValue, AsyncCallback<String> async);
 
 	void saveDefinitionAs(Definition definition, AsyncCallback<CTS2Result> async);
 
@@ -44,4 +46,16 @@ public interface Cts2EditorServiceAsync {
 	void getDefinition(String oid, String version, String changeSetUri, AsyncCallback<String> async);
 
 	void isFinal(Definition definition, AsyncCallback<Boolean> async);
+
+	void getCodeSystems(AsyncCallback<String[]> async);
+
+	void getCodeSystemVersions(String codeSystem, AsyncCallback<String[]> async);
+
+	void createValueSet(Definition definition, AsyncCallback<CTS2Result> async);
+
+	void checkNewValueSetMetadata(String valueSetName, String valueSetUri, String definitionName, String definitionVersion, AsyncCallback<MetadataResult> async);
+
+	void setServiceProperties(Map<String, String> serviceProperties, AsyncCallback<Void> async);
+
+	void addServiceProperty(String property, String value, AsyncCallback<Void> async);
 }

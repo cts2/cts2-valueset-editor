@@ -6,7 +6,13 @@ import java.util.List;
 
 public class Definition implements Serializable {
 
+	/* Value Set */
 	private String valueSetOid;
+	private String valueSetUri;
+	private String valueSetFormalName;
+
+	/* Value Set Definition */
+	private String name;
 	private String version;
 	private String changeSetUri;
 	private String documentUri;
@@ -23,6 +29,30 @@ public class Definition implements Serializable {
 
 	public void setValueSetOid(String valueSetOid) {
 		this.valueSetOid = valueSetOid;
+	}
+
+	public String getValueSetUri() {
+		return valueSetUri;
+	}
+
+	public void setValueSetUri(String valueSetUri) {
+		this.valueSetUri = valueSetUri;
+	}
+
+	public String getValueSetFormalName() {
+		return valueSetFormalName;
+	}
+
+	public void setValueSetFormalName(String valueSetFormalName) {
+		this.valueSetFormalName = valueSetFormalName;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	public String getAbout() {

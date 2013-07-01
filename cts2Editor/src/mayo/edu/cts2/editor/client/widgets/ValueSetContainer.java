@@ -1,11 +1,13 @@
 package mayo.edu.cts2.editor.client.widgets;
 
+import com.smartgwt.client.util.SC;
 import mayo.edu.cts2.editor.client.Cts2Editor;
 import mayo.edu.cts2.editor.client.events.AddRecordsEvent;
 import mayo.edu.cts2.editor.client.events.AddRecordsEventHandler;
+import mayo.edu.cts2.editor.client.events.NewValueSetCreatedEvent;
+import mayo.edu.cts2.editor.client.events.NewValueSetCreatedEventHandler;
 import mayo.edu.cts2.editor.client.events.UpdateValueSetVersionEvent;
 import mayo.edu.cts2.editor.client.events.UpdateValueSetVersionEventHandler;
-import mayo.edu.cts2.editor.client.widgets.search.SearchListGrid;
 import mayo.edu.cts2.editor.client.widgets.search.SearchValueSetsListGrid;
 import mayo.edu.cts2.editor.client.widgets.search.SearchWindow;
 
@@ -28,7 +30,7 @@ public class ValueSetContainer extends VLayout {
 	private static final String TITLE = "<em style=\"font-size:1.2em;font-weight:bold; margin-left:5px\">Value Sets</em>";
 
 	private static final int BUTTON_LAYOUT_HEIGHT = 25;
-	private static final String BUTTON_ADD_TITLE = "Add...";
+	private static final String BUTTON_ADD_TITLE = "Add Existing...";
 
 	private final Label i_title;
 	private final ValueSetsListGrid i_valueSetsListGrid;
@@ -53,8 +55,7 @@ public class ValueSetContainer extends VLayout {
 			// addMember(buttonLayout); // don't need this add button at all.
 		}
 
-		createAddRecordEvent();
-		createUpdateRecordEvent();
+		createEventHandlers();
 	}
 
 	private HLayout createButtonLayout() {
@@ -70,14 +71,24 @@ public class ValueSetContainer extends VLayout {
 
 			@Override
 			public void onClick(ClickEvent event) {
-				String message = "Search for value sets.  Select the value sets by checking the checkbox and then click Add to add them.";
-				i_searchWindow = new SearchWindow(new SearchValueSetsListGrid(), message);
+				i_searchWindow = new SearchWindow();
 				i_searchWindow.setInitialFocus();
 				i_searchWindow.show();
 			}
 		});
 
+		IButton createButton = new IButton("Create New...");
+		createButton.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent event) {
+				CreateValueSetWindow metadataWindow = new CreateValueSetWindow();
+				metadataWindow.show();
+				metadataWindow.setInitialFocus();
+			}
+		});
+
 		layout.addMember(i_addButton);
+		layout.addMember(createButton);
 
 		return layout;
 	}
@@ -95,6 +106,12 @@ public class ValueSetContainer extends VLayout {
 		return titleLabel;
 	}
 
+	private void createEventHandlers() {
+		createAddRecordEvent();
+		createUpdateRecordEvent();
+		createNewValueSetEvent();
+	}
+
 	private void createAddRecordEvent() {
 
 		Cts2Editor.EVENT_BUS.addHandler(AddRecordsEvent.TYPE, new AddRecordsEventHandler() {
@@ -106,21 +123,17 @@ public class ValueSetContainer extends VLayout {
 					return;
 				}
 
-				SearchListGrid listGrid = i_searchWindow.getSearchListGrid();
-				if (listGrid instanceof SearchValueSetsListGrid) {
-					SearchValueSetsListGrid searchValueSetsListGrid = (SearchValueSetsListGrid) listGrid;
+					SearchValueSetsListGrid searchValueSetsListGrid = i_searchWindow.getSearchListGrid();
 
 					Record[] records = searchValueSetsListGrid.getRecords();
 					for (int i = 0; i < records.length; i++) {
 
 						// if the checkbox is checked, then we need to add this
 						// record
-						if (records[i].getAttributeAsBoolean(SearchListGrid.ID_ADD)) {
+						if (records[i].getAttributeAsBoolean(SearchValueSetsListGrid.ID_ADD)) {
 							addValueSetRecord(records[i]);
 						}
 					}
-
-				}
 			}
 		});
 
@@ -148,6 +161,21 @@ public class ValueSetContainer extends VLayout {
 					i_valueSetsListGrid.updateRecord(recordToUpdate, valueSetId, versionId, comment, changeSetId,
 					        documentUri);
 				}
+			}
+		});
+	}
+
+	private void createNewValueSetEvent() {
+		Cts2Editor.EVENT_BUS.addHandler(NewValueSetCreatedEvent.TYPE, new NewValueSetCreatedEventHandler() {
+			@Override
+			public void onNewValueSetCreated(NewValueSetCreatedEvent event) {
+				/* TODO: Deal with new value set. */
+				SC.say("New Value Set created:<br/>VS:<br/>Name: " + event.getDefinition().getValueSetOid()
+				+ "<br/>Uri: " + event.getDefinition().getValueSetUri()
+				+ "<br/>DefName: " + event.getDefinition().getName()
+				+ "<br/>DefVersion: " + event.getDefinition().getVersion()
+				+ "<br/>Entities: " + event.getDefinition().getEntries().size());
+			i_valueSetsListGrid.createNewRecord(event.getDefinition().getName(), event.getDefinition().getValueSetOid(), "");
 			}
 		});
 	}

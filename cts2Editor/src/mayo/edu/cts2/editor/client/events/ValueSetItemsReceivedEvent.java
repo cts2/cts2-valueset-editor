@@ -13,6 +13,6 @@ public class ValueSetItemsReceivedEvent extends GwtEvent<ValueSetItemsReceivedEv
 
 	@Override
 	protected void dispatch(ValueSetItemsReceivedEventHandler handler) {
-		handler.onValueSetItemssReceived(this);
+		handler.onValueSetItemsReceived(this);
 	}
 }

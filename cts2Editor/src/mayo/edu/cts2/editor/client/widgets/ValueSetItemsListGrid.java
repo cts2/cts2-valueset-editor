@@ -1,5 +1,6 @@
 package mayo.edu.cts2.editor.client.widgets;
 
+import mayo.edu.cts2.editor.client.Cts2Editor;
 import mayo.edu.cts2.editor.client.datasource.ValueSetItemXmlDS;
 
 import com.smartgwt.client.data.Criteria;
@@ -20,6 +21,8 @@ import com.smartgwt.client.widgets.grid.ListGrid;
 import com.smartgwt.client.widgets.grid.ListGridField;
 import com.smartgwt.client.widgets.grid.ListGridRecord;
 import com.smartgwt.client.widgets.layout.HLayout;
+import mayo.edu.cts2.editor.client.events.AddSelectedEntitiesEvent;
+import mayo.edu.cts2.editor.client.events.AddSelectedEntitiesEventHandler;
 
 public class ValueSetItemsListGrid extends ListGrid {
 
@@ -32,16 +35,18 @@ public class ValueSetItemsListGrid extends ListGrid {
 
 	public static final String ID_PK = "primaryKey";
 	public static final String ID_URI = "uri";
-	public static final String ID_NAME_SPACE = "nameSpace";
+	public static final String ID_NAME_SPACE = "namespace";
 	public static final String ID_NAME = "name";
 	public static final String ID_DESIGNATION = "designation";
 	public static final String ID_ACTION = "action";
 	public static final String ID_HIDDEN_ACTION = "hiddenValue";
+	public static final String ID_CODE_SYSTEM_VERSION = "codeSystemVersion";
 
 	public static final String TITLE_NAME_SPACE = "Code System Name";
 	public static final String TITLE_NAME = "Code";
 	public static final String TITLE_DESIGNATION = "Description";
 	public static final String TITLE_ACTION = "Action";
+	public static final String TITLE_CODE_SYSTEM_VERSION = "Code System Version";
 
 	public ValueSetItemsListGrid() {
 		super();
@@ -76,6 +81,9 @@ public class ValueSetItemsListGrid extends ListGrid {
 		nameSpaceField.setShowHover(false);
 		nameSpaceField.setCanEdit(false);
 
+		ListGridField codeSystemVersion = new ListGridField(ID_CODE_SYSTEM_VERSION, TITLE_CODE_SYSTEM_VERSION);
+		codeSystemVersion.setHidden(true);
+
 		ListGridField nameField = new ListGridField(ID_NAME, TITLE_NAME);
 		nameField.setWrap(false);
 		nameField.setWidth("25%");
@@ -89,15 +97,19 @@ public class ValueSetItemsListGrid extends ListGrid {
 
 		ListGridField actionField = new ListGridField(ID_ACTION, TITLE_ACTION);
 		actionField.setWrap(false);
-		actionField.setWidth("*");
+		actionField.setWidth("126px");
 		actionField.setCanEdit(false);
 		actionField.setAttribute(ID_HIDDEN_ACTION, ACTION_NONE);
+		if (Cts2Editor.getReadOnly())
+			actionField.setHidden(true);
 
-		setFields(nameField, nameSpaceField, designationField, actionField);
+		setFields(nameField, designationField, nameSpaceField, actionField, codeSystemVersion);
 		setAutoFetchData(true);
 
 		setCanDragResize(true);
 		setDragAppearance(DragAppearance.TARGET);
+
+		addEventhandlers();
 	}
 
 	@Override
@@ -256,7 +268,7 @@ public class ValueSetItemsListGrid extends ListGrid {
 	 * @param codeSystemName
 	 * @param designation
 	 */
-	public void createNewRecord(String href, String code, String codeSystemName, String designation) {
+	public void createNewRecord(String href, String code, String codeSystemName, String codeSystemVersion, String designation) {
 
 		ListGridRecord newRecord = new ListGridRecord();
 
@@ -267,7 +279,7 @@ public class ValueSetItemsListGrid extends ListGrid {
 		newRecord.setAttribute(ID_NAME, code);
 		newRecord.setAttribute(ID_NAME_SPACE, codeSystemName);
 		newRecord.setAttribute(ID_DESIGNATION, designation);
-		newRecord.setAttribute(ID_PK, ((ValueSetItemXmlDS) getDataSource()).nextPrimaryKey());
+		newRecord.setAttribute("codeSystemVersion", codeSystemVersion);
 
 		// add a hidden attribute to indicate it was added.
 		newRecord.setAttribute(ID_HIDDEN_ACTION, ACTION_ADD);
@@ -286,6 +298,15 @@ public class ValueSetItemsListGrid extends ListGrid {
 		undoImg.setWidth(16);
 
 		return undoImg;
+	}
+
+	private void addEventhandlers() {
+		Cts2Editor.EVENT_BUS.addHandler(AddSelectedEntitiesEvent.TYPE, new AddSelectedEntitiesEventHandler() {
+			@Override
+			public void onSelectedEntriesAdded(AddSelectedEntitiesEvent event) {
+				setData(event.getSelectedEntites());
+			}
+		});
 	}
 
 }

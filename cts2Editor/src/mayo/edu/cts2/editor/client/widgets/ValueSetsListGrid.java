@@ -94,16 +94,18 @@ public class ValueSetsListGrid extends BaseValueSetsListGrid {
 		});
 
 		ListGridField versionsChangeField = new ListGridField(ID_CHANGE_VERSION, TITLE_CHANGE_VERSION);
-		versionsChangeField.setWidth("20%");
+		versionsChangeField.setWidth("64px");
 		versionsChangeField.setWrap(false);
 		versionsChangeField.setShowHover(true);
 		versionsChangeField.setCanEdit(false);
 
 		ListGridField actionField = new ListGridField(ID_ACTION, TITLE_ACTION);
 		actionField.setWrap(false);
-		actionField.setWidth("*");
+		actionField.setWidth("126px");
 		actionField.setCanEdit(false);
 		actionField.setAttribute(ID_HIDDEN_ACTION, ACTION_NONE);
+		if (Cts2Editor.getReadOnly())
+			actionField.setHidden(true);
 
 		setFields(formalNameField, resourceNamefField, currentVersionField, versionsChangeField, actionField);
 
@@ -204,8 +206,10 @@ public class ValueSetsListGrid extends BaseValueSetsListGrid {
 
 		String oid = record.getAttribute("valueSetName");
 
-		// create a unique ID for the datasource id.
-		oid = oid.trim().replace('.', '_');
+		/* create a unique ID for the datasource id.
+		   Note: Valid ID's must meet the following pattern [a-zA-Z_$][0-9a-zA-Z_$]*
+		   Therefore replace non-valid characters with an underscore */
+		oid = oid.trim().replaceAll("[^0-9A-Za-z_]", "_");
 		oid = "ValueSetItemXmlDS" + oid;
 
 		return ValueSetItemXmlDS.getInstance(oid);
@@ -303,7 +307,7 @@ public class ValueSetsListGrid extends BaseValueSetsListGrid {
 	/**
 	 * Call the search to get the matching data.
 	 * 
-	 * @param searchText
+	 * @param xmlData
 	 */
 	public void populateData(String xmlData) {
 

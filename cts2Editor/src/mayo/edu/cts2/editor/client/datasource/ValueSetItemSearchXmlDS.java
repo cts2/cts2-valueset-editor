@@ -20,9 +20,11 @@ public class ValueSetItemSearchXmlDS extends BaseValueSetItemSearchXmlDS {
 	private static final String X_PATH_NUMBER_OF_ENTRIES = "/cts2:EntityDirectory/@numEntries";
 	private static final String X_PATH_COMPLETE = "/cts2:EntityDirectory/@complete";
 
-	private static final String X_PATH_ENTRY_NAMESPACE = "core:name/core:namespace";
 	private static final String X_PATH_ENTRY_NAME = "core:name/core:name";
 	private static final String X_PATH_DESIGNATION = "core:knownEntityDescription/core:designation";
+	private static final String
+	  X_PATH_CODE_SYSTEM = "core:knownEntityDescription/core:describingCodeSystemVersion/core:codeSystem";
+	private static final String X_PATH_CODE_SYSTEM_VERSION = "core:knownEntityDescription/core:describingCodeSystemVersion/core:version";
 
 	private static ValueSetItemSearchXmlDS instance = null;
 
@@ -48,11 +50,12 @@ public class ValueSetItemSearchXmlDS extends BaseValueSetItemSearchXmlDS {
 		DataSourceTextField completeField = new DataSourceTextField("complete", "Complete");
 		completeField.setValueXPath(X_PATH_COMPLETE);
 
-		DataSourceTextField hrefField = new DataSourceTextField("href", "HREF");
-		hrefField.setPrimaryKey(true);
+		DataSourceTextField uriField = new DataSourceTextField("uri", "URI");
+		uriField.setValueXPath("@about");
+		uriField.setPrimaryKey(true);
 
-		DataSourceTextField nameSpaceField = new DataSourceTextField("nameSpace", "Code System Version");
-		nameSpaceField.setValueXPath(X_PATH_ENTRY_NAMESPACE);
+		DataSourceTextField codeSystemField = new DataSourceTextField("namespace", "Code System");
+		codeSystemField.setValueXPath(X_PATH_CODE_SYSTEM);
 
 		DataSourceTextField nameField = new DataSourceTextField("name", "Code");
 		nameField.setValueXPath(X_PATH_ENTRY_NAME);
@@ -60,7 +63,10 @@ public class ValueSetItemSearchXmlDS extends BaseValueSetItemSearchXmlDS {
 		DataSourceTextField designationField = new DataSourceTextField("designation", "Description");
 		designationField.setValueXPath(X_PATH_DESIGNATION);
 
-		setFields(nbrOfEntriesField, completeField, hrefField, nameSpaceField, nameField, designationField);
+		DataSourceTextField codeSystemVersionField = new DataSourceTextField("codeSystemVersion", "Code System Version");
+		codeSystemVersionField.setValueXPath(X_PATH_CODE_SYSTEM_VERSION);
+
+		setFields(nbrOfEntriesField, completeField, uriField, codeSystemField, nameField, designationField, codeSystemVersionField);
 
 		setClientOnly(true);
 	}
@@ -69,9 +75,11 @@ public class ValueSetItemSearchXmlDS extends BaseValueSetItemSearchXmlDS {
 	public void fetchData(Criteria criteria, final DSCallback callback) {
 
 		final String searchText = criteria.getAttribute("searchText");
+		final String codeSystem = criteria.getAttribute("codeSystem");
+		final String codeSystemVersion = criteria.getAttribute("codeSystemVersion");
 
 		Cts2EditorServiceAsync service = GWT.create(Cts2EditorService.class);
-		service.getMatchingEntities(searchText, new AsyncCallback<String>() {
+		service.getMatchingEntities(codeSystem, codeSystemVersion, searchText, new AsyncCallback<String>() {
 
 			@Override
 			public void onSuccess(String result) {

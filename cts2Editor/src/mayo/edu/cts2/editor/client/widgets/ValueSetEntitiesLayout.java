@@ -14,9 +14,9 @@ import mayo.edu.cts2.editor.client.events.SaveAsEvent;
 import mayo.edu.cts2.editor.client.events.SaveAsEventHandler;
 import mayo.edu.cts2.editor.client.events.UpdateValueSetVersionEvent;
 import mayo.edu.cts2.editor.client.utils.ModalWindow;
-import mayo.edu.cts2.editor.client.widgets.search.SearchListGrid;
+import mayo.edu.cts2.editor.client.widgets.search.EntitySearchWindow;
 import mayo.edu.cts2.editor.client.widgets.search.SearchValueSetItemsListGrid;
-import mayo.edu.cts2.editor.client.widgets.search.SearchWindow;
+import mayo.edu.cts2.editor.client.widgets.search.SearchValueSetsListGrid;
 import mayo.edu.cts2.editor.shared.CTS2Result;
 import mayo.edu.cts2.editor.shared.Definition;
 import mayo.edu.cts2.editor.shared.DefinitionEntry;
@@ -46,31 +46,19 @@ import com.smartgwt.client.widgets.layout.VLayout;
  */
 public class ValueSetEntitiesLayout extends VLayout {
 
-	private static final String TITLE_ENTITIES = "Entities";
-
-	private static final String HINT_ADD = "Add one or more value set entries";
-	private static final String HINT_DELETE = "Delete one or more value set entries";
-	private static final String HINT_SAVE_AS = "Save the value set as a new branch";
-	private static final String HINT_SAVE = "Save the value set on the current branch";
-	private static final String HINT_CLOSE = "Close the value set entries list";
-
 	private final ListGridRecord i_valueSetRecord;
-
-	private boolean i_additionsMade = false;
-	private boolean i_removalsMade = false;
-	private final ValueSetItemsListGrid i_valueSetItemsListGrid;
-	private SearchWindow i_searchWindow;
 	private final ListGrid i_parentGrid;
-
-	private final IButton i_addButton;
-	private final IButton i_deleteButton;
+	private final ValueSetItemsListGrid i_valueSetItemsListGrid;
+	private final IButton i_editButton;
+//	private final IButton i_deleteButton;
 	private final IButton i_saveButton;
 	private final IButton i_saveAsButton;
 	private final IButton i_closeButton;
 
+	private boolean i_additionsMade = false;
+	private boolean i_removalsMade = false;
+	private EntitySearchWindow i_searchWindow;
 	private ModalWindow i_busyIndicator;
-
-	// private boolean i_okToClose = false;
 
 	public ValueSetEntitiesLayout(final ListGridRecord record, DataSource childDatasource, final ListGrid parentGrid) {
 		super();
@@ -85,6 +73,7 @@ public class ValueSetEntitiesLayout extends VLayout {
 		addMember(titleLabel);
 
 		i_valueSetItemsListGrid = new ValueSetItemsListGrid();
+		i_valueSetItemsListGrid.setHeight(500);
 
 		i_valueSetItemsListGrid.setDataSource(childDatasource);
 		i_valueSetItemsListGrid.fetchData(criteria);
@@ -95,16 +84,23 @@ public class ValueSetEntitiesLayout extends VLayout {
 		buttonLayout.setMargin(5);
 		buttonLayout.setAlign(Alignment.CENTER);
 
-		i_addButton = new IButton("Add...");
-		i_addButton.setTop(250);
-		i_addButton.setShowHover(true);
-		i_addButton.setPrompt(HINT_ADD);
-		i_addButton.addClickHandler(new ClickHandler() {
+		i_editButton = new IButton("Edit...");
+		i_editButton.setTop(250);
+		i_editButton.setShowHover(true);
+		i_editButton.setPrompt("Add one or more value set entries");
+		i_editButton.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
-				String message = "Search for entities.  Select the entities by checking the checkbox.  Start typing in the search field to retrieve search results.";
-				i_searchWindow = new SearchWindow(new SearchValueSetItemsListGrid(), message);
-				i_searchWindow.setInitialFocus();
+				i_searchWindow = new EntitySearchWindow(i_valueSetItemsListGrid.getRecords());
+				i_searchWindow.getCloseButton().addClickHandler(new ClickHandler() {
+					@Override
+					public void onClick(ClickEvent clickEvent) {
+						i_valueSetItemsListGrid.setData(i_searchWindow.getSelectedEntitiesAsRecords());
+						i_saveButton.setDisabled(disableSave(i_valueSetRecord) || false);
+						i_saveAsButton.setDisabled(false);
+						i_additionsMade = true;
+					}
+				});
 				i_searchWindow.show();
 			}
 		});
@@ -112,7 +108,7 @@ public class ValueSetEntitiesLayout extends VLayout {
 		i_saveButton = new IButton("Save");
 		i_saveButton.setTop(250);
 		i_saveButton.setShowHover(true);
-		i_saveButton.setPrompt(HINT_SAVE);
+		i_saveButton.setPrompt("Save the value set on the current branch");
 		i_saveButton.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
@@ -126,7 +122,7 @@ public class ValueSetEntitiesLayout extends VLayout {
 
 		i_saveAsButton = new IButton("Save As...");
 		i_saveAsButton.setTop(250);
-		i_saveAsButton.setPrompt(HINT_SAVE_AS);
+		i_saveAsButton.setPrompt("Save the value set as a new branch");
 		i_saveAsButton.setShowHover(true);
 		i_saveAsButton.addClickHandler(new ClickHandler() {
 			@Override
@@ -135,9 +131,9 @@ public class ValueSetEntitiesLayout extends VLayout {
 			}
 		});
 
-		i_closeButton = new IButton("Close");
+		i_closeButton = new IButton("Cancel");
 		i_closeButton.setShowHover(true);
-		i_closeButton.setPrompt(HINT_CLOSE);
+		i_closeButton.setPrompt("Discard changes and close the value set entries list");
 		i_closeButton.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
@@ -153,41 +149,41 @@ public class ValueSetEntitiesLayout extends VLayout {
 			}
 		});
 
-		i_deleteButton = new IButton("Delete Row(s)");
-		i_deleteButton.setTop(250);
-		i_deleteButton.setShowHover(true);
-		i_deleteButton.setPrompt(HINT_DELETE);
-		i_deleteButton.addClickHandler(new ClickHandler() {
-			@Override
-			public void onClick(ClickEvent event) {
-
-				i_removalsMade = true;
-
-				// enable these buttons.
-				i_saveButton.setDisabled(disableSave(i_valueSetRecord) || false);
-				i_saveAsButton.setDisabled(false);
-
-				ListGridRecord[] records = i_valueSetItemsListGrid.getSelectedRecords();
-				for (ListGridRecord selectedRecord : records) {
-					selectedRecord.setAttribute(ValueSetItemsListGrid.ID_HIDDEN_ACTION,
-					        ValueSetItemsListGrid.ACTION_DELETE);
-					i_valueSetItemsListGrid.updateData(selectedRecord);
-				}
-
-				// refresh the icons in Action column
-				i_valueSetItemsListGrid.invalidateRecordComponents();
-				i_deleteButton.setDisabled(true);
-			}
-		});
-
-		// default these buttons to disabled.
-		i_deleteButton.setDisabled(true);
+//		i_deleteButton = new IButton("Delete Row(s)");
+//		i_deleteButton.setTop(250);
+//		i_deleteButton.setShowHover(true);
+//		i_deleteButton.setPrompt("Delete one or more value set entries");
+//		i_deleteButton.addClickHandler(new ClickHandler() {
+//			@Override
+//			public void onClick(ClickEvent event) {
+//
+//				i_removalsMade = true;
+//
+//				// enable these buttons.
+//				i_saveButton.setDisabled(disableSave(i_valueSetRecord) || false);
+//				i_saveAsButton.setDisabled(false);
+//
+//				ListGridRecord[] records = i_valueSetItemsListGrid.getSelectedRecords();
+//				for (ListGridRecord selectedRecord : records) {
+//					selectedRecord.setAttribute(ValueSetItemsListGrid.ID_HIDDEN_ACTION,
+//					        ValueSetItemsListGrid.ACTION_DELETE);
+//					i_valueSetItemsListGrid.updateData(selectedRecord);
+//				}
+//
+//				// refresh the icons in Action column
+//				i_valueSetItemsListGrid.invalidateRecordComponents();
+//				i_deleteButton.setDisabled(true);
+//			}
+//		});
+//
+//		// default these buttons to disabled.
+//		i_deleteButton.setDisabled(true);
 		i_saveButton.setDisabled(true);
 		i_saveAsButton.setDisabled(true);
 
 		// add the buttons to the layout
-		buttonLayout.addMember(i_addButton);
-		buttonLayout.addMember(i_deleteButton);
+		buttonLayout.addMember(i_editButton);
+//		buttonLayout.addMember(i_deleteButton);
 		buttonLayout.addMember(i_saveButton);
 		buttonLayout.addMember(i_saveAsButton);
 		buttonLayout.addMember(i_closeButton);
@@ -198,28 +194,28 @@ public class ValueSetEntitiesLayout extends VLayout {
 		}
 
 		// listen for selection changes to update the buttons
-		i_valueSetItemsListGrid.addSelectionUpdatedHandler(new SelectionUpdatedHandler() {
-
-			@Override
-			public void onSelectionUpdated(SelectionUpdatedEvent event) {
-				ListGridRecord[] records = i_valueSetItemsListGrid.getSelectedRecords();
-
-				boolean disableDelete = false;
-				String hiddenAction;
-
-				for (Record record : records) {
-
-					hiddenAction = record.getAttribute(ValueSetItemsListGrid.ID_HIDDEN_ACTION);
-					if (hiddenAction != null
-					        && (hiddenAction.equals(ValueSetItemsListGrid.ACTION_ADD) || hiddenAction
-					                .equals(ValueSetItemsListGrid.ACTION_DELETE))) {
-						disableDelete = true;
-						break;
-					}
-				}
-				i_deleteButton.setDisabled(disableDelete);
-			}
-		});
+//		i_valueSetItemsListGrid.addSelectionUpdatedHandler(new SelectionUpdatedHandler() {
+//
+//			@Override
+//			public void onSelectionUpdated(SelectionUpdatedEvent event) {
+//				ListGridRecord[] records = i_valueSetItemsListGrid.getSelectedRecords();
+//
+//				boolean disableDelete = false;
+//				String hiddenAction;
+//
+//				for (Record record : records) {
+//
+//					hiddenAction = record.getAttribute(ValueSetItemsListGrid.ID_HIDDEN_ACTION);
+//					if (hiddenAction != null
+//					        && (hiddenAction.equals(ValueSetItemsListGrid.ACTION_ADD) || hiddenAction
+//					                .equals(ValueSetItemsListGrid.ACTION_DELETE))) {
+//						disableDelete = true;
+//						break;
+//					}
+//				}
+//				i_deleteButton.setDisabled(disableDelete);
+//			}
+//		});
 
 		createAddRecordEvent();
 		createSaveAsEvent();
@@ -295,7 +291,7 @@ public class ValueSetEntitiesLayout extends VLayout {
 	 * @return
 	 */
 	private Label getTitleLabel() {
-		Label label = new Label("<b>" + TITLE_ENTITIES + "</b>");
+		Label label = new Label("<b>Entities</b>");
 		label.setWidth100();
 		label.setHeight(25);
 
@@ -313,9 +309,7 @@ public class ValueSetEntitiesLayout extends VLayout {
 					return;
 				}
 
-				SearchListGrid listGrid = i_searchWindow.getSearchListGrid();
-				if (listGrid instanceof SearchValueSetItemsListGrid) {
-					SearchValueSetItemsListGrid searchValueSetItemsListGrid = (SearchValueSetItemsListGrid) listGrid;
+					SearchValueSetItemsListGrid searchValueSetItemsListGrid = i_searchWindow.getSearchListGrid();
 
 					DebugPanel.log(
 					        DebugPanel.DEBUG,
@@ -327,7 +321,7 @@ public class ValueSetEntitiesLayout extends VLayout {
 
 						// if the checkbox is checked, then we need to add this
 						// record
-						if (records[i].getAttributeAsBoolean(SearchListGrid.ID_ADD)) {
+						if (records[i].getAttributeAsBoolean(SearchValueSetsListGrid.ID_ADD)) {
 							addValueSetRecord(records[i]);
 						}
 					}
@@ -336,7 +330,6 @@ public class ValueSetEntitiesLayout extends VLayout {
 					i_saveButton.setDisabled(disableSave(i_valueSetRecord) || false);
 					i_saveAsButton.setDisabled(false);
 					i_additionsMade = true;
-				}
 			}
 		});
 	}
@@ -349,13 +342,14 @@ public class ValueSetEntitiesLayout extends VLayout {
 	private void addValueSetRecord(Record record) {
 
 		String code = record.getAttribute(SearchValueSetItemsListGrid.ID_NAME);
-		String codeSystemName = record.getAttribute(SearchValueSetItemsListGrid.ID_NAME_SPACE);
+		String codeSystemName = record.getAttribute(SearchValueSetItemsListGrid.ID_CODE_SYSTEM);
 		String designation = record.getAttribute(SearchValueSetItemsListGrid.ID_DESIGNATION);
+		String codeSystemVersion = record.getAttribute("codeSystemVersion");
 
 		// this will be used as the PK
-		String href = record.getAttribute(SearchValueSetItemsListGrid.ID_HREF);
+		String href = record.getAttribute(SearchValueSetItemsListGrid.ID_URI);
 
-		i_valueSetItemsListGrid.createNewRecord(href, code, codeSystemName, designation);
+		i_valueSetItemsListGrid.createNewRecord(href, code, codeSystemName, codeSystemVersion, designation);
 		DebugPanel.log(DebugPanel.DEBUG, "Adding Value Set Entry with code = " + code + " codeSystemName = "
 		        + codeSystemName + " and designation = " + designation);
 	}
@@ -440,7 +434,7 @@ public class ValueSetEntitiesLayout extends VLayout {
 	 * Take changes to the value set entries and call SaveAs.
 	 * 
 	 * @param definition
-	 * @param comment
+	 * @param newComment
 	 */
 	private void saveAsValueSetEntities(Definition definition, final String newComment) {
 
@@ -564,12 +558,12 @@ public class ValueSetEntitiesLayout extends VLayout {
 
 				String uri = record.getAttribute(ValueSetItemsListGrid.ID_URI);
 				String name = record.getAttribute(ValueSetItemsListGrid.ID_NAME);
-				String nameSpace = record.getAttribute(ValueSetItemsListGrid.ID_NAME_SPACE);
+				String namespace = record.getAttribute(ValueSetItemsListGrid.ID_NAME_SPACE);
 
 				DefinitionEntry definitionEntry = new DefinitionEntry();
 
 				definitionEntry.setName(name);
-				definitionEntry.setNamespace(nameSpace);
+				definitionEntry.setNamespace(namespace);
 				definitionEntry.setUri(uri);
 
 				entries.add(definitionEntry);

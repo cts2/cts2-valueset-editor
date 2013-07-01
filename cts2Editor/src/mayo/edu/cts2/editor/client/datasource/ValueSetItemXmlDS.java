@@ -28,11 +28,16 @@ public class ValueSetItemXmlDS extends BaseValueSetItemXmlDS {
 
 	private static final Logger logger = Logger.getLogger(ValueSetItemXmlDS.class.getName());
 
-	private static final String RECORD_X_PATH = "/cts2:IteratableResolvedValueSet/cts2:entry";
+	private static final String X_PATH_ROOT = "/cts2:IteratableResolvedValueSet";
+	private static final String RECORD_X_PATH = X_PATH_ROOT + "/cts2:entry";
 
 	private static final String X_PATH_ENTRY_NAMESPACE = "core:namespace";
 	private static final String X_PATH_ENTRY_NAME = "core:name";
 	private static final String X_PATH_DESIGNATION = "core:designation";
+	private static final String X_PATH_CODE_SYSTEM = X_PATH_ROOT + "/cts2:resolutionInfo/cts2:resolvedUsingCodeSystem";
+	private static final String X_PATH_CODE_SYSTEM_NAME = X_PATH_CODE_SYSTEM + "/core:codeSystem";
+	private static final String X_PATH_CODE_SYSTEM_VERSION = X_PATH_CODE_SYSTEM + "/core:version";
+
 
 	private static final HashMap<String, ValueSetItemXmlDS> i_instances = new HashMap<String, ValueSetItemXmlDS>();
 
@@ -75,13 +80,11 @@ public class ValueSetItemXmlDS extends BaseValueSetItemXmlDS {
 		// set the XPath
 		setRecordXPath(RECORD_X_PATH);
 
-		DataSourceTextField pkField = new DataSourceTextField("primaryKey", "primaryKey");
-		pkField.setPrimaryKey(true);
-
 		DataSourceTextField uriField = new DataSourceTextField("uri", "URI");
-		// uriField.setPrimaryKey(true);
+		uriField.setValueXPath("@about");
+		uriField.setPrimaryKey(true);
 
-		DataSourceTextField nameSpaceField = new DataSourceTextField("nameSpace", "Code System Version");
+		DataSourceTextField nameSpaceField = new DataSourceTextField("namespace", "Code System");
 		nameSpaceField.setValueXPath(X_PATH_ENTRY_NAMESPACE);
 
 		DataSourceTextField nameField = new DataSourceTextField("name", "Code");
@@ -90,7 +93,10 @@ public class ValueSetItemXmlDS extends BaseValueSetItemXmlDS {
 		DataSourceTextField designationField = new DataSourceTextField("designation", "Description");
 		designationField.setValueXPath(X_PATH_DESIGNATION);
 
-		setFields(pkField, uriField, nameSpaceField, nameField, designationField);
+		DataSourceTextField codeSystemVersionVersion = new DataSourceTextField("codeSystemVersion", "Code System Version");
+		codeSystemVersionVersion.setValueXPath(X_PATH_CODE_SYSTEM_VERSION);
+
+		setFields(uriField, nameSpaceField, nameField, designationField, codeSystemVersionVersion);
 
 		setClientOnly(true);
 	}
@@ -133,7 +139,7 @@ public class ValueSetItemXmlDS extends BaseValueSetItemXmlDS {
 
 							if (record != null) {
 								// generate our own primary key
-								record.setAttribute("primaryKey", nextPrimaryKey());
+//								record.setAttribute("primaryKey", nextPrimaryKey());
 
 								addData(record);
 							}
@@ -211,10 +217,16 @@ public class ValueSetItemXmlDS extends BaseValueSetItemXmlDS {
 		i_shouldGetData = getData;
 	}
 
-	public String nextPrimaryKey() {
-		if (i_randomString == null) {
-			i_randomString = new RandomString(20);
-		}
-		return i_randomString.nextString();
-	}
+//	public String nextPrimaryKey() {
+//		/* Primary Keys must match the pattern '[a-zA-Z_$][0-9a-zA-Z_$]*' */
+//		if (i_randomString == null) {
+//			i_randomString = new RandomString(20);
+//		}
+//		String id;
+//		do {
+//			id = i_randomString.nextString();
+//		} while (!id.matches("[a-zA-Z_$][0-9a-zA-Z_$]*"));
+//
+//		return id;
+//	}
 }
