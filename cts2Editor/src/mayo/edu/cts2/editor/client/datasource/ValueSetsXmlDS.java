@@ -72,8 +72,9 @@ public class ValueSetsXmlDS extends BaseValueSetXmlDS {
 	public void setData(String xmlData) {
 		Object results = XMLTools.selectNodes(xmlData, RECORD_X_PATH, i_nsMap);
 		Record[] fetchRecords = recordsFromXML(results);
+		int recordLength = fetchRecords != null ? fetchRecords.length : 0;
 
-		DebugPanel.log(DebugPanel.DEBUG, fetchRecords.length + " Value Sets retrieved");
+		DebugPanel.log(DebugPanel.DEBUG, recordLength + " Value Sets retrieved");
 
 		setTestData(fetchRecords);
 	}
