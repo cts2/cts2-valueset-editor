@@ -52,7 +52,7 @@ public class ValueSetContainer extends VLayout {
 
 		// Don't add the buttons if we are in readOnly mode.
 		if (!Cts2Editor.getReadOnly()) {
-			addMember(buttonLayout);
+			// addMember(buttonLayout); // don't need this add button at all.
 		}
 
 		createEventHandlers();

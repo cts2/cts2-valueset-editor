@@ -127,8 +127,9 @@ public class ValueSetItemXmlDS extends BaseValueSetItemXmlDS {
 
 					Object results = XMLTools.selectNodes(result, RECORD_X_PATH, i_nsMap);
 					Record[] fetchRecords = recordsFromXML(results);
+					int recordLength = fetchRecords != null ? fetchRecords.length : 0;
 
-					DebugPanel.log(DebugPanel.DEBUG, fetchRecords.length + " Value sets Entries retrieved.");
+					DebugPanel.log(DebugPanel.DEBUG, recordLength + " Value sets Entries retrieved.");
 
 					// setTestData(fetchRecords);
 
