@@ -491,12 +491,6 @@ public class EntitySearchWindow extends Window {
 						break;
 					}
 				}
-			}
-		});
-
-		Cts2Editor.EVENT_BUS.addHandler(SelectedEntityAddedEvent.TYPE, new SelectedEntityAddedEventHandler() {
-			@Override
-			public void onEntityAdded(SelectedEntityAddedEvent event) {
 				finishBtn.setDisabled(!selectedEntitiesListGrid.hasSelectedEntities());
 			}
 		});

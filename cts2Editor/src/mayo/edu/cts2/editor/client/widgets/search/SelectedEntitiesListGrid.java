@@ -135,7 +135,7 @@ public class SelectedEntitiesListGrid extends ListGrid {
 	}
 
 	public boolean hasSelectedEntities() {
-		return !getDataAsRecordList().isEmpty();
+		return getDataAsRecordList() != null && !getDataAsRecordList().isEmpty();
 	}
 
 	public void setSelectedEntities(Record[] entries) {
