@@ -1,5 +1,6 @@
 package mayo.edu.cts2.editor.client.widgets.search;
 
+import com.smartgwt.client.data.DSResponse;
 import com.smartgwt.client.data.Record;
 import com.smartgwt.client.types.ListGridFieldType;
 import com.smartgwt.client.widgets.grid.ListGrid;
@@ -19,6 +20,10 @@ import mayo.edu.cts2.editor.client.events.SelectedEntityRemovedEvent;
 public class SelectedEntitiesListGrid extends ListGrid {
 
 	private final SelectedEntitiesXmlDS selectedEntitiesXmlDS;
+	/* Using entries to track the number of entries in the grid.
+	 * I tried calling getRecords().length and selectedEntitiesXmlDS.getCacheData().length
+	 * but they weren't always returning the expected number. */
+	private int entries = 0;
 
 	public SelectedEntitiesListGrid() {
 		super();
@@ -69,9 +74,10 @@ public class SelectedEntitiesListGrid extends ListGrid {
 	}
 
 	public void clearData() {
-		selectedEntitiesXmlDS.setTestData(new Record[0]);
 		setData(new ListGridRecord[0]);
+		entries = 0;
 		refresh();
+		Cts2Editor.EVENT_BUS.fireEvent(new SelectedEntityRemovedEvent(""));
 	}
 
 	private void addEventHandlers() {
@@ -86,6 +92,7 @@ public class SelectedEntitiesListGrid extends ListGrid {
 				record.setAttribute("codeSystemVersion", event.getCodeSystemVersion());
 				addData(record);
 				refresh();
+				entries++;
 				Cts2Editor.EVENT_BUS.fireEvent(new SelectedEntityAddedEvent());
 			}
 		});
@@ -103,6 +110,7 @@ public class SelectedEntitiesListGrid extends ListGrid {
 		record.setAttribute("uri", href);
 		removeData(record);
 		refresh();
+		entries--;
 		Cts2Editor.EVENT_BUS.fireEvent(new SelectedEntityRemovedEvent(href));
 	}
 
@@ -135,12 +143,13 @@ public class SelectedEntitiesListGrid extends ListGrid {
 	}
 
 	public boolean hasSelectedEntities() {
-		return getDataAsRecordList() != null && !getDataAsRecordList().isEmpty();
+		return entries > 0;
 	}
 
 	public void setSelectedEntities(Record[] entries) {
 		for (Record entry : entries) {
 			addData(entry);
+			this.entries++;
 		}
 		refresh();
 		Cts2Editor.EVENT_BUS.fireEvent(new SelectedEntityAddedEvent());

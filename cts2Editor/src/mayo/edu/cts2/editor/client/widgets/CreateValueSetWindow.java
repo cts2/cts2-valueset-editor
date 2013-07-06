@@ -41,7 +41,7 @@ public class CreateValueSetWindow extends Window {
 	private IButton cancelBtn;
 	private IButton entitiesBtn;
 	private Label entitiesLbl;
-	private EntitySearchWindow entitySearchWindow = new EntitySearchWindow();
+	private EntitySearchWindow entitySearchWindow;
 
 	public CreateValueSetWindow() {
 		super();

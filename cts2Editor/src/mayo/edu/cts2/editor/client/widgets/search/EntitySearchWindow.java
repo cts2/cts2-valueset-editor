@@ -5,6 +5,8 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.smartgwt.client.core.DataClass;
 import com.smartgwt.client.data.Record;
 import com.smartgwt.client.data.RecordList;
+import com.smartgwt.client.util.BooleanCallback;
+import com.smartgwt.client.util.SC;
 import com.smartgwt.client.widgets.form.fields.PickerIcon;
 import com.smartgwt.client.widgets.form.fields.SelectItem;
 import com.smartgwt.client.widgets.form.fields.events.ChangedEvent;
@@ -47,6 +49,7 @@ import mayo.edu.cts2.editor.client.events.ValueSetsReceivedEventHandler;
 import mayo.edu.cts2.editor.shared.DefinitionEntry;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class EntitySearchWindow extends Window {
@@ -58,8 +61,8 @@ public class EntitySearchWindow extends Window {
 	private Label rowsRetrievedLabel;
 	private SelectItem codeSystemCb;
 	private SelectItem codeSystemVersionCb;
-	protected Button finishBtn;
-	protected Button cancelBtn;
+	private Button finishBtn;
+	private Button cancelBtn;
 	private TextItem filterTi;
 	private PickerIcon searchPicker;
 	private SearchValueSetItemsListGrid searchListGrid;
@@ -202,7 +205,6 @@ public class EntitySearchWindow extends Window {
 		VLayout searchLayout = new VLayout();
 		searchLayout.setWidth100();
 		searchLayout.setHeight100();
-		searchLayout.setLayoutMargin(10);
 		searchLayout.setLayoutMargin(6);
 		searchLayout.setMembersMargin(15);
 		searchLayout.addMember(searchListGrid);
@@ -211,29 +213,20 @@ public class EntitySearchWindow extends Window {
 	}
 
 	private HLayout getButtons() {
-
-		// Buttons on the bottom
 		HLayout buttonLayout = new HLayout();
 		buttonLayout.setWidth100();
-		buttonLayout.setHeight(40);
+		buttonLayout.setAutoHeight();
 		buttonLayout.setLayoutMargin(6);
 		buttonLayout.setMembersMargin(10);
 		buttonLayout.setAlign(Alignment.RIGHT);
 
 		finishBtn = new Button("Finish");
-
-		// initially disable
 		finishBtn.setDisabled(true);
-
 		finishBtn.addClickHandler(new ClickHandler() {
 
 			@Override
 			public void onClick(ClickEvent event) {
-
-				// let others know that records are to be added.
 				Cts2Editor.EVENT_BUS.fireEvent(new AddSelectedEntitiesEvent(selectedEntitiesListGrid.getRecords()));
-
-				// hide the window, but don't destroy
 				hide();
 			}
 		});
@@ -243,7 +236,6 @@ public class EntitySearchWindow extends Window {
 
 			@Override
 			public void onClick(ClickEvent event) {
-				// close the window
 				destroy();
 			}
 		});
