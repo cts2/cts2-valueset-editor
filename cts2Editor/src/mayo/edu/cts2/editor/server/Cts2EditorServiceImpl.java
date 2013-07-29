@@ -24,6 +24,7 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import edu.mayo.cts2.framework.model.core.EntryDescription;
+import edu.mayo.cts2.framework.model.service.core.NameOrURI;
 import edu.mayo.cts2.framework.model.valueset.ValueSetCatalogEntry;
 import mayo.edu.cts2.editor.client.Cts2EditorService;
 import mayo.edu.cts2.editor.server.rest.Cts2Client;
@@ -353,9 +354,10 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 	 */
 	@Override
 	public CTS2Result saveDefinitionAs(Definition definition) throws IllegalArgumentException {
-		if (definition == null)
+		if (definition == null) {
+			logger.log(Level.WARNING, "Unable to save definition as: definition argument was null.");
 			throw new IllegalArgumentException("Argument can not be null.");
-
+		}
 		/* Set new random version */
 		definition.setVersion(UUID.randomUUID().toString());
 		return saveValueSetAs(toValueSetDefinition(definition));
@@ -442,13 +444,17 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 	 */
 	@Override
 	public void updateChangeSet(String uri, String creator, String changeInstructions) throws IllegalArgumentException {
-		if (uri == null || creator == null || changeInstructions == null)
+		if (uri == null || creator == null || changeInstructions == null) {
+			logger.log(Level.WARNING, "Unable to update change set, an argument was null: uri:" + uri + " creator:" + creator + " changeInstructions: " + changeInstructions);
 			throw new IllegalArgumentException("Arguments can not be null.");
+		}
 
 		UpdateChangeSetMetadataRequest metadata = new UpdateChangeSetMetadataRequest();
 
 		UpdatedCreator updatedCreator = new UpdatedCreator();
-		updatedCreator.setCreator(ModelUtils.nameOrUriFromName(creator));
+		NameOrURI nameOrUri = new NameOrURI();
+		nameOrUri.setName(creator);
+		updatedCreator.setCreator(nameOrUri);
 		metadata.setUpdatedCreator(updatedCreator);
 
 		UpdatedChangeInstructions updatedChangeInstructions = new UpdatedChangeInstructions();
@@ -665,54 +671,58 @@ public class Cts2EditorServiceImpl extends BaseEditorServlet implements Cts2Edit
 
 	private ValueSetDefinition toValueSetDefinition(Definition definition) {
 		ValueSetDefinition vsd = new ValueSetDefinition();
-		ValueSetReference valueSetReference = new ValueSetReference(definition.getValueSetOid());
-		valueSetReference.setUri(definition.getValueSetUri());
-		vsd.setDefinedValueSet(valueSetReference);
-		vsd.setDocumentURI(definition.getDocumentUri() == null || definition.getDocumentUri().trim().equals("") ? UUID
-		  .randomUUID().toString() : definition.getDocumentUri());
-		vsd.setAbout(definition.getAbout());
-		vsd.setFormalName(definition.getFormalName());
+		try {
+			ValueSetReference valueSetReference = new ValueSetReference(definition.getValueSetOid());
+			valueSetReference.setUri(definition.getValueSetUri());
+			vsd.setDefinedValueSet(valueSetReference);
+			vsd.setDocumentURI(definition.getDocumentUri() == null || definition.getDocumentUri().trim().equals("") ? UUID
+			  .randomUUID().toString() : definition.getDocumentUri());
+			vsd.setAbout(definition.getAbout());
+			vsd.setFormalName(definition.getFormalName());
 
 
-		EntryDescription desc = new EntryDescription();
-		desc.setValue(ModelUtils.toTsAnyType(definition.getResourceSynopsis()));
-		vsd.setResourceSynopsis(desc);
+			EntryDescription desc = new EntryDescription();
+			desc.setValue(ModelUtils.toTsAnyType(definition.getResourceSynopsis()));
+			vsd.setResourceSynopsis(desc);
 
-		VersionTagReference[] references = new VersionTagReference[]{new VersionTagReference(definition.getVersion())};
-		vsd.setVersionTag(references);
-		vsd.setState(FinalizableState.OPEN);
-		vsd.setOfficialReleaseDate(Calendar.getInstance().getTime());
+			VersionTagReference[] references = new VersionTagReference[]{new VersionTagReference(definition.getVersion())};
+			vsd.setVersionTag(references);
+			vsd.setState(FinalizableState.OPEN);
+			vsd.setOfficialReleaseDate(Calendar.getInstance().getTime());
 
-		ChangeableElementGroup group = new ChangeableElementGroup();
-		vsd.setChangeableElementGroup(group);
+			ChangeableElementGroup group = new ChangeableElementGroup();
+			vsd.setChangeableElementGroup(group);
 
-		SourceAndRoleReference snrr = new SourceAndRoleReference();
-		SourceReference sourceReference = new SourceReference();
-		sourceReference.setContent(definition.getCreator());
-		RoleReference roleReference = new RoleReference();
-		roleReference.setContent("creator");
-		roleReference.setUri("http://purl.org/dc/elements/1.1/creator");
-		snrr.setSource(sourceReference);
-		snrr.setRole(roleReference);
-		SourceAndRoleReference[] sourceAndRoleReferences = new SourceAndRoleReference[]{snrr};
-		vsd.setSourceAndRole(sourceAndRoleReferences);
+			SourceAndRoleReference snrr = new SourceAndRoleReference();
+			SourceReference sourceReference = new SourceReference();
+			sourceReference.setContent(definition.getCreator());
+			RoleReference roleReference = new RoleReference();
+			roleReference.setContent("creator");
+			roleReference.setUri("http://purl.org/dc/elements/1.1/creator");
+			snrr.setSource(sourceReference);
+			snrr.setRole(roleReference);
+			SourceAndRoleReference[] sourceAndRoleReferences = new SourceAndRoleReference[]{snrr};
+			vsd.setSourceAndRole(sourceAndRoleReferences);
 
-		Comment comment = new Comment();
-		comment.setType(NoteType.EDITORIALNOTE);
-		TsAnyType anyType = new TsAnyType();
-		anyType.setContent(definition.getNote());
-		comment.setValue(anyType);
-		vsd.setNote(new Comment[]{comment});
+			Comment comment = new Comment();
+			comment.setType(NoteType.EDITORIALNOTE);
+			TsAnyType anyType = new TsAnyType();
+			anyType.setContent(definition.getNote());
+			comment.setValue(anyType);
+			vsd.setNote(new Comment[]{comment});
 
-		SourceAndNotation snn = new SourceAndNotation();
-		snn.setSourceDocument("");
-		vsd.setSourceAndNotation(snn);
+			SourceAndNotation snn = new SourceAndNotation();
+			snn.setSourceDocument("");
+			vsd.setSourceAndNotation(snn);
 
-		edu.mayo.cts2.framework.model.valuesetdefinition.ValueSetDefinitionEntry entry = new edu.mayo.cts2.framework.model.valuesetdefinition.ValueSetDefinitionEntry();
-		entry.setOperator(SetOperator.UNION);
-		entry.setEntryOrder(1L);
-		entry.setEntityList(createEntityList(definition.getEntries()));
-		vsd.setEntry(new edu.mayo.cts2.framework.model.valuesetdefinition.ValueSetDefinitionEntry[]{entry});
+			edu.mayo.cts2.framework.model.valuesetdefinition.ValueSetDefinitionEntry entry = new edu.mayo.cts2.framework.model.valuesetdefinition.ValueSetDefinitionEntry();
+			entry.setOperator(SetOperator.UNION);
+			entry.setEntryOrder(1L);
+			entry.setEntityList(createEntityList(definition.getEntries()));
+			vsd.setEntry(new edu.mayo.cts2.framework.model.valuesetdefinition.ValueSetDefinitionEntry[]{entry});
+		} catch (Exception e) {
+			logger.log(Level.WARNING, "Unable to convert to value set definition.", e);
+		}
 
 		return vsd;
 	}
