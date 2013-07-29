@@ -28,7 +28,7 @@ public class SaveAsWindow extends Window {
 	private static final String MESSASE = "Add a Comment to the New Value Set Version.";
 
 	private static final int WIDTH = 500;
-	private static final int HEIGHT = 300;
+	private static final int HEIGHT = 325;
 
 	private static final int FORM_WIDGTET_WIDTH = 300;
 
@@ -127,15 +127,18 @@ public class SaveAsWindow extends Window {
 
 		StaticTextItem staticTextItemCurrentComment = new StaticTextItem("currentComment", "Current Comment");
 		staticTextItemCurrentComment.setWrap(false);
+		staticTextItemCurrentComment.setWrapTitle(false);
 		staticTextItemCurrentComment.setValue(i_comment);
 		staticTextItemCurrentComment.setWidth(FORM_WIDGTET_WIDTH);
 
 		StaticTextItem staticTextItemCurrentVersion = new StaticTextItem("currentVersion", "Current Version");
+		staticTextItemCurrentComment.setWrapTitle(false);
 		staticTextItemCurrentComment.setWrap(false);
 		staticTextItemCurrentVersion.setValue(i_version);
 		staticTextItemCurrentVersion.setWidth(FORM_WIDGTET_WIDTH);
 
 		StaticTextItem staticTextItemCurrentCreator = new StaticTextItem("currentCreator", "Creator");
+		staticTextItemCurrentCreator.setWrapTitle(false);
 		staticTextItemCurrentCreator.setWrap(false);
 		staticTextItemCurrentCreator.setValue(i_creator);
 		staticTextItemCurrentCreator.setWidth(FORM_WIDGTET_WIDTH);
