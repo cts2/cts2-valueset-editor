@@ -3,6 +3,7 @@ package mayo.edu.cts2.editor.client.widgets;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.gwt.user.client.Random;
 import mayo.edu.cts2.editor.client.Cts2Editor;
 import mayo.edu.cts2.editor.client.Cts2EditorService;
 import mayo.edu.cts2.editor.client.Cts2EditorServiceAsync;
@@ -35,8 +36,6 @@ import com.smartgwt.client.widgets.events.ClickEvent;
 import com.smartgwt.client.widgets.events.ClickHandler;
 import com.smartgwt.client.widgets.grid.ListGrid;
 import com.smartgwt.client.widgets.grid.ListGridRecord;
-import com.smartgwt.client.widgets.grid.events.SelectionUpdatedEvent;
-import com.smartgwt.client.widgets.grid.events.SelectionUpdatedHandler;
 import com.smartgwt.client.widgets.layout.HLayout;
 import com.smartgwt.client.widgets.layout.VLayout;
 
@@ -54,6 +53,7 @@ public class ValueSetEntitiesLayout extends VLayout {
 	private final IButton i_saveButton;
 	private final IButton i_saveAsButton;
 	private final IButton i_closeButton;
+    private final String layoutId = new Double(Random.nextDouble()).toString();
 
 	private boolean i_additionsMade = false;
 	private boolean i_removalsMade = false;
@@ -73,7 +73,7 @@ public class ValueSetEntitiesLayout extends VLayout {
 		addMember(titleLabel);
 
 		i_valueSetItemsListGrid = new ValueSetItemsListGrid();
-		i_valueSetItemsListGrid.setHeight(500);
+		i_valueSetItemsListGrid.setHeight(300);
 
 		i_valueSetItemsListGrid.setDataSource(childDatasource);
 		i_valueSetItemsListGrid.fetchData(criteria);
@@ -91,7 +91,7 @@ public class ValueSetEntitiesLayout extends VLayout {
 		i_editButton.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
-				i_searchWindow = new EntitySearchWindow(i_valueSetItemsListGrid.getRecords());
+				i_searchWindow = new EntitySearchWindow(i_valueSetItemsListGrid.getDataAsRecordList().toArray());
 				i_searchWindow.getCloseButton().addClickHandler(new ClickHandler() {
 					@Override
 					public void onClick(ClickEvent clickEvent) {
@@ -426,7 +426,7 @@ public class ValueSetEntitiesLayout extends VLayout {
 			comment = "< " + ValueSetsListGrid.DEFAULT_VERSION_COMMENT + " >";
 		}
 
-		SaveAsWindow saveAsWindow = new SaveAsWindow(version, comment, creator);
+		SaveAsWindow saveAsWindow = new SaveAsWindow(version, comment, creator, this.layoutId);
 		saveAsWindow.show();
 	}
 
@@ -487,18 +487,20 @@ public class ValueSetEntitiesLayout extends VLayout {
 	 * Listen for when a user selects to "save as" a value set.
 	 */
 	private void createSaveAsEvent() {
-
+        /* TODO investigate why this is getting caught multiple times! */
 		Cts2Editor.EVENT_BUS.addHandler(SaveAsEvent.TYPE, new SaveAsEventHandler() {
 
 			@Override
 			public void onSaveAs(SaveAsEvent event) {
-				String comment = event.getComment();
+                if (event.getLayoutId().equals(layoutId)) {
+                    String comment = event.getComment();
 
-				ListGridRecord[] records = i_valueSetItemsListGrid.getRecords();
-				Definition definition = getDefinition(records, comment);
+                    ListGridRecord[] records = i_valueSetItemsListGrid.getRecords();
+                    Definition definition = getDefinition(records, comment);
 
-				saveAsValueSetEntities(definition, comment);
-			}
+                    saveAsValueSetEntities(definition, comment);
+                }
+            }
 		});
 	}
 

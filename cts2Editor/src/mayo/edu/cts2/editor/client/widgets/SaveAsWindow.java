@@ -35,6 +35,7 @@ public class SaveAsWindow extends Window {
 	private final String i_comment;
 	private final String i_version;
 	private final String i_creator;
+	private final String i_layoutId;
 
 	private final VLayout i_mainLayout;
 
@@ -45,12 +46,13 @@ public class SaveAsWindow extends Window {
 	private Button i_saveButton;
 	private Button i_cancelButton;
 
-	public SaveAsWindow(String version, String comment, String creator) {
+	public SaveAsWindow(String version, String comment, String creator, String layoutId) {
 		super();
 
 		i_comment = comment;
 		i_version = version;
 		i_creator = creator;
+		i_layoutId = layoutId;
 
 		i_mainLayout = new VLayout(5);
 
@@ -190,7 +192,7 @@ public class SaveAsWindow extends Window {
 			@Override
 			public void onClick(ClickEvent event) {
 				// let others know that the saveAs button was pressed.
-				Cts2Editor.EVENT_BUS.fireEvent(new SaveAsEvent(getCommentText()));
+				Cts2Editor.EVENT_BUS.fireEvent(new SaveAsEvent(getCommentText(), i_layoutId));
 
 				i_saveButton.setDisabled(true);
 

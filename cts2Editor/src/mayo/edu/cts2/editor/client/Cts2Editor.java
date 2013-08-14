@@ -3,6 +3,8 @@ package mayo.edu.cts2.editor.client;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.gwt.event.shared.UmbrellaException;
+import com.google.gwt.user.client.Window;
 import mayo.edu.cts2.editor.client.debug.DebugPanel;
 import mayo.edu.cts2.editor.client.utils.ModalWindow;
 import mayo.edu.cts2.editor.client.widgets.ValueSetContainer;
@@ -31,7 +33,7 @@ public class Cts2Editor implements EntryPoint {
 	// Event Bus to capture global events and act upon them.
 	public static EventBus EVENT_BUS = GWT.create(SimpleEventBus.class);
 
-	private static final boolean s_standAlone = true;
+	private static final boolean s_standAlone = false;
 	private static final boolean s_readOnly = false;
 	private static final boolean s_debug = false;
 
@@ -42,6 +44,21 @@ public class Cts2Editor implements EntryPoint {
 	 */
 	@Override
 	public void onModuleLoad() {
+		if (s_debug) {
+			GWT.setUncaughtExceptionHandler(new GWT.UncaughtExceptionHandler() {
+				@Override
+				public void onUncaughtException(Throwable e) {
+					StringBuilder errors = new StringBuilder(e.getMessage() + "\n");
+					if (e instanceof UmbrellaException) {
+						for (Throwable t : ((UmbrellaException) e).getCauses()) {
+							errors.append(t.getMessage() + "\n");
+						}
+					}
+					Window.alert(errors.toString());
+
+			   }
+		});
+		}
 
 		/****************************************************************
 		 * NOTE: If you want to run this editor standalone, you need to set the
@@ -54,11 +71,13 @@ public class Cts2Editor implements EntryPoint {
 
 		// Sample list of oids for testing the call
 		final List<String> oids = new ArrayList<String>();
-		oids.add("2.16.840.1.113883.1.11.1");
-		oids.add("2.16.840.1.114222.4.11.837");
-		oids.add("2.16.840.1.113883.3.221.5");
-		oids.add("2.16.840.1.113883.3.464.0001.37");
-		oids.add("2.16.840.1.113883.3.526.02.337");
+        oids.add("2.16.840.1.113883.3.464.1003.101.12.1025");
+        oids.add("2.16.840.1.113883.3.464.1003.101.12.1016");
+//		oids.add("2.16.840.1.113883.1.11.1");
+//		oids.add("2.16.840.1.114222.4.11.837");
+//		oids.add("2.16.840.1.113883.3.221.5");
+//		oids.add("2.16.840.1.113883.3.464.0001.37");
+//		oids.add("2.16.840.1.113883.3.526.02.337");
 		// oids.add("2.16.840.1.113883.3.464.0003.1021");
 		// oids.add("2.16.840.1.113883.3.464.0003.1017");
 		// oids.add("2.16.840.1.113883.3.464.0001.231");
